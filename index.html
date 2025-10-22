@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>ABFIT</title>
+
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#111827">
+    <link rel="manifest" href="manifest.json">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="ABFIT">
+    <link rel="apple-touch-icon" href="https://via.placeholder.com/192x192/991b1b/FFFFFF?text=AB">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@700&display=swap" rel="stylesheet">
+    <!-- Feather Icons -->
+    <script src="https://unpkg.com/feather-icons"></script>
+    <!-- Chart.js for graphs -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Leaflet.js for GPS Tracking -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <!-- Marked.js for Markdown parsing -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+
+    <link rel="stylesheet" href="index.css">
+<script type="importmap">
+{
+  "imports": {
+    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.26.0",
+    "@capacitor/cli": "https://aistudiocdn.com/@capacitor/cli@^7.4.4"
+  }
+}
+</script>
+</head>
+
+<body class="overscroll-none">
+
+    <!-- ======================= SPLASH SCREEN ======================= -->
+    <div id="splashScreen" class="w-full h-screen flex flex-col items-center justify-center">
+        <div class="text-center">
+            <h1 class="font-black text-8xl tracking-tighter">
+                <span class="text-red-600">AB</span><span class="text-white">FIT</span>
+            </h1>
+        </div>
+        <div class="absolute bottom-8 text-center">
+            <p class="text-gray-400 text-sm">Desenvolvido por André Brito</p>
+            <p class="text-gray-500 text-xs mt-1">Versão 1.1</p>
+        </div>
+    </div>
+
+    <!-- ======================= APP CONTAINER ======================= -->
+    <div id="appContainer" class="hidden h-screen flex flex-col max-w-lg mx-auto">
+        <main class="flex-grow screens-wrapper">
+             <!-- ======================= TELA DE LOGIN ======================= -->
+            <div id="loginScreen" class="screen p-6 flex flex-col justify-center">
+                <div class="text-center mb-8">
+                    <h1 class="font-black text-6xl tracking-tighter">
+                        <span class="text-red-600">AB</span><span class="text-white">FIT</span>
+                    </h1>
+                </div>
+                <div class="bg-gray-800 p-6 rounded-xl border border-gray-700">
+                    <h3 class="text-white font-bold text-xl mb-4 text-center">Acesse seu Perfil</h3>
+                    <form id="login-form">
+                        <div class="mb-4">
+                            <label for="login-email" class="block text-sm font-medium text-white mb-1">Email</label>
+                            <input type="email" id="login-email" required placeholder="seuemail@exemplo.com"
+                                class="w-full p-3 border border-gray-600 bg-gray-700 text-white rounded-lg focus:ring-red-500 focus:border-red-500">
+                        </div>
+                        <button id="login-btn" type="submit"
+                            class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 rounded-xl flex items-center justify-center space-x-2 transition shadow-lg shadow-red-500/20">
+                            Entrar
+                        </button>
+                        <div id="login-error" class="text-red-500 text-center text-sm mt-3 h-4"></div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- ======================= TELA PERFIL DO ALUNO ======================= -->
+            <div id="studentProfileScreen" class="screen p-6">
+                <header class="flex items-start justify-between pt-8 pb-4">
+                    <div id="user-greeting">
+                        <!-- Populated by JS -->
+                    </div>
+                     <div class="flex items-center gap-4">
+                        <div id="weather-widget" class="text-right">
+                            <!-- Populated by JS -->
+                        </div>
+                        <button id="logout-btn" class="p-2 rounded-full hover:bg-gray-700 text-white hover:text-white">
+                            <i data-feather="log-out"></i>
+                        </button>
+                    </div>
+                </header>
+
+                <div id="student-profile-info"
+                    class="flex items-center p-4 bg-gray-800 border border-gray-700 rounded-xl mb-6"></div>
+
+                <div id="student-profile-buttons" class="grid grid-cols-3 gap-4 mb-6"></div>
+
+                <div class="bg-gray-800 p-4 rounded-xl border border-gray-700">
+                    <div id="calendar-header" class="flex justify-between items-center mb-4">
+                        <button id="prev-month-btn" class="p-2 rounded-full hover:bg-gray-700"><i
+                                data-feather="chevron-left" class="text-white"></i></button>
+                        <h2 id="calendar-month-year" class="font-bold text-lg text-white">Setembro 2025</h2>
+                        <button id="next-month-btn" class="p-2 rounded-full hover:bg-gray-700"><i
+                                data-feather="chevron-right" class="text-white"></i></button>
+                    </div>
+                    <div class="grid grid-cols-7 gap-1 text-center text-xs text-white mb-2">
+                        <div>D</div>
+                        <div>S</div>
+                        <div>T</div>
+                        <div>Q</div>
+                        <div>Q</div>
+                        <div>S</div>
+                        <div>S</div>
+                    </div>
+                    <div id="calendar-grid" class="grid grid-cols-7 gap-1 text-center text-sm"></div>
+                </div>
+
+                <div id="training-history-container" class="mt-6">
+                    <!-- Training history will be rendered here by JS -->
+                </div>
+                
+                <div class="text-center pt-8 pb-24">
+                    <p class="text-xs">Versão 1.1</p>
+                    <p class="text-xs">Desenvolvido por André Brito</p>
+                </div>
+            </div>
+
+            <!-- ======================= TELA DE TREINO ======================= -->
+            <div id="trainingScreen" class="screen p-6">
+                <header class="flex items-center justify-between pt-6 pb-4">
+                    <button class="back-btn p-2 rounded-full hover:bg-gray-800" data-target="studentProfileScreen"><i
+                            data-feather="arrow-left" class="text-white"></i></button>
+                    <div class="text-center timer-header-box">
+                        <h1 id="training-title" class="text-xl font-bold text-white uppercase tracking-wider">Treino</h1>
+                        <div id="workout-timer" class="digital-timer text-4xl">00:00:00</div>
+                    </div>
+                    <button id="save-training-btn" class="hidden bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg text-sm flex items-center gap-2">
+                        <i data-feather="check-circle" class="w-4 h-4"></i>
+                        <span>Concluir</span>
+                    </button>
+                </header>
+                <div id="periodization-notification" class="hidden mb-4"></div>
+                <div id="training-content-wrapper" class="space-y-3 pb-24"></div>
+            </div>
+            
+            <!-- ======================= TELA DE PERIODIZAÇÃO ======================= -->
+            <div id="periodizationScreen" class="screen p-6">
+                <header class="flex items-center justify-between pt-6 pb-4">
+                    <button class="back-btn p-2 rounded-full hover:bg-gray-800" data-target="studentProfileScreen"><i
+                            data-feather="arrow-left" class="text-white"></i></button>
+                    <h1 class="text-2xl font-bold text-white">Periodização</h1>
+                    <div class="w-10"></div>
+                </header>
+                <div id="periodization-content-wrapper" class="space-y-4 pb-24">
+                    <!-- Periodization table will be rendered here by JS -->
+                </div>
+            </div>
+
+            <!-- ======================= TELA DE ANÁLISE IA ======================= -->
+            <div id="aiAnalysisScreen" class="screen p-6">
+                <header class="flex items-center justify-between pt-6 pb-4">
+                    <button class="back-btn p-2 rounded-full hover:bg-gray-800" data-target="studentProfileScreen">
+                        <i data-feather="arrow-left" class="text-white"></i>
+                    </button>
+                    <h1 class="text-2xl font-bold text-white">Análise de Performance</h1>
+                    <div class="w-10"></div>
+                </header>
+                <div class="space-y-4 pb-24 text-center">
+                    <div class="bg-gray-800 p-6 rounded-xl border border-gray-700">
+                        <i data-feather="cpu" class="w-16 h-16 mx-auto mb-4 text-teal-400"></i>
+                        <h2 class="text-xl font-bold text-white mb-2">Análise com IA</h2>
+                        <p class="text-sm mb-6">Receba insights sobre sua evolução de cargas e descubra pontos de melhoria.</p>
+                        <button id="generate-analysis-btn" class="w-full bg-teal-500 hover:bg-teal-600 text-white font-bold py-3 rounded-xl flex items-center justify-center space-x-2 transition shadow-lg">
+                            <i data-feather="bar-chart-2"></i> <span>Gerar Análise</span>
+                        </button>
+                    </div>
+            
+                    <div id="ai-analysis-spinner" class="hidden text-center p-8">
+                        <div class="loader inline-block"></div>
+                        <p class="mt-4 text-white">Analisando seu progresso...</p>
+                    </div>
+            
+                    <div id="ai-analysis-result" class="prose prose-invert max-w-none hidden text-left bg-gray-800 p-6 rounded-xl border border-gray-700 space-y-4">
+                        <!-- AI results will be injected here -->
+                    </div>
+                </div>
+            </div>
+
+             <!-- ======================= TELA NUTRICIONISTA IA ======================= -->
+            <div id="iaNutritionistScreen" class="screen flex flex-col p-0">
+                <header class="flex items-center justify-between pt-6 pb-4 px-6 flex-shrink-0">
+                    <button class="back-btn p-2 rounded-full hover:bg-gray-800" data-target="studentProfileScreen">
+                        <i data-feather="arrow-left" class="text-white"></i>
+                    </button>
+                    <h1 class="text-2xl font-bold text-white text-center">Consulta Nutricional IA</h1>
+                    <div class="w-10"></div>
+                </header>
+                <div id="nutrition-content-wrapper" class="flex-grow overflow-y-auto">
+                    <!-- O conteúdo da consulta (perguntas ou plano) será renderizado aqui -->
+                </div>
+            </div>
+
+
+            <!-- ======================= TELA DE CORRIDA ======================= -->
+            <div id="runningScreen" class="screen p-6">
+                <header class="flex items-center justify-between pt-6 pb-4">
+                    <button class="back-btn p-2 rounded-full hover:bg-gray-800" data-target="studentProfileScreen"><i
+                            data-feather="arrow-left" class="text-white"></i></button>
+                    <h1 class="text-2xl font-bold text-white">Treinos de Corrida</h1>
+                    <div class="w-10"></div>
+                </header>
+                <div id="running-workouts-list" class="space-y-3 pb-24"></div>
+            </div>
+            
+            <!-- ======================= TELA BIBLIOTECA DE EXERCÍCIOS ======================= -->
+            <div id="exerciciosScreen" class="screen p-6">
+                <header class="flex items-center justify-between pt-6 pb-4">
+                    <button class="back-btn p-2 rounded-full hover:bg-gray-800" data-target="studentProfileScreen"><i
+                            data-feather="arrow-left" class="text-white"></i></button>
+                    <h1 class="text-2xl font-bold text-white">Biblioteca de Exercícios</h1>
+                    <div class="w-10"></div>
+                </header>
+                 <div class="mb-4 sticky top-0 bg-black/50 backdrop-blur-sm py-2 -mx-6 px-6 z-10">
+                     <input type="text" id="exercise-search-input" placeholder="Buscar exercício..." class="w-full p-3 border border-gray-600 bg-gray-700 text-white rounded-lg focus:ring-red-500 focus:border-red-500">
+                </div>
+                <div id="exercise-library-list" class="grid grid-cols-2 gap-4 pb-24">
+                    <!-- Exercise cards will be rendered here -->
+                </div>
+            </div>
+
+            <!-- ======================= TELA DE EVOLUÇÃO ======================= -->
+            <div id="evolutionScreen" class="screen p-6">
+                <header class="flex items-center justify-between pt-6 pb-4">
+                    <button class="back-btn p-2 rounded-full hover:bg-gray-800" data-target="studentProfileScreen"><i
+                            data-feather="arrow-left" class="text-white"></i></button>
+                    <h1 class="text-2xl font-bold text-white">Evolução de Carga</h1>
+                    <div class="w-10"></div>
+                </header>
+                <div class="space-y-6 pb-24">
+                    <div class="bg-gray-800 p-4 rounded-xl border border-gray-700">
+                        <h2 class="text-xl font-bold text-white mb-2">Treino A</h2>
+                        <label for="select-treino-a" class="text-sm text-white mb-2 block">Selecione o Exercício</label>
+                        <select id="select-treino-a" class="w-full p-3 border border-gray-600 bg-gray-700 text-white rounded-lg mb-4"></select>
+                        <canvas id="treinoAChart" class="w-full"></canvas>
+                    </div>
+                    <div class="bg-gray-800 p-4 rounded-xl border border-gray-700">
+                        <h2 class="text-xl font-bold text-white mb-2">Treino B</h2>
+                         <label for="select-treino-b" class="text-sm text-white mb-2 block">Selecione o Exercício</label>
+                        <select id="select-treino-b" class="w-full p-3 border border-gray-600 bg-gray-700 text-white rounded-lg mb-4"></select>
+                        <canvas id="treinoBChart" class="w-full"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ======================= TELA CONTROLE DE PESO ======================= -->
+            <div id="weightControlScreen" class="screen p-6">
+                <header class="flex items-center justify-between pt-6 pb-4">
+                    <button class="back-btn p-2 rounded-full hover:bg-gray-800" data-target="studentProfileScreen"><i
+                            data-feather="arrow-left" class="text-white"></i></button>
+                    <h1 class="text-2xl font-bold text-white">Controle de Peso</h1>
+                    <div class="w-10"></div>
+                </header>
+                <div class="space-y-4 pb-24">
+                    <div class="bg-gray-800 p-4 rounded-xl border border-gray-700">
+                        <h2 class="text-xl font-bold text-white mb-4">Adicionar Novo Registro</h2>
+                        <div class="flex items-center gap-2">
+                            <input type="number" step="0.1" id="weight-input" inputmode="decimal" placeholder="Ex: 85.5"
+                                class="w-full p-3 border border-gray-600 bg-gray-700 text-white rounded-lg">
+                            <span class="font-semibold text-white">kg</span>
+                            <button id="save-weight-btn"
+                                class="bg-red-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-red-700 transition-colors">Salvar</button>
+                        </div>
+                    </div>
+                    <div class="bg-gray-800 p-4 rounded-xl border border-gray-700">
+                        <h2 class="text-xl font-bold text-white mb-4">Evolução do Peso</h2>
+                        <canvas id="weightChart" class="w-full"></canvas>
+                    </div>
+                    <div class="bg-gray-800 p-4 rounded-xl border border-gray-700">
+                        <h2 class="text-xl font-bold text-white mb-4">Histórico de Peso</h2>
+                        <div id="weight-history-list" class="space-y-2"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ======================= TELA AVALIAÇÃO FÍSICA ======================= -->
+            <div id="physioAssessmentScreen" class="screen p-6">
+                <header class="flex items-center justify-between pt-6 pb-4">
+                    <button class="back-btn p-2 rounded-full hover:bg-gray-800" data-target="studentProfileScreen"><i
+                            data-feather="arrow-left" class="text-white"></i></button>
+                    <h1 class="text-2xl font-bold text-white">Avaliação Física</h1>
+                    <div class="w-10"></div>
+                </header>
+                <div class="space-y-4 pb-24">
+                    <!-- Navegação por abas -->
+                    <nav class="border-b border-gray-700">
+                        <div class="flex space-x-8">
+                            <button id="tab-professor"
+                                class="py-4 px-1 border-b-2 font-medium text-lg border-transparent text-white hover:text-blue-500 focus:outline-none tab-active">
+                                <i class="fas fa-user-tie mr-2"></i> Professor
+                            </button>
+                            <button id="tab-aluno"
+                                class="py-4 px-1 border-b-2 font-medium text-lg border-transparent text-white hover:text-blue-500 focus:outline-none">
+                                <i class="fas fa-user-graduate mr-2"></i> Aluno
+                            </button>
+                        </div>
+                    </nav>
+
+                    <!-- VISÃO DO PROFESSOR -->
+                    <div id="view-professor">
+                        <!-- Lista de Alunos e Ações -->
+                        <div id="professor-dashboard">
+                            <div class="flex justify-between items-center mb-6">
+                                <h2 class="text-2xl font-semibold text-white">Painel do Professor</h2>
+                                <button id="btn-add-aluno"
+                                    class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition-transform transform hover:scale-105">
+                                    <i class="fas fa-user-plus mr-2"></i> Adicionar Aluno
+                                </button>
+                            </div>
+
+                            <div id="loader" class="text-center p-8">
+                                <i class="fas fa-spinner fa-spin text-4xl text-blue-500"></i>
+                                <p class="mt-2 text-white">Carregando alunos...</p>
+                            </div>
+
+                            <div id="lista-alunos" class="hidden grid grid-cols-1 gap-4">
+                                <!-- Cards de alunos serão inseridos aqui pelo JS -->
+                            </div>
+                            <div id="no-alunos-message"
+                                class="hidden text-center p-8 bg-gray-800 rounded-lg shadow-md">
+                                <i class="fas fa-users-slash text-4xl text-white mb-4"></i>
+                                <h3 class="text-xl font-semibold text-white">Nenhum aluno encontrado</h3>
+                                <p class="text-white">Adicione seu primeiro aluno para começar a registrar as
+                                    avaliações.</p>
+                            </div>
+                        </div>
+
+                        <!-- Formulário de Nova Avaliação -->
+                        <div id="form-avaliacao" class="hidden">
+                            <div class="flex items-center mb-6">
+                                <button id="btn-back-to-dashboard"
+                                    class="mr-4 bg-gray-700 hover:bg-gray-600 p-2 rounded-full text-white"><i
+                                        class="fas fa-arrow-left"></i></button>
+                                <h2 class="text-2xl font-semibold text-white">Nova Avaliação para <span
+                                        id="form-aluno-nome" class="text-blue-400"></span></h2>
+                            </div>
+
+                            <form id="avaliacao-form" class="space-y-6 bg-gray-800 p-6 rounded-2xl shadow-xl">
+                                <!-- Seção Dados Básicos -->
+                                <fieldset class="physio-fieldset">
+                                    <legend class="physio-legend">Dados Básicos</legend>
+                                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                        <div><label for="data" class="block text-sm font-medium text-white">Data da
+                                                Avaliação</label><input type="date" id="data" required
+                                                class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md py-2 px-3 text-white focus:ring-blue-500 focus:border-blue-500">
+                                        </div>
+                                        <div><label for="peso" class="block text-sm font-medium text-white">Peso
+                                                Corporal (kg)</label><input type="number" step="0.1" id="peso" required
+                                                class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md py-2 px-3 text-white focus:ring-blue-500 focus:border-blue-500">
+                                        </div>
+                                        <div><label for="altura" class="block text-sm font-medium text-white">Altura
+                                                (cm)</label><input type="number" step="0.1" id="altura" required
+                                                class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md py-2 px-3 text-white focus:ring-blue-500 focus:border-blue-500">
+                                        </div>
+                                    </div>
+                                </fieldset>
+
+                                <!-- Seção Dobras Cutâneas -->
+                                <fieldset class="physio-fieldset">
+                                    <legend class="physio-legend">Dobras Cutâneas (mm) - Protocolo Pollock 3</legend>
+                                    <div id="skinfold-fields-container" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                        <!-- Campos dinâmicos baseados no sexo -->
+                                        <div class="skinfold-field-wrapper" data-gender="Masculino"><label
+                                                for="dc_peitoral"
+                                                class="block text-sm font-medium text-white">Peitoral</label><input
+                                                type="number" step="0.1" id="dc_peitoral"
+                                                class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md py-2 px-3 text-white focus:ring-blue-500 focus:border-blue-500">
+                                        </div>
+                                        <div class="skinfold-field-wrapper" data-gender="Masculino"><label
+                                                for="dc_abdominal"
+                                                class="block text-sm font-medium text-white">Abdominal</label><input
+                                                type="number" step="0.1" id="dc_abdominal"
+                                                class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md py-2 px-3 text-white focus:ring-blue-500 focus:border-blue-500">
+                                        </div>
+                                        <div class="skinfold-field-wrapper" data-gender="Feminino"><label
+                                                for="dc_tricipital"
+                                                class="block text-sm font-medium text-white">Tricipital</label><input
+                                                type="number" step="0.1" id="dc_tricipital"
+                                                class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md py-2 px-3 text-white focus:ring-blue-500 focus:border-blue-500">
+                                        </div>
+                                        <div class="skinfold-field-wrapper" data-gender="Feminino"><label
+                                                for="dc_suprailiaca"
+                                                class="block text-sm font-medium text-white">Suprailíaca</label><input
+                                                type="number" step="0.1" id="dc_suprailiaca"
+                                                class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md py-2 px-3 text-white focus:ring-blue-500 focus:border-blue-500">
+                                        </div>
+                                        <div class="skinfold-field-wrapper" data-gender="Masculino Feminino"><label
+                                                for="dc_coxa"
+                                                class="block text-sm font-medium text-white">Coxa</label><input
+                                                type="number" step="0.1" id="dc_coxa"
+                                                class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md py-2 px-3 text-white focus:ring-blue-500 focus:border-blue-500">
+                                        </div>
+                                    </div>
+                                </fieldset>
+
+                                <div class="flex justify-end pt-4">
+                                    <button type="submit" id="btn-salvar-avaliacao"
+                                        class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg shadow-lg transition-transform transform hover:scale-105">
+                                        <i class="fas fa-save mr-2"></i> Salvar Avaliação
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+
+                        <!-- Visualização de Dados do Aluno -->
+                        <div id="view-aluno-data" class="hidden">
+                            <!-- Conteúdo preenchido pelo JS -->
+                        </div>
+                    </div>
+
+                    <!-- VISÃO DO ALUNO -->
+                    <div id="view-aluno" class="hidden">
+                        <div id="aluno-login-screen">
+                            <h2 class="text-2xl font-semibold text-white mb-4">Selecione seu nome</h2>
+                            <select id="aluno-selector"
+                                class="block w-full max-w-md bg-gray-700 border border-gray-600 rounded-md shadow-sm py-3 px-4 text-white focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                                <option>Carregando...</option>
+                            </select>
+                        </div>
+                        <div id="aluno-dashboard" class="hidden">
+                            <!-- Conteúdo do dashboard do aluno preenchido pelo JS -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ======================= INÍCIO DAS TELAS DE RASTREAMENTO OUTDOOR ======================= -->
+
+            <!-- TELA DE SELEÇÃO DE ATIVIDADE OUTDOOR -->
+            <div id="outdoorSelectionScreen" class="screen p-6">
+                <header class="flex items-center justify-between pt-6 pb-4">
+                    <button class="outdoor-back-btn p-2 rounded-full hover:bg-gray-800"
+                        data-target="studentProfileScreen"><i data-feather="arrow-left"
+                            class="text-white"></i></button>
+                    <h1 class="text-2xl font-bold text-white">Treino Outdoor</h1>
+                    <div class="w-10"></div>
+                </header>
+                <div class="p-4 bg-gray-800 text-center rounded-xl border border-gray-700 mb-6">
+                    <h2 class="text-xl font-bold text-white">ABFIT Outdoor</h2>
+                    <p class="text-white">Sua jornada começa aqui. Escolha sua atividade.</p>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <button
+                        class="outdoor-activity-btn bg-gray-800 hover:bg-gray-700 border border-gray-700 text-white rounded-xl p-4 flex flex-col items-center justify-center space-y-2 h-32 transition"
+                        data-activity="Caminhada outdoor">
+                        <i class="fas fa-walking text-3xl text-blue-400"></i>
+                        <span class="font-semibold">Caminhada</span>
+                    </button>
+                    <button
+                        class="outdoor-activity-btn bg-gray-800 hover:bg-gray-700 border border-gray-700 text-white rounded-xl p-4 flex flex-col items-center justify-center space-y-2 h-32 transition"
+                        data-activity="Corrida outdoor">
+                        <i class="fas fa-running text-3xl text-orange-400"></i>
+                        <span class="font-semibold">Corrida</span>
+                    </button>
+                    <button
+                        class="outdoor-activity-btn bg-gray-800 hover:bg-gray-700 border border-gray-700 text-white rounded-xl p-4 flex flex-col items-center justify-center space-y-2 h-32 transition"
+                        data-activity="Ciclismo outdoor">
+                        <i class="fas fa-biking text-3xl text-green-400"></i>
+                        <span class="font-semibold">Ciclismo</span>
+                    </button>
+                    <button
+                        class="outdoor-activity-btn bg-gray-800 hover:bg-gray-700 border border-gray-700 text-white rounded-xl p-4 flex flex-col items-center justify-center space-y-2 h-32 transition"
+                        data-activity="Natação outdoor">
+                        <i class="fas fa-swimmer text-3xl text-cyan-400"></i>
+                        <span class="font-semibold">Natação</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- TELA DE RASTREAMENTO DE ATIVIDADE -->
+            <div id="outdoorTrackingScreen" class="screen p-6 flex flex-col">
+                <header class="flex items-center justify-between pt-6 pb-4">
+                    <button class="outdoor-back-btn p-2 rounded-full hover:bg-gray-800"
+                        data-target="outdoorSelectionScreen"><i data-feather="arrow-left"
+                            class="text-white"></i></button>
+                    <h1 id="tracking-activity-title" class="text-2xl font-bold text-white">Atividade</h1>
+                    <div class="w-10"></div>
+                </header>
+                <div class="map-container mb-4" id="map"></div>
+                <div class="grid grid-cols-3 gap-4 mb-6 text-center">
+                    <div class="bg-gray-800 p-4 rounded-xl">
+                        <div class="text-sm">Distância</div>
+                        <div id="tracking-distance" class="text-2xl font-bold">0.00 km</div>
+                    </div>
+                    <div class="bg-gray-800 p-4 rounded-xl">
+                        <div class="text-sm">Tempo</div>
+                        <div id="tracking-time" class="text-2xl font-bold">00:00:00</div>
+                    </div>
+                    <div class="bg-gray-800 p-4 rounded-xl">
+                        <div class="text-sm">Ritmo</div>
+                        <div id="tracking-pace" class="text-2xl font-bold">--:-- /km</div>
+                    </div>
+                </div>
+                <div class="mt-auto flex items-center justify-center space-x-4 pb-24">
+                    <button id="start-tracking-btn"
+                        class="w-20 h-20 bg-green-600 hover:bg-green-700 text-white rounded-full flex items-center justify-center text-lg font-bold">
+                        <i data-feather="play" class="w-8 h-8"></i>
+                    </button>
+                    <button id="pause-tracking-btn"
+                        class="hidden w-20 h-20 bg-yellow-500 hover:bg-yellow-600 text-white rounded-full items-center justify-center text-lg font-bold">
+                        <i data-feather="pause" class="w-8 h-8"></i>
+                    </button>
+                    <button id="stop-tracking-btn"
+                        class="hidden w-20 h-20 bg-red-600 hover:bg-red-700 text-white rounded-full items-center justify-center text-lg font-bold">
+                        <i data-feather="square" class="w-8 h-8"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- ======================= TELAS NÍVEL DE ESTRESSE ======================= -->
+            <!-- TELA PRINCIPAL NÍVEL DE ESTRESSE -->
+            <div id="stressLevelScreen" class="screen p-6">
+                <header class="flex items-center justify-between pt-6 pb-4">
+                    <button class="back-btn p-2 rounded-full hover:bg-gray-800" data-target="studentProfileScreen"><i
+                            data-feather="arrow-left" class="text-white"></i></button>
+                    <h1 class="text-2xl font-bold text-white">Nível de Estresse</h1>
+                    <div class="w-10"></div>
+                </header>
+                <div class="space-y-6 pb-24">
+                    <!-- Resumo do Dia -->
+                    <div class="bg-gray-800 p-4 rounded-xl border border-gray-700">
+                        <div class="flex justify-between items-center">
+                            <h2 class="text-lg font-bold">Resumo do Dia</h2>
+                            <i data-feather="chevron-down"></i>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4 mt-4">
+                            <div class="bg-gray-900/50 p-4 rounded-lg text-center">
+                                <p class="text-sm">Pontuação Média (Hoje)</p>
+                                <p id="stress-avg-score" class="text-3xl font-bold text-yellow-400">--<span class="text-lg">/100</span></p>
+                            </div>
+                            <div class="bg-gray-900/50 p-4 rounded-lg text-center">
+                                <p class="text-sm">Avaliações Hoje</p>
+                                <p id="stress-assessments-today" class="text-3xl font-bold">0</p>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Variação Durante o Dia -->
+                    <div class="bg-gray-800 p-4 rounded-xl border border-gray-700">
+                        <div class="flex justify-between items-center mb-4">
+                             <h2 class="text-lg font-bold">Variação Durante o Dia</h2>
+                             <i data-feather="chevron-down"></i>
+                        </div>
+                        <div class="bg-gray-900/50 p-4 rounded-lg">
+                           <canvas id="stressChart"></canvas>
+                        </div>
+                    </div>
+                    <!-- Avaliação de Estresse -->
+                    <div class="bg-gray-800 p-4 rounded-xl border border-gray-700">
+                         <div class="flex justify-between items-center mb-4">
+                            <h2 class="text-lg font-bold">Avaliação de Estresse</h2>
+                             <i data-feather="chevron-down"></i>
+                        </div>
+                        <div class="bg-gray-900/50 p-6 rounded-lg text-center">
+                           <p class="mb-4">Responda a um questionário rápido para avaliar seu nível de estresse atual.</p>
+                           <button id="start-stress-assessment-btn" class="w-full bg-yellow-500 hover:bg-yellow-600 text-black font-bold py-3 rounded-xl transition shadow-lg">
+                               Avaliar Agora
+                           </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TELA QUESTIONÁRIO DE ESTRESSE -->
+            <div id="stressAssessmentScreen" class="screen p-6 flex flex-col">
+                <header class="flex items-center pt-6 pb-4">
+                    <button class="back-btn p-2 rounded-full hover:bg-gray-800" data-target="stressLevelScreen"><i
+                            data-feather="arrow-left" class="text-white"></i></button>
+                </header>
+                <div id="stress-question-container" class="flex-grow flex flex-col justify-center items-center text-center">
+                    <!-- Conteúdo dinâmico do questionário -->
+                </div>
+            </div>
+
+            <!-- TELA RESULTADO DO ESTRESSE -->
+             <div id="stressResultScreen" class="screen p-6 flex flex-col">
+                <header class="flex items-center pt-6 pb-4">
+                    <button class="back-btn p-2 rounded-full hover:bg-gray-800" data-target="stressLevelScreen"><i
+                            data-feather="arrow-left" class="text-white"></i></button>
+                </header>
+                <div class="flex-grow flex flex-col justify-center items-center text-center">
+                    <div class="bg-gray-800 p-8 rounded-2xl w-full max-w-sm border border-gray-700">
+                        <h2 class="text-2xl font-bold mb-2">Resultado da Avaliação</h2>
+                        <p id="stress-result-score" class="text-7xl font-extrabold text-red-500 my-4">75</p>
+                        <p id="stress-result-level" class="text-xl font-semibold mb-6">Alto</p>
+                        <div class="w-full bg-gray-700 rounded-full h-2.5 mb-6 relative">
+                             <div id="stress-gauge-labels" class="flex justify-between text-xs px-1 absolute -bottom-5 w-full">
+                                <span>Baixo</span>
+                                <span>Médio</span>
+                                <span>Alto</span>
+                            </div>
+                            <div id="stress-gauge-bar" class="stress-gauge-gradient h-2.5 rounded-full"></div>
+                            <div id="stress-gauge-marker" class="absolute top-1/2 -translate-y-1/2 w-5 h-5 bg-white rounded-full border-4 border-gray-800 shadow-lg" style="left: 75%;">
+                                 <i data-feather="check" class="w-3 h-3 text-gray-800 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"></i>
+                            </div>
+                        </div>
+                        <button id="assess-again-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl mt-8 transition shadow-lg">
+                            Avaliar Novamente
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ======================= TELA LIVE COACH ======================= -->
+            <div id="liveCoachScreen" class="screen p-6 flex flex-col">
+                <header class="flex items-center justify-between pt-6 pb-4">
+                    <button class="back-btn p-2 rounded-full hover:bg-gray-800" data-target="studentProfileScreen"><i
+                            data-feather="arrow-left" class="text-white"></i></button>
+                    <h1 class="text-2xl font-bold text-white">Live Coach</h1>
+                    <div class="w-10"></div>
+                </header>
+            
+                <div class="flex-grow flex flex-col items-center justify-center text-center space-y-6">
+                    <div id="live-status-indicator" class="w-48 h-48 rounded-full bg-gray-800 border-4 border-gray-700 flex items-center justify-center">
+                        <i data-feather="mic" class="w-24 h-24 text-gray-600"></i>
+                    </div>
+                    <p class="text-lg">Fale com seu personal trainer IA</p>
+                </div>
+            
+                <div class="h-48 bg-gray-800 rounded-xl p-4 border border-gray-700 mb-4 overflow-y-auto">
+                    <div id="live-transcription-log" class="text-sm space-y-2">
+                        <!-- Transcription will appear here -->
+                    </div>
+                </div>
+                
+                <div class="pb-24">
+                    <button id="toggle-live-session-btn" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-4 rounded-xl text-lg transition shadow-lg">
+                        Iniciar Sessão
+                    </button>
+                </div>
+            </div>
+
+        </main>
+
+        <!-- ======================= BARRA DE NAVEGAÇÃO INFERIOR ======================= -->
+        <nav id="bottom-nav" class="fixed bottom-0 left-0 right-0 max-w-lg mx-auto bg-black/70 backdrop-blur-sm border-t border-gray-700 p-2 z-50">
+            <div class="flex justify-around items-center">
+                <button class="nav-btn text-red-500" data-target="studentProfileScreen">
+                    <i data-feather="home"></i>
+                    <span class="text-xs">Início</span>
+                </button>
+                <button class="nav-btn text-white" data-target="evolutionScreen">
+                    <i data-feather="trending-up"></i>
+                    <span class="text-xs">Evolução</span>
+                </button>
+            </div>
+        </nav>
+    </div>
+
+    <!-- ======================= MODAIS ======================= -->
+    <!-- Modal Detalhes do Exercício -->
+    <div id="exerciseDetailModal" class="fixed inset-0 bg-black/70 flex items-center justify-center hidden z-50">
+        <div id="exercise-modal-content" class="bg-gray-900 rounded-xl max-w-md w-11/12 transform scale-95 opacity-0 transition-transform transition-opacity duration-300 border border-gray-700">
+            <header class="p-4 border-b border-gray-700 flex justify-between items-center">
+                <h2 id="modal-exercise-name" class="text-lg font-bold">Nome do Exercício</h2>
+                <button id="closeExerciseModalBtn" class="p-2 rounded-full hover:bg-gray-800"><i data-feather="x"></i></button>
+            </header>
+            <div id="exercise-modal-body" class="p-4">
+                <img id="modal-exercise-img" src="" alt="Imagem do exercício" class="w-full h-48 object-cover rounded-lg mb-4 bg-gray-700">
+                <div id="modal-exercise-method" class="bg-gray-800 p-3 rounded-lg mb-4">
+                    <h3 class="font-bold text-sm mb-1">Método de Execução</h3>
+                    <p class="text-sm">--</p>
+                </div>
+                <form id="edit-carga-form">
+                    <label for="carga-input" class="block text-sm font-medium mb-1">Registrar Carga (kg)</label>
+                    <div class="flex items-center gap-2">
+                        <input type="number" step="0.5" id="carga-input" class="w-full p-2 border border-gray-600 bg-gray-700 text-white rounded-lg" placeholder="Ex: 25.5">
+                        <button type="submit" class="bg-red-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-red-700">Salvar</button>
+                    </div>
+                </form>
+                <div class="mt-4">
+                    <h3 class="font-bold text-sm mb-2">Histórico de Carga</h3>
+                    <div id="carga-history-list" class="space-y-2 max-h-32 overflow-y-auto pr-2"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+     <!-- Modal Registro de Corrida -->
+    <div id="runningLogModal" class="fixed inset-0 bg-black/70 flex items-center justify-center hidden z-50">
+        <div id="running-log-modal-content" class="bg-gray-900 rounded-xl max-w-md w-11/11 transform scale-95 opacity-0 transition-transform transition-opacity duration-300 border border-gray-700">
+            <header class="p-4 border-b border-gray-700 flex justify-between items-center">
+                <h2 id="running-log-date" class="text-lg font-bold">Registrar Corrida</h2>
+                <button id="closeRunningLogModalBtn" class="p-2 rounded-full hover:bg-gray-800"><i data-feather="x"></i></button>
+            </header>
+            <div class="p-4 space-y-4">
+                 <form id="running-log-form" class="space-y-4">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label for="running-distance" class="block text-sm font-medium mb-1">Distância (km)</label>
+                            <input type="text" id="running-distance" inputmode="decimal" class="w-full p-2 border border-gray-600 bg-gray-700 text-white rounded-lg" placeholder="Ex: 5,5">
+                        </div>
+                        <div>
+                            <label for="running-time" class="block text-sm font-medium mb-1">Tempo (min)</label>
+                            <input type="text" id="running-time" inputmode="decimal" class="w-full p-2 border border-gray-600 bg-gray-700 text-white rounded-lg" placeholder="Ex: 30,5">
+                        </div>
+                    </div>
+                    <button type="submit" class="w-full bg-orange-600 text-white font-bold py-3 rounded-lg hover:bg-orange-700 flex items-center justify-center gap-2">
+                        <i data-feather="save"></i> <span>Salvar Registro</span>
+                    </button>
+                </form>
+
+                <div class="bg-gray-800 p-4 rounded-lg">
+                    <h3 class="font-bold text-center mb-3">Resumo da Performance</h3>
+                    <div class="grid grid-cols-3 gap-2 text-center text-xs">
+                        <div>
+                            <span class="font-semibold opacity-80">Velocidade Média</span>
+                            <p class="font-bold text-lg"><span id="summary-speed">0.0</span> km/h</p>
+                        </div>
+                        <div>
+                            <span class="font-semibold opacity-80">Pace Médio</span>
+                            <p class="font-bold text-lg"><span id="summary-pace">--:--</span> /km</p>
+                        </div>
+                        <div>
+                            <span class="font-semibold opacity-80">Calorias (Est.)</span>
+                            <p class="font-bold text-lg"><span id="summary-calories">0</span> kcal</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+     <!-- Modal Adicionar Aluno (Avaliação Física) -->
+    <div id="modal-add-aluno" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 hidden z-50">
+        <div id="modal-add-aluno-content"
+            class="bg-gray-900 rounded-2xl shadow-xl w-full max-w-lg transform scale-95 opacity-0 transition-all duration-300 border border-gray-700">
+            <div class="p-6">
+                <h2 class="text-2xl font-bold text-white mb-6">Cadastrar Novo Aluno</h2>
+                <form id="form-novo-aluno" class="space-y-4">
+                    <div>
+                        <label for="nome-aluno" class="block text-sm font-medium text-white mb-1">Nome Completo</label>
+                        <input type="text" id="nome-aluno" required
+                            class="w-full p-3 border border-gray-600 bg-gray-700 text-white rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label for="sexo-aluno" class="block text-sm font-medium text-white mb-1">Sexo</label>
+                        <select id="sexo-aluno" required
+                            class="w-full p-3 border border-gray-600 bg-gray-700 text-white rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                            <option value="Masculino">Masculino</option>
+                            <option value="Feminino">Feminino</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="nascimento-aluno" class="block text-sm font-medium text-white mb-1">Data de Nascimento</label>
+                        <input type="date" id="nascimento-aluno" required
+                            class="w-full p-3 border border-gray-600 bg-gray-700 text-white rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                    <div class="pt-6 flex justify-end space-x-4">
+                        <button type="button" id="btn-cancel-modal"
+                            class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-6 rounded-lg transition">Cancelar</button>
+                        <button type="submit"
+                            class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg transition">Salvar
+                            Aluno</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+     <!-- Modal da Câmera -->
+    <div id="cameraModal"
+        class="hidden fixed inset-0 bg-black z-50 flex flex-col items-center justify-center p-4">
+        <div class="relative w-full max-w-lg h-auto aspect-square">
+            <video id="camera-stream" autoplay playsinline class="w-full h-full object-cover rounded-lg"></video>
+            <canvas id="camera-canvas" class="hidden"></canvas>
+        </div>
+        <div class="flex items-center justify-center space-x-4 mt-4">
+            <button id="close-camera-modal-btn"
+                class="bg-gray-700 hover:bg-gray-600 text-white p-4 rounded-full">
+                <i class="fas fa-times"></i>
+            </button>
+            <button id="capture-photo-btn"
+                class="bg-blue-600 hover:bg-blue-700 text-white w-20 h-20 rounded-full border-4 border-white">
+                <i class="fas fa-camera text-2xl"></i>
+            </button>
+            <div class="w-16"></div> <!-- Espaçador -->
+        </div>
+    </div>
+
+
+    <script src="index.js" defer></script>
+</body>
+
+</html>

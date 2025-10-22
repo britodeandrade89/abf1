@@ -1,0 +1,21 @@
+{
+  "name": "ABFIT",
+  "short_name": "ABFIT",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#111827",
+  "description": "Assessoria de Treinamento Físico por André Brito.",
+  "icons": [
+    {
+      "src": "https://via.placeholder.com/192x192/991b1b/FFFFFF?text=AB",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "https://via.placeholder.com/512x512/991b1b/FFFFFF?text=AB",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
