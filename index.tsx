@@ -1,5 +1,5 @@
 
-import { LiveServerMessage, Modality, Blob } from "@google/genai";
+import { GoogleGenAI, LiveSession, LiveServerMessage, Modality, Blob } from "@google/genai";
 
 // Globals defined by imported scripts
 declare var feather: any;
@@ -10,6 +10,22 @@ declare var L: any; // Leaflet global
 // Fix: Correctly type workoutTimerInterval
 let workoutTimerInterval: number | null = null;
 let workoutStartTime: Date | null = null;
+
+// --- LIVE COACH GLOBALS ---
+const liveCoachState = {
+    ai: null as GoogleGenAI | null,
+    sessionPromise: null as Promise<LiveSession> | null,
+    isSessionActive: false,
+    inputAudioContext: null as AudioContext | null,
+    outputAudioContext: null as AudioContext | null,
+    micStream: null as MediaStream | null,
+    scriptProcessor: null as ScriptProcessorNode | null,
+    sources: new Set<AudioBufferSourceNode>(),
+    nextStartTime: 0,
+    currentInputTranscription: '',
+    currentOutputTranscription: '',
+};
+
 
 // --- OUTDOOR TRACKING GLOBALS ---
 let outdoorTrackingState = {
@@ -507,6 +523,15 @@ function showScreen(screenId) {
 function transitionScreen(fromScreen, toScreen, direction = 'right') {
     if (!fromScreen || !toScreen || fromScreen === toScreen) return;
 
+    const navBar = document.getElementById('bottom-nav');
+    // Hide nav bar on non-primary screens
+    if (toScreen.id !== 'studentProfileScreen' && toScreen.id !== 'evolutionScreen') {
+        navBar.classList.add('nav-hidden');
+    } else {
+        navBar.classList.remove('nav-hidden');
+    }
+
+
     const fromRight = direction === 'right' ? 'screen-exit-to-left' : 'screen-exit-to-right';
     const fromLeft = direction === 'right' ? 'screen-enter-from-right' : 'screen-enter-from-left';
 
@@ -612,6 +637,8 @@ window.addEventListener('load', () => {
             let lastScrollY = 0;
             document.querySelectorAll('.screen').forEach(screen => {
                 screen.addEventListener('scroll', () => {
+                    if (screen.id !== 'studentProfileScreen' && screen.id !== 'evolutionScreen') return;
+                    
                     const currentScrollY = screen.scrollTop;
                     if (Math.abs(currentScrollY - lastScrollY) < 10) return;
 
@@ -637,6 +664,11 @@ window.addEventListener('load', () => {
                         navButtons.forEach(btn => btn.classList.remove('text-red-500', 'text-white'));
                         button.classList.add('text-red-500');
                         (Array.from(navButtons).filter(b => b !== button)).forEach(b => b.classList.add('text-white'));
+                        
+                        // Fix: Add function call for renderLiveCoachScreen
+                        if (targetScreenId === 'liveCoachScreen') {
+                            renderLiveCoachScreen(getCurrentUser());
+                        }
 
                         if (targetScreenId === 'evolutionScreen') renderEvolutionScreen(getCurrentUser());
 
@@ -652,6 +684,10 @@ window.addEventListener('load', () => {
                     const currentScreen = document.querySelector('.screen.active');
                     const targetScreen = document.getElementById(targetScreenId);
                     if (currentScreen && targetScreen) {
+                        // Fix: Add function call for stopLiveSession
+                        if (currentScreen.id === 'liveCoachScreen' && liveCoachState.isSessionActive) {
+                            stopLiveSession();
+                        }
                         transitionScreen(currentScreen, targetScreen, 'left');
                     }
                 });
@@ -771,6 +807,7 @@ function renderStudentProfile(email) {
         <button data-target="physioAssessmentScreen" id="physio-btn" class="bg-gray-800 hover:bg-gray-700 border border-gray-700 text-white font-bold p-2 rounded-xl flex flex-col items-center justify-center space-y-1 transition text-center h-24"><i data-feather="users"></i><span class="text-xs">Avaliação</span></button>
         <button data-target="outdoorSelectionScreen" class="bg-gray-800 hover:bg-gray-700 border border-gray-700 text-white font-bold p-2 rounded-xl flex flex-col items-center justify-center space-y-1 transition text-center h-24"><i data-feather="sun"></i><span class="text-xs">Outdoor</span></button>
         <button data-target="exerciciosScreen" id="exercicios-btn" class="bg-gray-800 hover:bg-gray-700 border border-gray-700 text-white font-bold p-2 rounded-xl flex flex-col items-center justify-center space-y-1 transition text-center h-24"><i data-feather="book-open"></i><span class="text-xs">Biblioteca</span></button>
+        <button data-target="liveCoachScreen" id="live-coach-btn" class="bg-teal-500 hover:bg-teal-600 col-span-3 text-white font-bold p-2 rounded-xl flex flex-col items-center justify-center space-y-1 transition text-center h-24"><i data-feather="radio"></i><span class="text-xs">Live Coach</span></button>
     `;
     // Fix: Call feather.replace() to render icons
     feather.replace();
@@ -804,7 +841,11 @@ function renderStudentProfile(email) {
                 renderStressLevelScreen(email);
             } else if (targetScreenId === 'raceCalendarScreen') {
                 renderRaceCalendarScreen(email);
+            // Fix: Add function call for renderLiveCoachScreen
+            } else if (targetScreenId === 'liveCoachScreen') {
+                renderLiveCoachScreen(email);
             }
+
 
             transitionScreen(currentScreen, targetScreen);
         }
@@ -2636,6 +2677,288 @@ function renderRaceCalendarScreen(email) {
         });
     });
 }
+
+// Fix: Add missing Live Coach functions
+// --- LIVE COACH (GEMINI LIVE API) ---
+
+// --- Gemini Audio Helper Functions (as per guidelines) ---
+function encode(bytes: Uint8Array): string {
+  let binary = '';
+  const len = bytes.byteLength;
+  for (let i = 0; i < len; i++) {
+    binary += String.fromCharCode(bytes[i]);
+  }
+  return btoa(binary);
+}
+
+function decode(base64: string): Uint8Array {
+  const binaryString = atob(base64);
+  const len = binaryString.length;
+  const bytes = new Uint8Array(len);
+  for (let i = 0; i < len; i++) {
+    bytes[i] = binaryString.charCodeAt(i);
+  }
+  return bytes;
+}
+
+async function decodeAudioData(
+  data: Uint8Array,
+  ctx: AudioContext,
+  sampleRate: number,
+  numChannels: number,
+): Promise<AudioBuffer> {
+  const dataInt16 = new Int16Array(data.buffer);
+  const frameCount = dataInt16.length / numChannels;
+  const buffer = ctx.createBuffer(numChannels, frameCount, sampleRate);
+
+  for (let channel = 0; channel < numChannels; channel++) {
+    const channelData = buffer.getChannelData(channel);
+    for (let i = 0; i < frameCount; i++) {
+      channelData[i] = dataInt16[i * numChannels + channel] / 32768.0;
+    }
+  }
+  return buffer;
+}
+
+function createBlob(data: Float32Array): Blob {
+    const l = data.length;
+    const int16 = new Int16Array(l);
+    for (let i = 0; i < l; i++) {
+      int16[i] = data[i] * 32768;
+    }
+    return {
+      data: encode(new Uint8Array(int16.buffer)),
+      mimeType: 'audio/pcm;rate=16000',
+    };
+}
+
+async function startLiveSession(email: string) {
+    if (liveCoachState.isSessionActive) {
+        console.log("Session already active.");
+        return;
+    }
+
+    const user = database.users.find(u => u.email === email);
+    if (!user) {
+        throw new Error("Usuário não encontrado para iniciar a sessão.");
+    }
+
+    const startBtn = document.getElementById('start-live-session-btn');
+    const stopBtn = document.getElementById('stop-live-session-btn');
+    const statusEl = document.getElementById('live-coach-status');
+    const transcriptionEl = document.getElementById('live-coach-transcription');
+
+    if(statusEl) statusEl.textContent = 'Iniciando...';
+    if(startBtn) (startBtn as HTMLElement).style.display = 'none';
+    if(stopBtn) (stopBtn as HTMLElement).style.display = 'block';
+    if(transcriptionEl) transcriptionEl.innerHTML = '';
+    
+    // 1. Initialize API and Audio Contexts
+    liveCoachState.ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+    liveCoachState.inputAudioContext = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 16000 });
+    liveCoachState.outputAudioContext = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 24000 });
+    liveCoachState.nextStartTime = 0;
+    
+    // 2. Get microphone access
+    liveCoachState.micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+
+    // 3. Setup Live Session Promise
+    liveCoachState.sessionPromise = liveCoachState.ai.live.connect({
+        model: 'gemini-2.5-flash-native-audio-preview-09-2025',
+        callbacks: {
+            onopen: () => {
+                console.log("Live session opened.");
+                liveCoachState.isSessionActive = true;
+                if(statusEl) statusEl.textContent = 'Sessão ativa... Fale agora!';
+
+                const source = liveCoachState.inputAudioContext.createMediaStreamSource(liveCoachState.micStream);
+                const scriptProcessor = liveCoachState.inputAudioContext.createScriptProcessor(4096, 1, 1);
+                
+                scriptProcessor.onaudioprocess = (audioProcessingEvent) => {
+                    const inputData = audioProcessingEvent.inputBuffer.getChannelData(0);
+                    const pcmBlob = createBlob(inputData);
+                    // CRITICAL: Solely rely on sessionPromise resolves and then call `session.sendRealtimeInput`
+                    liveCoachState.sessionPromise.then((session) => {
+                        session.sendRealtimeInput({ media: pcmBlob });
+                    });
+                };
+
+                source.connect(scriptProcessor);
+                scriptProcessor.connect(liveCoachState.inputAudioContext.destination);
+                liveCoachState.scriptProcessor = scriptProcessor;
+            },
+            onmessage: async (message: LiveServerMessage) => {
+                const base64EncodedAudioString = message.serverContent?.modelTurn?.parts[0]?.inlineData?.data;
+                if (base64EncodedAudioString && liveCoachState.outputAudioContext) {
+                    liveCoachState.nextStartTime = Math.max(
+                        liveCoachState.nextStartTime,
+                        liveCoachState.outputAudioContext.currentTime,
+                    );
+                    const audioBuffer = await decodeAudioData(
+                        decode(base64EncodedAudioString),
+                        liveCoachState.outputAudioContext,
+                        24000,
+                        1,
+                    );
+                    const source = liveCoachState.outputAudioContext.createBufferSource();
+                    source.buffer = audioBuffer;
+                    source.connect(liveCoachState.outputAudioContext.destination);
+                    source.addEventListener('ended', () => {
+                        liveCoachState.sources.delete(source);
+                    });
+
+                    source.start(liveCoachState.nextStartTime);
+                    liveCoachState.nextStartTime = liveCoachState.nextStartTime + audioBuffer.duration;
+                    liveCoachState.sources.add(source);
+                }
+
+                if (message.serverContent?.outputTranscription) {
+                    liveCoachState.currentOutputTranscription += message.serverContent.outputTranscription.text;
+                } else if (message.serverContent?.inputTranscription) {
+                    liveCoachState.currentInputTranscription += message.serverContent.inputTranscription.text;
+                }
+
+                if (message.serverContent?.turnComplete) {
+                    if (transcriptionEl) {
+                        const fullInput = liveCoachState.currentInputTranscription;
+                        const fullOutput = liveCoachState.currentOutputTranscription;
+                        if (fullInput) transcriptionEl.innerHTML += `<p><strong>Você:</strong> ${fullInput}</p>`;
+                        if (fullOutput) transcriptionEl.innerHTML += `<p><strong>Coach:</strong> ${fullOutput}</p>`;
+                        transcriptionEl.scrollTop = transcriptionEl.scrollHeight;
+                    }
+                    liveCoachState.currentInputTranscription = '';
+                    liveCoachState.currentOutputTranscription = '';
+                }
+
+                const interrupted = message.serverContent?.interrupted;
+                if (interrupted) {
+                    for (const source of liveCoachState.sources.values()) {
+                        source.stop();
+                        liveCoachState.sources.delete(source);
+                    }
+                    liveCoachState.nextStartTime = 0;
+                }
+            },
+            onerror: (e: ErrorEvent) => {
+                console.error('Live session error:', e);
+                if(statusEl) statusEl.textContent = 'Erro na conexão.';
+                alert(`Erro na sessão: ${e.message}`);
+                stopLiveSession();
+            },
+            onclose: (e: CloseEvent) => {
+                console.log('Live session closed.');
+                if(statusEl) statusEl.textContent = 'Sessão encerrada.';
+                stopLiveSession(); // Ensure cleanup
+            },
+        },
+        config: {
+            responseModalities: [Modality.AUDIO],
+            inputAudioTranscription: {},
+            outputAudioTranscription: {},
+            speechConfig: {
+                voiceConfig: { prebuiltVoiceConfig: { voiceName: 'Zephyr' } },
+            },
+            systemInstruction: `Você é um personal trainer e coach de corrida chamado 'AB FIT Coach'. Você é motivador, positivo e técnico. Seu objetivo é guiar o usuário, ${user.name}, durante o treino de corrida dele. Use um tom de voz energético e encorajador. Dê dicas sobre postura, respiração e ritmo. Responda de forma concisa e direta.`,
+        },
+    });
+}
+
+
+function stopLiveSession() {
+    if (!liveCoachState.isSessionActive) {
+        return;
+    }
+
+    console.log("Stopping Live Session...");
+
+    if (liveCoachState.sessionPromise) {
+        liveCoachState.sessionPromise.then(session => {
+            if (session) {
+                session.close();
+            }
+        }).catch(console.error);
+        liveCoachState.sessionPromise = null;
+    }
+
+    if (liveCoachState.micStream) {
+        liveCoachState.micStream.getTracks().forEach(track => track.stop());
+        liveCoachState.micStream = null;
+    }
+
+    if (liveCoachState.scriptProcessor) {
+        liveCoachState.scriptProcessor.disconnect();
+        liveCoachState.scriptProcessor.onaudioprocess = null;
+        liveCoachState.scriptProcessor = null;
+    }
+    
+    if (liveCoachState.inputAudioContext && liveCoachState.inputAudioContext.state !== 'closed') {
+        liveCoachState.inputAudioContext.close().catch(console.error);
+    }
+    
+    if (liveCoachState.outputAudioContext && liveCoachState.outputAudioContext.state !== 'closed') {
+        liveCoachState.outputAudioContext.close().catch(console.error);
+    }
+
+    liveCoachState.sources.forEach(source => source.stop());
+    liveCoachState.sources.clear();
+    
+    liveCoachState.isSessionActive = false;
+    liveCoachState.nextStartTime = 0;
+    liveCoachState.currentInputTranscription = '';
+    liveCoachState.currentOutputTranscription = '';
+    liveCoachState.ai = null;
+
+    const statusEl = document.getElementById('live-coach-status');
+    const startBtn = document.getElementById('start-live-session-btn');
+    const stopBtn = document.getElementById('stop-live-session-btn');
+    
+    if (statusEl) statusEl.textContent = 'Toque para iniciar';
+    if (startBtn) (startBtn as HTMLElement).style.display = 'block';
+    if (stopBtn) (stopBtn as HTMLElement).style.display = 'none';
+
+    console.log("Live Session stopped.");
+}
+
+function renderLiveCoachScreen(email: string) {
+    const startBtn = document.getElementById('start-live-session-btn');
+    const stopBtn = document.getElementById('stop-live-session-btn');
+    const statusEl = document.getElementById('live-coach-status');
+
+    if (!startBtn || !stopBtn || !statusEl) {
+        console.error("Live coach UI elements not found.");
+        return;
+    }
+
+    if (liveCoachState.isSessionActive) {
+        statusEl.textContent = 'Sessão ativa...';
+        (startBtn as HTMLElement).style.display = 'none';
+        (stopBtn as HTMLElement).style.display = 'block';
+    } else {
+        statusEl.textContent = 'Toque para iniciar';
+        (startBtn as HTMLElement).style.display = 'block';
+        (stopBtn as HTMLElement).style.display = 'none';
+    }
+
+    const startSessionHandler = async () => {
+        try {
+            await startLiveSession(email);
+        } catch (error) {
+            console.error("Failed to start live session:", error);
+            alert(`Erro ao iniciar a sessão: ${(error as Error).message}`);
+            stopLiveSession(); // Cleanup on failure
+        }
+    };
+    
+    // Replace buttons to avoid duplicate listeners
+    const newStartBtn = startBtn.cloneNode(true);
+    startBtn.parentNode.replaceChild(newStartBtn, startBtn);
+    newStartBtn.addEventListener('click', startSessionHandler);
+
+    const newStopBtn = stopBtn.cloneNode(true);
+    stopBtn.parentNode.replaceChild(newStopBtn, stopBtn);
+    newStopBtn.addEventListener('click', stopLiveSession);
+}
+
 
 function openRaceDetailModal(raceId) {
     const race = database.raceCalendar.find(r => r.id === raceId);

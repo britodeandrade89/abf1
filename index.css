@@ -593,16 +593,43 @@ button:active,
 
 
 /* === ESTILOS LIVE COACH === */
-#live-status-indicator {
-    transition: all 0.3s ease-in-out;
+#live-status.status-connected {
+    background-color: #16a34a; /* green-600 */
+    color: white !important;
+    animation: pulse-bg 2s infinite;
 }
-#live-status-indicator.pulsing {
-    border-color: #10b981; /* green-500 */
-    box-shadow: 0 0 20px #10b981, 0 0 40px #10b981;
-    animation: pulse 2s infinite;
+#live-status.status-disconnected {
+    background-color: #dc2626; /* red-600 */
+    color: white !important;
 }
-#live-status-indicator.pulsing i {
-    color: #6ee7b7; /* emerald-300 */
+#live-status.status-connecting {
+    background-color: #f59e0b; /* amber-500 */
+    color: white !important;
+}
+#live-control-btn.active {
+    background-color: #16a34a; /* green-600 */
+    box-shadow: 0 0 20px #16a34a;
+}
+#live-control-btn.inactive {
+    background-color: #6b7280; /* gray-500 */
+}
+.transcript-bubble {
+    padding: 0.75rem 1rem;
+    border-radius: 1.25rem;
+    max-width: 80%;
+    line-height: 1.5;
+}
+.transcript-user {
+    background-color: #2563eb; /* blue-600 */
+    color: white !important;
+    border-bottom-right-radius: 0.25rem;
+    align-self: flex-end;
+}
+.transcript-coach {
+    background-color: #1f2937; /* gray-800 */
+    color: white !important;
+    border-bottom-left-radius: 0.25rem;
+    align-self: flex-start;
 }
 
 #bottom-nav {
@@ -613,17 +640,14 @@ button:active,
     transform: translateY(100%);
 }
 
-@keyframes pulse {
+@keyframes pulse-bg {
     0% {
-        transform: scale(0.95);
-        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+        box-shadow: 0 0 0 0 rgba(22, 163, 74, 0.7);
     }
     70% {
-        transform: scale(1);
-        box-shadow: 0 0 0 20px rgba(16, 185, 129, 0);
+        box-shadow: 0 0 0 10px rgba(22, 163, 74, 0);
     }
     100% {
-        transform: scale(0.95);
-        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+        box-shadow: 0 0 0 0 rgba(22, 163, 74, 0);
     }
 }
