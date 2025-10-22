@@ -1,3 +1,4 @@
+
 import { LiveServerMessage, Modality, Blob } from "@google/genai";
 
 // Globals defined by imported scripts
@@ -89,11 +90,11 @@ const stressAssessmentQuestions = [
 // --- DATABASE ---
 const database = {
     users: [
-        { id: 1, name: 'André Brito', email: 'britodeandrade@gmail.com', photo: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/3Zy4n6ZmWp9DW98VtXpO.jpeg', weightHistory: [], nutritionistData: { consultation: { step: 0, answers: {} }, plan: null, status: 'idle' }, periodizationStartDate: null, stressData: { assessments: [] } },
-        { id: 2, name: 'Marcelly Bispo', email: 'marcellybispo92@gmail.com', photo: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/2VWhNV4eSyDNkwEzPGvq.jpeg', weightHistory: [], nutritionistData: { consultation: { step: 0, answers: {} }, plan: null, status: 'idle' }, periodizationStartDate: null, stressData: { assessments: [] } },
-        { id: 3, name: 'Marcia Brito', email: 'andrademarcia.ucam@gmail.com', photo: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/huS3I3wDTHbXGY1EuLjf.jpg', weightHistory: [], nutritionistData: { consultation: { step: 0, answers: {} }, plan: null, status: 'idle' }, periodizationStartDate: null, stressData: { assessments: [] } },
-        { id: 4, name: 'Liliane Torres', email: 'lilicatorres@gmail.com', photo: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/ebw5cplf2cypx4laU7fu.jpg', weightHistory: [], nutritionistData: { consultation: { step: 0, answers: {} }, plan: null, status: 'idle' }, periodizationStartDate: null, stressData: { assessments: [] } },
-        { id: 5, name: 'Rebecca Brito', email: 'arbrito.andrade@gmail.com', photo: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/WjeZGiT8uQKPhfXmxrCe.jpeg', weightHistory: [], nutritionistData: { consultation: { step: 0, answers: {} }, plan: null, status: 'idle' }, periodizationStartDate: null, stressData: { assessments: [] } }
+        { id: 1, name: 'André Brito', email: 'britodeandrade@gmail.com', photo: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/3Zy4n6ZmWp9DW98VtXpO.jpeg', weightHistory: [], nutritionistData: { consultation: { step: 0, answers: {} }, plans: [], status: 'idle' }, periodizationStartDate: null, stressData: { assessments: [] } },
+        { id: 2, name: 'Marcelly Bispo', email: 'marcellybispo92@gmail.com', photo: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/2VWhNV4eSyDNkwEzPGvq.jpeg', weightHistory: [], nutritionistData: { consultation: { step: 0, answers: {} }, plans: [], status: 'idle' }, periodizationStartDate: null, stressData: { assessments: [] } },
+        { id: 3, name: 'Marcia Brito', email: 'andrademarcia.ucam@gmail.com', photo: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/huS3I3wDTHbXGY1EuLjf.jpg', weightHistory: [], nutritionistData: { consultation: { step: 0, answers: {} }, plans: [], status: 'idle' }, periodizationStartDate: null, stressData: { assessments: [] } },
+        { id: 4, name: 'Liliane Torres', email: 'lilicatorres@gmail.com', photo: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/ebw5cplf2cypx4laU7fu.jpg', weightHistory: [], nutritionistData: { consultation: { step: 0, answers: {} }, plans: [], status: 'idle' }, periodizationStartDate: null, stressData: { assessments: [] } },
+        { id: 5, name: 'Rebecca Brito', email: 'arbrito.andrade@gmail.com', photo: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/WjeZGiT8uQKPhfXmxrCe.jpeg', weightHistory: [], nutritionistData: { consultation: { step: 0, answers: {} }, plans: [], status: 'idle' }, periodizationStartDate: null, stressData: { assessments: [] } }
     ],
     trainingPlans: {
         treinosA: {},
@@ -102,7 +103,8 @@ const database = {
     },
     userRunningWorkouts: {},
     completedWorkouts: {},
-    activeSessions: {}
+    activeSessions: {},
+    raceCalendar: []
 };
 
 // --- SISTEMA DE AVALIAção FÍSICA ---
@@ -197,7 +199,18 @@ function initializeDatabase() {
         // Data migration for new features
         database.users.forEach(user => {
             if (!user.nutritionistData) {
-                user.nutritionistData = { consultation: { step: 0, answers: {} }, plan: null, status: 'idle' };
+                user.nutritionistData = { consultation: { step: 0, answers: {} }, plans: [], status: 'idle' };
+            } else if (!user.nutritionistData.plans) { // Migration for existing users
+                user.nutritionistData.plans = [];
+                // Fix: Cast nutritionistData to any to handle legacy 'plan' property during migration.
+                if ((user.nutritionistData as any).plan) { // Move old plan to history
+                    user.nutritionistData.plans.push({
+                        date: new Date().toISOString(),
+                        plan: (user.nutritionistData as any).plan,
+                        answers: {}
+                    });
+                    delete (user.nutritionistData as any).plan;
+                }
             }
             if (user.periodizationStartDate === undefined) {
                 user.periodizationStartDate = null;
@@ -212,9 +225,76 @@ function initializeDatabase() {
         if (!database.activeSessions) {
             database.activeSessions = {};
         }
+        if (!database.raceCalendar) {
+             database.raceCalendar = []; // Initialize if not present
+        }
         console.log('Dados carregados do armazenamento local');
         return;
     }
+
+    // --- Hardcoded Race Calendar Data (as scraping is not feasible client-side) ---
+    database.raceCalendar = [
+        {
+            id: 'race-1',
+            date: '2024-08-04',
+            name: 'Meia Maratona do Cristo',
+            location: 'Corcovado, Rio de Janeiro - RJ',
+            distances: '21km (Solo), 21km (Dupla)',
+            time: '08:00',
+            price: 'A partir de R$ 250,00',
+            registrationLink: 'https://www.ticketsports.com.br/e/meia-maratona-do-cristo-by-speed-38011'
+        },
+        {
+            id: 'race-2',
+            date: '2024-08-18',
+            name: 'Asics Golden Run',
+            location: 'Aterro do Flamengo, Rio de Janeiro - RJ',
+            distances: '10km, 21km',
+            time: '07:00',
+            price: 'A partir de R$ 159,99',
+            registrationLink: 'https://www.ticketsports.com.br/e/asics-golden-run-rio-de-janeiro-2024-37748'
+        },
+        {
+            id: 'race-3',
+            date: '2024-09-01',
+            name: 'Shopping Leblon',
+            location: 'Leblon, Rio de Janeiro - RJ',
+            distances: '5km, 10km',
+            time: '07:30',
+            price: 'A ser definido',
+            registrationLink: '#' // Placeholder link
+        },
+        {
+            id: 'race-4',
+            date: '2024-09-15',
+            name: 'Circuito das Estações - Primavera',
+            location: 'Aterro do Flamengo, Rio de Janeiro - RJ',
+            distances: '5km, 10km, 15km',
+            time: '07:00',
+            price: 'A partir de R$ 139,99',
+            registrationLink: 'https://circuitodasestacoes.com.br/'
+        },
+        {
+            id: 'race-5',
+            date: '2024-10-06',
+            name: 'Bravus Race',
+            location: 'Campo dos Afonsos, Rio de Janeiro - RJ',
+            distances: '5km (com obstáculos)',
+            time: '08:00',
+            price: 'A partir de R$ 189,99',
+            registrationLink: 'https://www.bravusrace.com.br/'
+        },
+        {
+            id: 'race-6',
+            date: '2024-10-20',
+            name: 'WTR Arraial do Cabo',
+            location: 'Arraial do Cabo - RJ',
+            distances: '8km, 16km, 32km (Trail Run)',
+            time: '07:00',
+            price: 'A partir de R$ 220,00',
+            registrationLink: 'https://worldtrailraces.com.br/wtr-arraial-do-cabo-2024/'
+        }
+    ];
 
     const periodizacaoPlano1 = [
         { week: '1ª e 2ª', phase: 'Adaptação/Hipertrofia', methods: 'Método de execução Simples', reps: '15', volume: '6 séries/grupo', intensity: '50-60% 1RM', recovery: '30 Seg' },
@@ -629,12 +709,22 @@ window.addEventListener('load', () => {
             if (splashScreen) {
                 splashScreen.style.display = 'none';
             }
-            if (appContainer) {
-                appContainer.classList.remove('hidden');
-            }
-            showScreen('loginScreen');
 
-            // AFTER the UI is visible, initialize the app logic.
+            // First, ensure the correct screen is set to display: block
+            // while the container is still invisible.
+            showScreen('loginScreen');
+            
+            if (appContainer) {
+                // Make the container part of the layout flow
+                appContainer.classList.remove('hidden');
+                
+                // In the next frame, remove the opacity class to trigger the fade-in
+                requestAnimationFrame(() => {
+                     appContainer.classList.remove('init-hidden');
+                });
+            }
+            
+            // Initialize the app logic.
             initializeApp();
 
         }, 500); // Matches the CSS transition duration
@@ -674,9 +764,10 @@ function renderStudentProfile(email) {
         <button data-target="runningScreen" id="running-btn" class="bg-gray-800 hover:bg-gray-700 border border-gray-700 text-white font-bold p-2 rounded-xl flex flex-col items-center justify-center space-y-1 transition text-center h-24"><i data-feather="wind"></i><span class="text-xs">Corrida</span></button>
         <button data-target="periodizationScreen" id="periodization-btn" class="bg-gray-800 hover:bg-gray-700 border border-gray-700 text-white font-bold p-2 rounded-xl flex flex-col items-center justify-center space-y-1 transition text-center h-24"><i data-feather="calendar"></i><span class="text-xs">Periodização</span></button>
         <button data-target="weightControlScreen" id="weight-control-btn" class="bg-gray-800 hover:bg-gray-700 border border-gray-700 text-white font-bold p-2 rounded-xl flex flex-col items-center justify-center space-y-1 transition text-center h-24"><i data-feather="bar-chart-2"></i><span class="text-xs">Peso</span></button>
-        <button data-target="aiAnalysisScreen" id="ai-analysis-btn" class="bg-gray-800 hover:bg-gray-700 border border-gray-700 text-white font-bold p-2 rounded-xl flex flex-col items-center justify-center space-y-1 transition text-center h-24"><i data-feather="cpu"></i><span class="text-xs">Análise IA</span></button>
         <button data-target="iaNutritionistScreen" id="ia-nutritionist-btn" class="bg-gray-800 hover:bg-gray-700 border border-gray-700 text-white font-bold p-2 rounded-xl flex flex-col items-center justify-center space-y-1 transition text-center h-24"><i data-feather="heart"></i><span class="text-xs">Nutri IA</span></button>
-        <button data-target="stressLevelScreen" id="stress-level-btn" class="bg-gray-800 hover:bg-gray-700 border border-gray-700 text-white font-bold p-2 rounded-xl flex flex-col items-center justify-center space-y-1 transition text-center h-24"><i data-feather="activity"></i><span class="text-xs">Nível de Estresse</span></button>
+        <button data-target="stressLevelScreen" id="stress-level-btn" class="bg-gray-800 hover:bg-gray-700 border border-gray-700 text-white font-bold p-2 rounded-xl flex flex-col items-center justify-center space-y-1 transition text-center h-24"><i data-feather="activity"></i><span class="text-xs">Estresse</span></button>
+        <button data-target="raceCalendarScreen" id="race-calendar-btn" class="bg-gray-800 hover:bg-gray-700 border border-gray-700 text-white font-bold p-2 rounded-xl flex flex-col items-center justify-center space-y-1 transition text-center h-24"><i data-feather="award"></i><span class="text-xs">Corridas</span></button>
+        <button data-target="aiAnalysisScreen" id="ai-analysis-btn" class="bg-gray-800 hover:bg-gray-700 border border-gray-700 text-white font-bold p-2 rounded-xl flex flex-col items-center justify-center space-y-1 transition text-center h-24"><i data-feather="cpu"></i><span class="text-xs">Análise IA</span></button>
         <button data-target="physioAssessmentScreen" id="physio-btn" class="bg-gray-800 hover:bg-gray-700 border border-gray-700 text-white font-bold p-2 rounded-xl flex flex-col items-center justify-center space-y-1 transition text-center h-24"><i data-feather="users"></i><span class="text-xs">Avaliação</span></button>
         <button data-target="outdoorSelectionScreen" class="bg-gray-800 hover:bg-gray-700 border border-gray-700 text-white font-bold p-2 rounded-xl flex flex-col items-center justify-center space-y-1 transition text-center h-24"><i data-feather="sun"></i><span class="text-xs">Outdoor</span></button>
         <button data-target="exerciciosScreen" id="exercicios-btn" class="bg-gray-800 hover:bg-gray-700 border border-gray-700 text-white font-bold p-2 rounded-xl flex flex-col items-center justify-center space-y-1 transition text-center h-24"><i data-feather="book-open"></i><span class="text-xs">Biblioteca</span></button>
@@ -711,6 +802,8 @@ function renderStudentProfile(email) {
                 renderAiAnalysisScreen(email);
             } else if (targetScreenId === 'stressLevelScreen') {
                 renderStressLevelScreen(email);
+            } else if (targetScreenId === 'raceCalendarScreen') {
+                renderRaceCalendarScreen(email);
             }
 
             transitionScreen(currentScreen, targetScreen);
@@ -1787,6 +1880,9 @@ function renderNutritionistScreen(email: string) {
     }
 
     const status = user.nutritionistData.status;
+    const lastPlan = user.nutritionistData.plans && user.nutritionistData.plans.length > 0
+        ? user.nutritionistData.plans[user.nutritionistData.plans.length - 1]
+        : null;
 
     if (status === 'loading') {
         contentWrapper.innerHTML = `
@@ -1796,8 +1892,8 @@ function renderNutritionistScreen(email: string) {
                 <p class="text-gray-400">Estou criando seu plano alimentar personalizado. Isso pode levar um momento.</p>
             </div>
         `;
-    } else if (status === 'complete' && user.nutritionistData.plan) {
-        const planHtml = marked.parse(user.nutritionistData.plan);
+    } else if (status === 'complete' && lastPlan) {
+        const planHtml = marked.parse(lastPlan.plan);
         contentWrapper.innerHTML = `
             <div class="prose prose-invert max-w-none p-4">${planHtml}</div>
             <div class="p-4 sticky bottom-0 bg-gray-900 border-t border-gray-700">
@@ -1805,8 +1901,7 @@ function renderNutritionistScreen(email: string) {
             </div>
         `;
         document.getElementById('start-new-consultation-btn')?.addEventListener('click', () => {
-            if (confirm('Isso apagará seu plano atual e iniciará uma nova consulta. Deseja continuar?')) {
-                user.nutritionistData.plan = null;
+            if (confirm('Isso arquivará seu plano atual e iniciará uma nova consulta. Deseja continuar?')) {
                 user.nutritionistData.status = 'idle';
                 user.nutritionistData.consultation = { step: 0, answers: {} };
                 saveDatabase(database);
@@ -1918,26 +2013,34 @@ function renderStressLevelScreen(email) {
     if (!user.stressData) user.stressData = { assessments: [] };
 
     const today = new Date().toISOString().split('T')[0];
-    const todaysAssessments = user.stressData.assessments.filter(a => a.date.startsWith(today));
-    const assessmentsTodayEl = document.getElementById('stress-assessments-today');
-    const avgScoreEl = document.getElementById('stress-avg-score');
+    const todaysAssessments = user.stressData.assessments
+        .filter(a => a.date.startsWith(today))
+        .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
-    assessmentsTodayEl.textContent = todaysAssessments.length.toString();
+    const summaryListEl = document.getElementById('stress-history-summary-list');
     if (todaysAssessments.length > 0) {
-        const avgScore = todaysAssessments.reduce((sum, a) => sum + a.score, 0) / todaysAssessments.length;
-        avgScoreEl.innerHTML = `${Math.round(avgScore)}<span class="text-lg">/100</span>`;
+        summaryListEl.innerHTML = todaysAssessments.slice(0, 5).map(a => {
+            const date = new Date(a.date);
+            const time = date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+            return `
+                <div class="flex justify-between items-center bg-gray-900/50 p-3 rounded-lg text-sm">
+                    <span>${time}</span>
+                    <span class="font-bold text-lg">${a.score} / 100</span>
+                </div>
+            `;
+        }).join('');
     } else {
-        avgScoreEl.innerHTML = `--<span class="text-lg">/100</span>`;
+        summaryListEl.innerHTML = '<p class="text-center text-sm p-4">Nenhuma avaliação hoje.</p>';
     }
 
-    // Render Chart
     if (stressChart) stressChart.destroy();
     const chartCanvas = document.getElementById('stressChart') as HTMLCanvasElement;
     const ctx = chartCanvas.getContext('2d');
     const chartData = todaysAssessments.map(a => ({
         x: new Date(a.date).getTime(),
         y: a.score
-    }));
+    })).reverse(); // Reverse for chronological order in chart
+
     stressChart = new Chart(ctx, {
         type: 'line',
         data: {
@@ -1970,14 +2073,49 @@ function renderStressLevelScreen(email) {
         }
     });
 
-    const startBtn = document.getElementById('start-stress-assessment-btn');
-    startBtn.onclick = () => {
+    document.getElementById('start-stress-assessment-btn').onclick = () => {
         stressAssessmentState = { currentQuestionIndex: 0, answers: [] };
-        const currentScreen = document.getElementById('stressLevelScreen');
-        const targetScreen = document.getElementById('stressAssessmentScreen');
+        transitionScreen(document.getElementById('stressLevelScreen'), document.getElementById('stressAssessmentScreen'));
         renderStressAssessmentScreen();
-        transitionScreen(currentScreen, targetScreen);
     };
+
+    document.getElementById('view-stress-history-btn').onclick = () => {
+        renderStressHistoryScreen(email);
+        transitionScreen(document.getElementById('stressLevelScreen'), document.getElementById('stressHistoryScreen'));
+    };
+}
+
+function renderStressHistoryScreen(email) {
+    const user = database.users.find(u => u.email === email);
+    if (!user || !user.stressData) return;
+
+    const listEl = document.getElementById('stress-history-full-list');
+    const allAssessments = [...user.stressData.assessments].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+    if (allAssessments.length === 0) {
+        listEl.innerHTML = '<p class="text-center text-white bg-gray-800 p-4 rounded-lg">Nenhum histórico encontrado.</p>';
+        return;
+    }
+
+    listEl.innerHTML = allAssessments.map(a => {
+        const date = new Date(a.date);
+        const formattedDate = date.toLocaleDateString('pt-BR', { day: '2-digit', month: 'long' });
+        const time = date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+
+        let scoreColor = 'text-green-400';
+        if (a.score >= 40 && a.score < 70) scoreColor = 'text-yellow-400';
+        else if (a.score >= 70) scoreColor = 'text-red-500';
+
+        return `
+            <div class="bg-gray-800 p-3 rounded-lg flex justify-between items-center border-l-4 border-gray-600">
+                <div>
+                    <p class="font-bold">${formattedDate}</p>
+                    <p class="text-xs">${time}</p>
+                </div>
+                <p class="text-2xl font-bold ${scoreColor}">${a.score}<span class="text-sm">/100</span></p>
+            </div>
+        `;
+    }).join('');
 }
 
 
@@ -2358,19 +2496,12 @@ async function generateMealPlan(email) {
     const user = database.users.find(u => u.email === email);
     if (!user) return;
 
-    // Set and save the loading state immediately. This ensures that if the user
-    // navigates away or reloads, the app correctly shows the loading state upon return.
     user.nutritionistData.status = 'loading';
     saveDatabase(database);
-    renderNutritionistScreen(email); // Show loader
+    renderNutritionistScreen(email);
 
-    // Simulate API call delay
     await new Promise(resolve => setTimeout(resolve, 3000));
 
-    // NOTE: We continue to use the 'user' object from the outer scope.
-    // This is safe in JavaScript's single-threaded event loop model.
-
-    // Helper to format dates
     const formatDate = (date) => {
         const day = String(date.getDate()).padStart(2, '0');
         const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -2393,11 +2524,9 @@ async function generateMealPlan(email) {
     const week4_start = formatDate(addDays(today, 21));
     const week4_end = formatDate(addDays(today, 27));
 
-    // Fix: Explicitly type answers as any to access properties
     const answers: any = user.nutritionistData.consultation.answers;
     const userName = user.name.split(' ')[0];
     
-    // A high-quality, pre-written sample meal plan with dates, times, progression and end message.
     const samplePlan = `
 # Seu Plano Alimentar Personalizado, ${userName}!
 
@@ -2412,89 +2541,129 @@ Olá, ${userName}! Com base nas suas respostas, criei um plano alimentar focado 
 ### Dia Exemplo
 
 *   **Café da Manhã (07:00 - 08:00):** 2 ovos mexidos com espinafre + 1 fatia de pão integral com abacate.
-    *   *Opção:* Crepioca (1 ovo + 2 col. de tapioca) com queijo minas.
 *   **Lanche da Manhã (10:00 - 10:30):** 1 iogurte natural + 1 colher de sopa de aveia.
-    *   *Opção:* 1 maçã + 10 amêndoas.
 *   **Almoço (12:30 - 13:30):** 120g de filé de frango grelhado + 1/2 xícara de arroz integral + salada de folhas verdes à vontade com azeite e limão.
-    *   *Opção:* 120g de peixe (tilápia ou salmão) ou 150g de tofu.
 *   **Lanche da Tarde (16:00 - 16:30):** 1 banana amassada com canela.
-    *   *Opção:* Vitamina de frutas (150ml de leite ou bebida vegetal + 1/2 fruta).
 *   **Jantar (19:30 - 20:30):** Sopa de legumes com 100g de carne magra desfiada (patinho).
-    *   *Opção:* Omelete de 2 ovos com legumes e salada.
-*   **Ceia (Opcional - 22:00):** Chá de camomila ou erva-doce.
 
 ---
 
 ## Semana 2: Intensificando os Nutrientes (${week2_start} a ${week2_end})
 
-**Dica da Semana:** Varie os legumes e verduras! Quanto mais colorido seu prato, maior a variedade de vitaminas e minerais que você consome. Foque em uma fonte de proteína em todas as refeições principais.
+**Dica da Semana:** Varie os legumes e verduras! Quanto mais colorido seu prato, maior a variedade de vitaminas e minerais que você consome.
 
 ### Dia Exemplo
 
 *   **Café da Manhã (07:00 - 08:00):** Mingau de aveia (3 col. de aveia + 150ml de leite/bebida vegetal) com frutas vermelhas e 1 col. de semente de chia.
-    *   *Opção:* 2 fatias de pão integral com pasta de amendoim e 1 fatia de queijo branco.
 *   **Lanche da Manhã (10:00 - 10:30):** Mix de castanhas (30g).
-    *   *Opção:* 1 pera.
 *   **Almoço (12:30 - 13:30):** 120g de carne moída (patinho) refogada com legumes + 1/2 xícara de purê de batata doce + brócolis cozido no vapor.
-    *   *Opção:* 150g de lentilha cozida com legumes no lugar da carne.
 *   **Lanche da Tarde (16:00 - 16:30):** 2 ovos cozidos.
-    *   *Opção:* 1 pote de iogurte natural com mel.
 *   **Jantar (19:30 - 20:30):** Salada completa: folhas variadas, tomate cereja, cenoura ralada, 1 lata de atum em água e 1 colher de milho.
-    *   *Opção:* Wrap integral com frango desfiado, ricota e salada.
-
----
-
-## Semana 3: Otimização de Energia (${week3_start} a ${week3_end})
-
-**Dica da Semana:** Planeje seu lanche pré-treino! Consumir um carboidrato de fácil digestão cerca de 45-60 min antes do exercício pode melhorar seu desempenho.
-
-### Dia Exemplo
-
-*   **Café da Manhã (07:00 - 08:00):** Vitamina reforçada: 1 scoop de whey protein (ou proteína vegetal), 1 banana, 1 col. de aveia e 200ml de água ou leite.
-    *   *Opção:* Pão integral com 2 ovos mexidos.
-*   **Lanche da Manhã (10:00 - 10:30):** 3 bolachas de arroz integral com homus.
-    *   *Opção:* 1 laranja.
-*   **Almoço (12:30 - 13:30):** 120g de salmão assado com ervas + 1 xícara de quinoa cozida + aspargos no azeite.
-    *   *Opção:* 120g de filé mignon suíno grelhado com purê de mandioquinha.
-*   **Lanche da Tarde / Pré-treino (16:00 - 16:30):** 1 banana com 1 col. de pasta de amendoim.
-    *   *Opção:* 1 fatia de pão integral com geleia sem açúcar.
-*   **Jantar (19:30 - 20:30):** 150g de peito de frango em cubos com curry e legumes (abobrinha, pimentão) + 2 col. de arroz de couve-flor.
-    *   *Opção:* Panqueca de frango (massa de aveia) com molho de tomate caseiro.
-*   **Ceia (Opcional - 22:00):** 1/2 abacate com cacau em pó.
-
----
-
-## Semana 4: Consolidação de Hábitos (${week4_start} a ${week4_end})
-
-**Dica da Semana:** Permita-se uma refeição livre! Escolha uma refeição na semana para comer algo que você gosta muito, sem culpa. Isso ajuda na adesão ao plano a longo prazo.
-
-### Dia Exemplo
-
-*   **Café da Manhã (07:00 - 08:00):** Repita sua opção favorita da semana 3.
-*   **Lanche da Manhã (10:00 - 10:30):** 1 fatia de melão com 2 fatias de presunto de parma.
-    *   *Opção:* 1 iogurte grego.
-*   **Almoço (12:30 - 13:30):** Refeição livre planejada (ex: pizza, hambúrguer) ou, se não for o dia, 120g de bife acebolado + arroz, feijão e salada colorida.
-*   **Lanche da Tarde (16:00 - 16:30):** 1 maçã assada com canela.
-    *   *Opção:* 20g de chocolate 70% cacau.
-*   **Jantar (19:30 - 20:30):** Sanduíche leve em pão sírio integral com rosbife, folhas, tomate e queijo cottage.
-    *   *Opção:* Filé de tilápia com purê de abóbora.
-
 ---
 
 ## Fim do Ciclo Mensal
 
-**Parabéns por completar seu primeiro mês!** Seu corpo já se adaptou a novos e melhores hábitos alimentares.
+**Parabéns!** Inicie uma nova consulta para continuarmos evoluindo juntos!
+`;
 
-Este é o momento perfeito para reavaliar seus resultados e ajustar o plano para a próxima fase. **Inicie uma nova consulta para continuarmos evoluindo juntos!**
-
-**Observação Importante:** Este é um plano gerado por IA com base em suas respostas. Para necessidades específicas ou condições de saúde, consulte sempre um nutricionista profissional.
-        `;
-
-    user.nutritionistData.plan = samplePlan;
+    if (!user.nutritionistData.plans) user.nutritionistData.plans = [];
+    user.nutritionistData.plans.push({
+        date: new Date().toISOString(),
+        plan: samplePlan,
+        answers: user.nutritionistData.consultation.answers
+    });
     user.nutritionistData.status = 'complete';
-    user.nutritionistData.consultation = { step: 0, answers: {} }; // Reset consultation
+    user.nutritionistData.consultation = { step: 0, answers: {} };
     
     saveDatabase(database);
-    // Re-render the screen to show the generated plan
     renderNutritionistScreen(email);
 }
+
+// --- CALENDÁRIO DE CORRIDAS ---
+function renderRaceCalendarScreen(email) {
+    const contentEl = document.getElementById('race-calendar-content');
+    const races = database.raceCalendar;
+
+    if (!races || races.length === 0) {
+        contentEl.innerHTML = '<p class="text-center text-white">Nenhuma corrida encontrada no calendário.</p>';
+        return;
+    }
+
+    const racesByMonth = races.reduce((acc, race) => {
+        const month = new Date(race.date).toLocaleString('pt-BR', { month: 'long', year: 'numeric', timeZone: 'UTC' });
+        if (!acc[month]) {
+            acc[month] = [];
+        }
+        acc[month].push(race);
+        return acc;
+    }, {});
+
+    let html = '';
+    for (const month in racesByMonth) {
+        html += `<h2 class="text-2xl font-bold text-white capitalize border-b-2 border-blue-500 pb-2 mb-4">${month}</h2>`;
+        html += '<div class="space-y-4">';
+        racesByMonth[month].forEach(race => {
+            const date = new Date(race.date);
+            const day = date.getUTCDate();
+            const monthShort = date.toLocaleString('pt-BR', { month: 'short', timeZone: 'UTC' }).replace('.', '');
+            html += `
+                <div class="race-card" data-race-id="${race.id}">
+                    <div class="race-date-box">
+                        <div class="race-date-day">${day}</div>
+                        <div class="race-date-month">${monthShort}</div>
+                    </div>
+                    <div class="flex-grow">
+                        <h3 class="font-bold">${race.name}</h3>
+                        <p class="text-sm opacity-80">${race.location}</p>
+                    </div>
+                    <button class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-3 rounded-lg text-sm">Detalhes</button>
+                </div>
+            `;
+        });
+        html += '</div>';
+    }
+
+    contentEl.innerHTML = html;
+    
+    contentEl.querySelectorAll('.race-card button').forEach(button => {
+        button.addEventListener('click', (e) => {
+            // Fix: Cast the result of closest() to HTMLElement and check for null to safely access dataset.
+            const card = (e.currentTarget as HTMLElement).closest('.race-card');
+            if (card) {
+                const raceId = (card as HTMLElement).dataset.raceId;
+                openRaceDetailModal(raceId);
+            }
+        });
+    });
+}
+
+function openRaceDetailModal(raceId) {
+    const race = database.raceCalendar.find(r => r.id === raceId);
+    if (!race) return;
+
+    const modal = document.getElementById('raceDetailModal');
+    const modalContent = document.getElementById('race-modal-content');
+    
+    document.getElementById('modal-race-name').textContent = race.name;
+    document.getElementById('modal-race-date').textContent = new Date(race.date).toLocaleDateString('pt-BR', { timeZone: 'UTC' });
+    document.getElementById('modal-race-time').textContent = race.time;
+    document.getElementById('modal-race-location').textContent = race.location;
+    document.getElementById('modal-race-distances').textContent = race.distances;
+    document.getElementById('modal-race-price').textContent = race.price;
+    document.getElementById('modal-race-link').setAttribute('href', race.registrationLink);
+    
+    modal.classList.remove('hidden');
+    requestAnimationFrame(() => {
+        modalContent.classList.add('open');
+    });
+}
+
+function closeRaceDetailModal() {
+    const modal = document.getElementById('raceDetailModal');
+    const modalContent = document.getElementById('race-modal-content');
+    modalContent.classList.remove('open');
+    setTimeout(() => {
+        modal.classList.add('hidden');
+    }, 300);
+}
+document.getElementById('closeRaceModalBtn').addEventListener('click', closeRaceDetailModal);

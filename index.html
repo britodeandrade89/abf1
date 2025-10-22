@@ -63,7 +63,7 @@
     </div>
 
     <!-- ======================= APP CONTAINER ======================= -->
-    <div id="appContainer" class="hidden h-screen flex flex-col max-w-lg mx-auto">
+    <div id="appContainer" class="hidden init-hidden h-screen flex flex-col max-w-lg mx-auto">
         <main class="flex-grow screens-wrapper">
              <!-- ======================= TELA DE LOGIN ======================= -->
             <div id="loginScreen" class="screen p-6 flex flex-col justify-center">
@@ -225,6 +225,22 @@
                     <div class="w-10"></div>
                 </header>
                 <div id="running-workouts-list" class="space-y-3 pb-24"></div>
+            </div>
+
+             <!-- ======================= TELA CALENDÁRIO DE CORRIDAS ======================= -->
+            <div id="raceCalendarScreen" class="screen p-6">
+                <header class="flex items-center justify-between pt-6 pb-4">
+                    <button class="back-btn p-2 rounded-full hover:bg-gray-800" data-target="studentProfileScreen"><i
+                            data-feather="arrow-left" class="text-white"></i></button>
+                    <h1 class="text-2xl font-bold text-white">Corridas de Rua</h1>
+                    <div class="w-10"></div>
+                </header>
+                <div class="bg-blue-900/50 text-blue-200 text-sm p-3 rounded-lg border border-blue-700 mb-4">
+                    <p><strong>Aviso:</strong> Esta é uma lista de exemplo e pode não estar 100% atualizada. Sempre confirme os detalhes no site oficial do evento.</p>
+                </div>
+                <div id="race-calendar-content" class="space-y-6 pb-24">
+                    <!-- Race calendar content will be rendered here by JS -->
+                </div>
             </div>
             
             <!-- ======================= TELA BIBLIOTECA DE EXERCÍCIOS ======================= -->
@@ -541,46 +557,42 @@
                     <div class="w-10"></div>
                 </header>
                 <div class="space-y-6 pb-24">
-                    <!-- Resumo do Dia -->
-                    <div class="bg-gray-800 p-4 rounded-xl border border-gray-700">
-                        <div class="flex justify-between items-center">
-                            <h2 class="text-lg font-bold">Resumo do Dia</h2>
-                            <i data-feather="chevron-down"></i>
-                        </div>
-                        <div class="grid grid-cols-2 gap-4 mt-4">
-                            <div class="bg-gray-900/50 p-4 rounded-lg text-center">
-                                <p class="text-sm">Pontuação Média (Hoje)</p>
-                                <p id="stress-avg-score" class="text-3xl font-bold text-yellow-400">--<span class="text-lg">/100</span></p>
-                            </div>
-                            <div class="bg-gray-900/50 p-4 rounded-lg text-center">
-                                <p class="text-sm">Avaliações Hoje</p>
-                                <p id="stress-assessments-today" class="text-3xl font-bold">0</p>
-                            </div>
-                        </div>
+                    <div class="bg-gray-800 p-4 rounded-xl border border-gray-700 text-center">
+                       <p class="mb-4">Responda a um questionário rápido para avaliar seu nível de estresse atual.</p>
+                       <button id="start-stress-assessment-btn" class="w-full bg-yellow-500 hover:bg-yellow-600 text-black font-bold py-3 rounded-xl transition shadow-lg">
+                           Avaliar Agora
+                       </button>
                     </div>
-                    <!-- Variação Durante o Dia -->
+
                     <div class="bg-gray-800 p-4 rounded-xl border border-gray-700">
-                        <div class="flex justify-between items-center mb-4">
-                             <h2 class="text-lg font-bold">Variação Durante o Dia</h2>
-                             <i data-feather="chevron-down"></i>
-                        </div>
-                        <div class="bg-gray-900/50 p-4 rounded-lg">
+                        <h2 class="text-lg font-bold mb-4">Variação Diária (Hoje)</h2>
+                        <div class="bg-gray-900/50 p-2 rounded-lg">
                            <canvas id="stressChart"></canvas>
                         </div>
                     </div>
-                    <!-- Avaliação de Estresse -->
+
                     <div class="bg-gray-800 p-4 rounded-xl border border-gray-700">
                          <div class="flex justify-between items-center mb-4">
-                            <h2 class="text-lg font-bold">Avaliação de Estresse</h2>
-                             <i data-feather="chevron-down"></i>
+                            <h2 class="text-lg font-bold">Últimos Registros</h2>
+                            <button id="view-stress-history-btn" class="text-sm text-blue-400 hover:underline">Ver tudo</button>
                         </div>
-                        <div class="bg-gray-900/50 p-6 rounded-lg text-center">
-                           <p class="mb-4">Responda a um questionário rápido para avaliar seu nível de estresse atual.</p>
-                           <button id="start-stress-assessment-btn" class="w-full bg-yellow-500 hover:bg-yellow-600 text-black font-bold py-3 rounded-xl transition shadow-lg">
-                               Avaliar Agora
-                           </button>
+                        <div id="stress-history-summary-list" class="space-y-2">
+                            <p class="text-center text-sm p-4">Nenhuma avaliação hoje.</p>
                         </div>
                     </div>
+                </div>
+            </div>
+
+             <!-- TELA HISTÓRICO DE ESTRESSE -->
+            <div id="stressHistoryScreen" class="screen p-6">
+                <header class="flex items-center justify-between pt-6 pb-4">
+                    <button class="back-btn p-2 rounded-full hover:bg-gray-800" data-target="stressLevelScreen"><i
+                            data-feather="arrow-left" class="text-white"></i></button>
+                    <h1 class="text-2xl font-bold text-white">Histórico de Estresse</h1>
+                    <div class="w-10"></div>
+                </header>
+                <div id="stress-history-full-list" class="space-y-3 pb-24">
+                    <!-- Historical data will be rendered here -->
                 </div>
             </div>
 
@@ -711,6 +723,48 @@
                         </div>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Detalhes da Corrida -->
+    <div id="raceDetailModal" class="fixed inset-0 bg-black/70 flex items-end justify-center hidden z-50 p-4">
+        <div id="race-modal-content"
+            class="bg-gray-900 rounded-t-2xl max-w-lg w-full transform translate-y-full transition-transform duration-300 border-t border-gray-700">
+            <header class="p-4 border-b border-gray-700 flex justify-between items-center">
+                <h2 id="modal-race-name" class="text-lg font-bold">Nome da Corrida</h2>
+                <button id="closeRaceModalBtn" class="p-2 rounded-full hover:bg-gray-800"><i
+                        data-feather="x"></i></button>
+            </header>
+            <div id="race-modal-body" class="p-4 space-y-4 max-h-[60vh] overflow-y-auto">
+                <div class="grid grid-cols-2 gap-4 text-center">
+                    <div class="bg-gray-800 p-3 rounded-lg">
+                        <p class="text-sm font-semibold">Data</p>
+                        <p id="modal-race-date" class="font-bold text-lg"></p>
+                    </div>
+                    <div class="bg-gray-800 p-3 rounded-lg">
+                        <p class="text-sm font-semibold">Horário</p>
+                        <p id="modal-race-time" class="font-bold text-lg"></p>
+                    </div>
+                </div>
+                <div class="bg-gray-800 p-3 rounded-lg">
+                    <p class="text-sm font-semibold">Local</p>
+                    <p id="modal-race-location" class="font-bold"></p>
+                </div>
+                <div class="bg-gray-800 p-3 rounded-lg">
+                    <p class="text-sm font-semibold">Distâncias</p>
+                    <p id="modal-race-distances" class="font-bold"></p>
+                </div>
+                <div class="bg-gray-800 p-3 rounded-lg">
+                    <p class="text-sm font-semibold">Valores</p>
+                    <p id="modal-race-price" class="font-bold"></p>
+                </div>
+            </div>
+            <div class="p-4 border-t border-gray-700">
+                <a id="modal-race-link" href="#" target="_blank"
+                    class="block w-full text-center bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-xl">
+                    Inscreva-se
+                </a>
             </div>
         </div>
     </div>

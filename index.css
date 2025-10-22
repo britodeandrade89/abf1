@@ -22,7 +22,13 @@ p, label, h1, h2, h3, h4, h5, h6, div, button, option, select, input {
     height: 100vh;
     display: flex;
     flex-direction: column;
+    transition: opacity 0.3s ease-in-out;
 }
+
+#appContainer.init-hidden {
+    opacity: 0;
+}
+
 
 .logo-text {
     font-weight: 800;
@@ -542,6 +548,49 @@ button:active,
 .stress-question-option:active {
     transform: scale(0.96);
 }
+
+/* === ESTILOS CALENDÁRIO DE CORRIDAS === */
+.race-card {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    background-color: #1f2937; /* gray-800 */
+    border: 1px solid #374151; /* gray-700 */
+    padding: 1rem;
+    border-radius: 0.75rem; /* rounded-xl */
+    transition: background-color 0.2s;
+}
+.race-card:hover {
+    background-color: #374151; /* gray-700 */
+}
+.race-date-box {
+    background-color: #111827; /* gray-900 */
+    border: 1px solid #4b5563; /* gray-600 */
+    border-radius: 0.5rem; /* rounded-lg */
+    text-align: center;
+    padding: 0.5rem;
+    width: 64px;
+    flex-shrink: 0;
+}
+.race-date-day {
+    font-size: 1.875rem; /* text-3xl */
+    font-weight: 700;
+    line-height: 1;
+    color: #3b82f6 !important; /* blue-500 */
+}
+.race-date-month {
+    font-size: 0.75rem; /* text-xs */
+    text-transform: uppercase;
+    font-weight: 600;
+}
+
+#race-modal-content {
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+#race-modal-content.open {
+    transform: translateY(0);
+}
+
 
 /* === ESTILOS LIVE COACH === */
 #live-status-indicator {
