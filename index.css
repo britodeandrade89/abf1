@@ -556,6 +556,14 @@ button:active,
     color: #6ee7b7; /* emerald-300 */
 }
 
+#bottom-nav {
+    transition: transform 0.3s ease-in-out;
+}
+
+#bottom-nav.nav-hidden {
+    transform: translateY(100%);
+}
+
 @keyframes pulse {
     0% {
         transform: scale(0.95);

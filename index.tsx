@@ -26,25 +26,64 @@ let outdoorTrackingState = {
 };
 
 // --- STRESS ASSESSMENT GLOBALS ---
-// Fix: 'Chart' refers to a value (the global Chart.js object), not a type. Using 'any' to avoid the name collision.
 let stressChart: any = null;
 let stressAssessmentState = {
     currentQuestionIndex: 0,
     answers: [] as number[],
 };
 
-// --- LIVE COACH GLOBALS ---
-let liveSessionState = {
-    session: null as any, // Will hold the session promise result
-    inputAudioContext: null as AudioContext | null,
-    outputAudioContext: null as AudioContext | null,
-    microphoneStream: null as MediaStream | null,
-    scriptProcessor: null as ScriptProcessorNode | null,
-    sourceNode: null as MediaStreamAudioSourceNode | null,
-    nextStartTime: 0,
-    sources: new Set<AudioBufferSourceNode>(),
-    isSessionActive: false,
-};
+const stressAssessmentQuestions = [
+    {
+        question: "Nos últimos dias, com que frequência você se sentiu incapaz de controlar as coisas importantes da sua vida?",
+        options: [
+            { text: "Nunca", score: 0 },
+            { text: "Quase Nunca", score: 1 },
+            { text: "Às Vezes", score: 2 },
+            { text: "Com Frequência", score: 3 },
+            { text: "Sempre", score: 4 }
+        ]
+    },
+    {
+        question: "Nos últimos dias, com que frequência você se sentiu confiante sobre sua capacidade de lidar com seus problemas pessoais?",
+        options: [ // Reverse scored
+            { text: "Nunca", score: 4 },
+            { text: "Quase Nunca", score: 3 },
+            { text: "Às Vezes", score: 2 },
+            { text: "Com Frequência", score: 1 },
+            { text: "Sempre", score: 0 }
+        ]
+    },
+    {
+        question: "Nos últimos dias, com que frequência você sentiu que as coisas estavam indo do seu jeito?",
+        options: [ // Reverse scored
+            { text: "Nunca", score: 4 },
+            { text: "Quase Nunca", score: 3 },
+            { text: "Às Vezes", score: 2 },
+            { text: "Com Frequência", score: 1 },
+            { text: "Sempre", score: 0 }
+        ]
+    },
+    {
+        question: "Nos últimos dias, com que frequência você sentiu que as dificuldades estavam se acumulando tanto que você não conseguia superá-las?",
+        options: [
+            { text: "Nunca", score: 0 },
+            { text: "Quase Nunca", score: 1 },
+            { text: "Às Vezes", score: 2 },
+            { text: "Com Frequência", score: 3 },
+            { text: "Sempre", score: 4 }
+        ]
+    },
+    {
+        question: "Nos últimos dias, com que frequência você se sentiu irritado(a) ou nervoso(a)?",
+        options: [
+            { text: "Nunca", score: 0 },
+            { text: "Quase Nunca", score: 1 },
+            { text: "Às Vezes", score: 2 },
+            { text: "Com Frequência", score: 3 },
+            { text: "Sempre", score: 4 }
+        ]
+    }
+];
 
 
 // --- DATABASE ---
@@ -488,6 +527,24 @@ window.addEventListener('load', () => {
                 transitionScreen(studentProfileScreen, loginScreen, 'left');
             });
 
+            // --- Bottom Nav Visibility on Scroll ---
+            const navBar = document.getElementById('bottom-nav');
+            let lastScrollY = 0;
+            document.querySelectorAll('.screen').forEach(screen => {
+                screen.addEventListener('scroll', () => {
+                    const currentScrollY = screen.scrollTop;
+                    if (Math.abs(currentScrollY - lastScrollY) < 10) return;
+
+                    if (currentScrollY > lastScrollY && currentScrollY > 50) {
+                        navBar.classList.add('nav-hidden');
+                    } else {
+                        navBar.classList.remove('nav-hidden');
+                    }
+                    lastScrollY = currentScrollY <= 0 ? 0 : currentScrollY;
+                });
+            });
+
+
             // --- Navegação ---
             const navButtons = document.querySelectorAll('.nav-btn');
             navButtons.forEach(button => {
@@ -515,9 +572,6 @@ window.addEventListener('load', () => {
                     const currentScreen = document.querySelector('.screen.active');
                     const targetScreen = document.getElementById(targetScreenId);
                     if (currentScreen && targetScreen) {
-                        if (currentScreen.id === 'liveCoachScreen' && liveSessionState.isSessionActive) {
-                            stopLiveSession();
-                        }
                         transitionScreen(currentScreen, targetScreen, 'left');
                     }
                 });
@@ -584,7 +638,7 @@ window.addEventListener('load', () => {
             initializeApp();
 
         }, 500); // Matches the CSS transition duration
-    }, 2000); // Splash screen display duration
+    }, 3000); // Splash screen display duration
 });
 
 
@@ -626,7 +680,6 @@ function renderStudentProfile(email) {
         <button data-target="physioAssessmentScreen" id="physio-btn" class="bg-gray-800 hover:bg-gray-700 border border-gray-700 text-white font-bold p-2 rounded-xl flex flex-col items-center justify-center space-y-1 transition text-center h-24"><i data-feather="users"></i><span class="text-xs">Avaliação</span></button>
         <button data-target="outdoorSelectionScreen" class="bg-gray-800 hover:bg-gray-700 border border-gray-700 text-white font-bold p-2 rounded-xl flex flex-col items-center justify-center space-y-1 transition text-center h-24"><i data-feather="sun"></i><span class="text-xs">Outdoor</span></button>
         <button data-target="exerciciosScreen" id="exercicios-btn" class="bg-gray-800 hover:bg-gray-700 border border-gray-700 text-white font-bold p-2 rounded-xl flex flex-col items-center justify-center space-y-1 transition text-center h-24"><i data-feather="book-open"></i><span class="text-xs">Biblioteca</span></button>
-        <button data-target="liveCoachScreen" id="live-coach-btn" class="bg-gray-800 hover:bg-gray-700 border border-gray-700 text-white font-bold p-2 rounded-xl flex flex-col items-center justify-center space-y-1 transition text-center h-24"><i data-feather="mic"></i><span class="text-xs">Live Coach</span></button>
     `;
     // Fix: Call feather.replace() to render icons
     feather.replace();
@@ -658,8 +711,6 @@ function renderStudentProfile(email) {
                 renderAiAnalysisScreen(email);
             } else if (targetScreenId === 'stressLevelScreen') {
                 renderStressLevelScreen(email);
-            } else if (targetScreenId === 'liveCoachScreen') {
-                renderLiveCoachScreen();
             }
 
             transitionScreen(currentScreen, targetScreen);
@@ -1861,68 +1912,169 @@ function renderAiAnalysisScreen(email: string) {
     spinner.classList.add('hidden');
 }
 
-function renderStressLevelScreen(email: string) {
-    console.log("Rendering Stress Level screen for", email);
-    const contentEl = document.getElementById('stress-level-content');
-    if (contentEl) {
-        contentEl.innerHTML = `<div class="p-8 text-center text-white">
-            <i data-feather="activity" class="w-16 h-16 mx-auto mb-4 text-gray-500"></i>
-            <h3 class="text-xl font-bold">Nível de Estresse</h3>
-            <p class="text-gray-400 mt-2">Esta funcionalidade está em desenvolvimento e será disponibilizada em breve.</p>
-        </div>`;
-        feather.replace();
+function renderStressLevelScreen(email) {
+    const user = database.users.find(u => u.email === email);
+    if (!user) return;
+    if (!user.stressData) user.stressData = { assessments: [] };
+
+    const today = new Date().toISOString().split('T')[0];
+    const todaysAssessments = user.stressData.assessments.filter(a => a.date.startsWith(today));
+    const assessmentsTodayEl = document.getElementById('stress-assessments-today');
+    const avgScoreEl = document.getElementById('stress-avg-score');
+
+    assessmentsTodayEl.textContent = todaysAssessments.length.toString();
+    if (todaysAssessments.length > 0) {
+        const avgScore = todaysAssessments.reduce((sum, a) => sum + a.score, 0) / todaysAssessments.length;
+        avgScoreEl.innerHTML = `${Math.round(avgScore)}<span class="text-lg">/100</span>`;
+    } else {
+        avgScoreEl.innerHTML = `--<span class="text-lg">/100</span>`;
     }
+
+    // Render Chart
+    if (stressChart) stressChart.destroy();
+    const chartCanvas = document.getElementById('stressChart') as HTMLCanvasElement;
+    const ctx = chartCanvas.getContext('2d');
+    const chartData = todaysAssessments.map(a => ({
+        x: new Date(a.date).getTime(),
+        y: a.score
+    }));
+    stressChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            datasets: [{
+                label: 'Nível de Estresse',
+                data: chartData,
+                borderColor: '#facc15',
+                backgroundColor: 'rgba(250, 204, 21, 0.2)',
+                tension: 0.4,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                x: {
+                    type: 'time',
+                    time: { unit: 'hour', tooltipFormat: 'HH:mm' },
+                    ticks: { color: 'white' },
+                    grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                },
+                y: {
+                    min: 0,
+                    max: 100,
+                    ticks: { color: 'white' },
+                    grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                }
+            },
+            plugins: { legend: { display: false } }
+        }
+    });
+
+    const startBtn = document.getElementById('start-stress-assessment-btn');
+    startBtn.onclick = () => {
+        stressAssessmentState = { currentQuestionIndex: 0, answers: [] };
+        const currentScreen = document.getElementById('stressLevelScreen');
+        const targetScreen = document.getElementById('stressAssessmentScreen');
+        renderStressAssessmentScreen();
+        transitionScreen(currentScreen, targetScreen);
+    };
 }
+
+
+function renderStressAssessmentScreen() {
+    const container = document.getElementById('stress-question-container');
+    const questionIndex = stressAssessmentState.currentQuestionIndex;
+    const questionData = stressAssessmentQuestions[questionIndex];
+
+    if (!questionData) {
+        console.error("Question not found for index:", questionIndex);
+        return;
+    }
+
+    let optionsHtml = questionData.options.map(opt => 
+        `<button class="stress-question-option" data-score="${opt.score}">${opt.text}</button>`
+    ).join('');
+
+    container.innerHTML = `
+        <p class="text-2xl font-semibold mb-8">${questionData.question}</p>
+        <div class="space-y-4 w-full flex flex-col items-center">
+            ${optionsHtml}
+        </div>
+        <div class="mt-8 text-sm">${questionIndex + 1} / ${stressAssessmentQuestions.length}</div>
+    `;
+
+    container.querySelectorAll('.stress-question-option').forEach(button => {
+        button.addEventListener('click', (e) => {
+            const score = parseInt((e.currentTarget as HTMLElement).dataset.score, 10);
+            stressAssessmentState.answers.push(score);
+
+            if (stressAssessmentState.currentQuestionIndex < stressAssessmentQuestions.length - 1) {
+                stressAssessmentState.currentQuestionIndex++;
+                renderStressAssessmentScreen();
+            } else {
+                calculateAndShowStressResult();
+            }
+        });
+    });
+}
+
+function calculateAndShowStressResult() {
+    const totalScore = stressAssessmentState.answers.reduce((sum, score) => sum + score, 0);
+    const maxScore = stressAssessmentQuestions.length * 4;
+    const scorePercentage = Math.round((totalScore / maxScore) * 100);
+
+    const email = getCurrentUser();
+    const user = database.users.find(u => u.email === email);
+    if (user) {
+        if (!user.stressData) user.stressData = { assessments: [] };
+        user.stressData.assessments.push({
+            date: new Date().toISOString(),
+            score: scorePercentage
+        });
+        saveDatabase(database);
+    }
+    
+    renderStressResultScreen(scorePercentage);
+    const currentScreen = document.getElementById('stressAssessmentScreen');
+    const targetScreen = document.getElementById('stressResultScreen');
+    transitionScreen(currentScreen, targetScreen);
+}
+
+function renderStressResultScreen(score) {
+    const scoreEl = document.getElementById('stress-result-score');
+    const levelEl = document.getElementById('stress-result-level');
+    const barEl = document.getElementById('stress-gauge-bar');
+    const markerEl = document.getElementById('stress-gauge-marker');
+
+    scoreEl.textContent = score.toString();
+    barEl.style.width = `${score}%`;
+    markerEl.style.left = `${score}%`;
+
+    if (score < 40) {
+        levelEl.textContent = 'Baixo';
+        scoreEl.className = 'text-7xl font-extrabold text-green-400 my-4';
+    } else if (score < 70) {
+        levelEl.textContent = 'Moderado';
+        scoreEl.className = 'text-7xl font-extrabold text-yellow-400 my-4';
+    } else {
+        levelEl.textContent = 'Alto';
+        scoreEl.className = 'text-7xl font-extrabold text-red-500 my-4';
+    }
+
+    const assessAgainBtn = document.getElementById('assess-again-btn');
+    assessAgainBtn.onclick = () => {
+        stressAssessmentState = { currentQuestionIndex: 0, answers: [] };
+        const currentScreen = document.getElementById('stressResultScreen');
+        const targetScreen = document.getElementById('stressAssessmentScreen');
+        renderStressAssessmentScreen();
+        transitionScreen(currentScreen, targetScreen, 'left');
+    };
+}
+
 
 function initializeOutdoorSelectionScreen() {
     console.log('Initializing Outdoor Selection Screen...');
     // Placeholder for outdoor selection screen logic
-}
-
-function renderLiveCoachScreen() {
-    console.log("Rendering Live Coach screen");
-    const contentEl = document.getElementById('live-coach-content');
-    if (contentEl) {
-        contentEl.innerHTML = `<div class="p-8 text-center text-white">
-            <i data-feather="mic" class="w-16 h-16 mx-auto mb-4 text-gray-500"></i>
-            <h3 class="text-xl font-bold">Live Coach</h3>
-            <p class="text-gray-400 mt-2">Esta funcionalidade está em desenvolvimento e será disponibilizada em breve.</p>
-        </div>`;
-        feather.replace();
-    }
-}
-
-function stopLiveSession() {
-    console.log("Stopping live session...");
-    if (liveSessionState.session) {
-        liveSessionState.session.close();
-        liveSessionState.session = null;
-    }
-    if (liveSessionState.microphoneStream) {
-        liveSessionState.microphoneStream.getTracks().forEach(track => track.stop());
-        liveSessionState.microphoneStream = null;
-    }
-    if (liveSessionState.scriptProcessor) {
-        liveSessionState.scriptProcessor.disconnect();
-        liveSessionState.scriptProcessor = null;
-    }
-    if (liveSessionState.sourceNode) {
-        liveSessionState.sourceNode.disconnect();
-        liveSessionState.sourceNode = null;
-    }
-    if (liveSessionState.inputAudioContext && liveSessionState.inputAudioContext.state !== 'closed') {
-        liveSessionState.inputAudioContext.close();
-        liveSessionState.inputAudioContext = null;
-    }
-    if (liveSessionState.outputAudioContext && liveSessionState.outputAudioContext.state !== 'closed') {
-        liveSessionState.outputAudioContext.close();
-        liveSessionState.outputAudioContext = null;
-    }
-    liveSessionState.sources.forEach(source => source.stop());
-    liveSessionState.sources.clear();
-    liveSessionState.isSessionActive = false;
-    liveSessionState.nextStartTime = 0;
-    console.log("Live session stopped and resources cleaned up.");
 }
 
 // --- AVALIAÇÃO FÍSICA & CÂMERA ---
@@ -2202,12 +2354,21 @@ const consultationQuestions = [
     { id: 'health_conditions', question: "Por fim, você tem alguma condição de saúde relevante ou toma alguma medicação contínua?", type: 'textarea', placeholder: 'Ex: Diabetes, hipertensão, problemas de tireoide. Se não houver, escreva "Nenhuma".' },
 ];
 
-function generateMealPlan(email) {
+async function generateMealPlan(email) {
     const user = database.users.find(u => u.email === email);
     if (!user) return;
 
+    // Set and save the loading state immediately. This ensures that if the user
+    // navigates away or reloads, the app correctly shows the loading state upon return.
     user.nutritionistData.status = 'loading';
+    saveDatabase(database);
     renderNutritionistScreen(email); // Show loader
+
+    // Simulate API call delay
+    await new Promise(resolve => setTimeout(resolve, 3000));
+
+    // NOTE: We continue to use the 'user' object from the outer scope.
+    // This is safe in JavaScript's single-threaded event loop model.
 
     // Helper to format dates
     const formatDate = (date) => {
@@ -2232,14 +2393,12 @@ function generateMealPlan(email) {
     const week4_start = formatDate(addDays(today, 21));
     const week4_end = formatDate(addDays(today, 27));
 
-    // Simulate API call delay
-    setTimeout(() => {
-        // Fix: Explicitly type answers as any to access properties
-        const answers: any = user.nutritionistData.consultation.answers;
-        const userName = user.name.split(' ')[0];
-        
-        // A high-quality, pre-written sample meal plan with dates, times, progression and end message.
-        const samplePlan = `
+    // Fix: Explicitly type answers as any to access properties
+    const answers: any = user.nutritionistData.consultation.answers;
+    const userName = user.name.split(' ')[0];
+    
+    // A high-quality, pre-written sample meal plan with dates, times, progression and end message.
+    const samplePlan = `
 # Seu Plano Alimentar Personalizado, ${userName}!
 
 Olá, ${userName}! Com base nas suas respostas, criei um plano alimentar focado no seu objetivo de **${answers.goal}**. Este é um guia flexível para as próximas 4 semanas. Lembre-se de ouvir seu corpo e ajustar as porções conforme necessário.
@@ -2331,12 +2490,11 @@ Este é o momento perfeito para reavaliar seus resultados e ajustar o plano para
 **Observação Importante:** Este é um plano gerado por IA com base em suas respostas. Para necessidades específicas ou condições de saúde, consulte sempre um nutricionista profissional.
         `;
 
-        user.nutritionistData.plan = samplePlan;
-        user.nutritionistData.status = 'complete';
-        user.nutritionistData.consultation = { step: 0, answers: {} }; // Reset consultation
-        
-        saveDatabase(database);
-        // Fix: Re-render the screen to show the generated plan
-        renderNutritionistScreen(email);
-    }, 3000); // Simulate 3 second delay
+    user.nutritionistData.plan = samplePlan;
+    user.nutritionistData.status = 'complete';
+    user.nutritionistData.consultation = { step: 0, answers: {} }; // Reset consultation
+    
+    saveDatabase(database);
+    // Re-render the screen to show the generated plan
+    renderNutritionistScreen(email);
 }

@@ -1,9 +1,8 @@
 {
-  "name": "Copy of Copy of Versao1.2ABFIT",
+  "name": "Versao 1.1 ABFIT",
   "description": "Assessoria de Treinamento Físico por André Brito.",
   "requestFramePermissions": [
     "camera",
-    "geolocation",
-    "microphone"
+    "geolocation"
   ]
 }
