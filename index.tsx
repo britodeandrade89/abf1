@@ -1,5 +1,5 @@
 
-import { GoogleGenAI, LiveSession, LiveServerMessage, Modality, Blob } from "@google/genai";
+import { GoogleGenAI } from "@google/genai";
 
 // Globals defined by imported scripts
 declare var feather: any;
@@ -10,22 +10,6 @@ declare var L: any; // Leaflet global
 // Fix: Correctly type workoutTimerInterval
 let workoutTimerInterval: number | null = null;
 let workoutStartTime: Date | null = null;
-
-// --- LIVE COACH GLOBALS ---
-const liveCoachState = {
-    ai: null as GoogleGenAI | null,
-    sessionPromise: null as Promise<LiveSession> | null,
-    isSessionActive: false,
-    inputAudioContext: null as AudioContext | null,
-    outputAudioContext: null as AudioContext | null,
-    micStream: null as MediaStream | null,
-    scriptProcessor: null as ScriptProcessorNode | null,
-    sources: new Set<AudioBufferSourceNode>(),
-    nextStartTime: 0,
-    currentInputTranscription: '',
-    currentOutputTranscription: '',
-};
-
 
 // --- OUTDOOR TRACKING GLOBALS ---
 let outdoorTrackingState = {
@@ -339,18 +323,48 @@ function initializeDatabase() {
         'arbrito.andrade@gmail.com': periodizacaoPlano1,
     };
 
+    const treinosA_AndreBrito_Semana3e4 = [
+        { name: 'Agachamento parcial no Smith (CONJUGADO 1)', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/dMXSfHrCe2BQAKRvIvIg.png', sets: '4', reps: '9', carga: '20', obs: 'Método Simples (9 RM)', recovery: '30s' },
+        { name: 'Agachamento Livre com HBC (CONJUGADO 1)', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/77Uth2fQUxtPXvqu1UCb.png', sets: '4', reps: '9', carga: '16', obs: 'Método Simples (9 RM)', recovery: '30s' },
+        { name: 'Agachamento Búlgaro com HBC no banco ou step', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/jo9jsMXR96Q17m4pXn7B.jpg', sets: '4', reps: '9', carga: '8', obs: 'Método Simples (9 RM)', recovery: '30s' },
+        { name: 'Cadeira extensora', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/rQ8l64KvygQUAa8FZXyp.jpg', sets: '4', reps: '9', carga: '7', obs: 'Método Simples (9 RM)', recovery: '30s' },
+        { name: 'Supino inclinado com HBC (CONJUGADO 2)', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/fWBlaY5LXefUGcXHz2tO.jpg', sets: '4', reps: '9', carga: '14', obs: 'Método Simples (9 RM)', recovery: '30s' },
+        { name: 'Desenvolvimento aberto com HBC (CONJUGADO 2)', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/niXdGuQHlniNh7f6xh5i.png', sets: '4', reps: '9', carga: '9', obs: 'Método Simples (9 RM)', recovery: '30s' },
+        { name: 'Crucifixo aberto no banco inclinado com HBC (CONJUGADO 3)', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/6RBiU0w8EtT9enxOTM6Q.jpg', sets: '4', reps: '9', carga: '6', obs: 'Método Simples (9 RM)', recovery: '30s' },
+        { name: 'Extensão de cotovelos no solo (CONJUGADO 3)', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/eGNCCvzlv1jGWpSbs5nH.png', sets: '4', reps: '9', carga: '0', obs: 'Método Simples (9 RM)', recovery: '30s' },
+        { name: 'Tríceps fechado no solo de joelhos', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/cVidpH3PfsrBhLcAGKmI.jpg', sets: '6', reps: '9', carga: '0', obs: 'Método Simples (9 RM)', recovery: '30s' },
+        { name: 'Abdominal supra no solo', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/7M5vMfWh1Jb7DnLIUs4g.png', sets: '6', reps: '9', carga: '0', obs: 'Método Simples (15 RM)', recovery: '30s' }
+    ];
+
+    const treinosB_AndreBrito_Semana3e4 = [
+        { name: 'Agachamento sumô com HBC (CONJUGADO 1)', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/sGz9YqGUPf7lIqX8vULE.png', sets: '4', reps: '9', carga: '22', obs: 'Método Simples (9 RM)', recovery: '30s' },
+        { name: 'Agachamento no smith ao fundo pés alinhados a barra (CONJUGADO 1)', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/qF4Qx4su0tiGLT3oTZqu.png', sets: '4', reps: '9', carga: '14', obs: 'Método Simples (9 RM)', recovery: '30s' },
+        { name: 'Stiff em pé com HBM (CONJUGADO 2)', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/isKs5qzBPblirwR4IHPO.png', sets: '4', reps: '9', carga: '7', obs: 'Método Simples (9 RM)', recovery: '30s' },
+        { name: 'Flexão de joelho em pé com caneleira (CONJUGADO 2)', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/ZEcYnpswJBmu24PWZXwq.jpg', sets: '4', reps: '9', carga: '14', obs: 'Método Simples (9 RM)', recovery: '30s' },
+        { name: 'Remada declinada no Smith (CONJUGADO 3)', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/gSfHTcM8MNU22aYUa0zH.jpg', sets: '4', reps: '9', carga: '7', obs: 'Método Simples (9 RM)', recovery: '30s' },
+        { name: 'Abdominal supra no solo (CONJUGADO 3)', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/De8VrobzH9PPMDIAr7Cn.png', sets: '4', reps: '9', carga: '8', obs: 'Método Simples (15 RM)', recovery: '30s' },
+        { name: 'Remada curvada supinada no cross barra reta (CONJUGADO 4)', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/Vw4Wjum0oI5o4JiuTomc.jpg', sets: '4', reps: '9', carga: '4', obs: 'Método Simples (9 RM)', recovery: '30s' },
+        { name: 'Bíceps em pé no cross barra reta (CONJUGADO 4)', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/o8z8KzDoOqceSMHJvdLB.jpg', sets: '4', reps: '9', carga: '6', obs: 'Método Simples (9 RM)', recovery: '30s' },
+        { name: 'Puxada aberta no pulley alto (CONJUGADO 5)', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/EqnYYAVM1GKUbaAUibQF.jpg', sets: '4', reps: '9', carga: '11', obs: 'Método Simples (9 RM)', recovery: '30s' },
+        { name: 'Puxada supinada no pulley alto (CONJUGADO 5)', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/Rmve8zGQZaEmRNHZC1G6.jpg', sets: '4', reps: '10', carga: '10', obs: 'Método Simples (9 RM)', recovery: '30s' }
+    ];
+
     const treinosA = {
-        'britodeandrade@gmail.com': [
-            { name: 'Agachamento parcial no Smith', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/dMXSfHrCe2BQAKRvIvIg.png', sets: '4', reps: '10', carga: '15', obs: 'Método Simples (10 RM)', recovery: '30s' },
-            { name: 'Agachamento Livre com HBC', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/lik7g55hYpUjX2Rs6ASg.png', sets: '4', reps: '10', carga: '14', obs: 'Método Simples (10 RM)', recovery: '30s' },
-            { name: 'Cadeira extensora', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/CGVAnjor7i6F1Xj1IQoK.png', sets: '4', reps: '10', carga: '5', obs: 'Método Simples (10 RM)', recovery: '30s' },
-            { name: 'Supino inclinado com HBC (CONJUGADO 1)', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/WyYlLuQ2Ch6WAXdVcwHL.png', sets: '3', reps: '10', carga: '12', obs: 'Método Simples (10 RM)', recovery: '30s' },
-            { name: 'Extensão de cotovelos no solo (CONJUGADO 1)', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/kmM09RrmttVVMNq2Vvae.png', sets: '3', reps: '10', carga: '0', obs: 'Método Simples (10 RM)', recovery: '30s' },
-            { name: 'Crucifixo aberto na máquina', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/rhLOUSYFlEMyTYyADYUQ.png', sets: '6', reps: '10', carga: '8', obs: 'Método Simples (10 RM)', recovery: '30s' },
-            { name: 'Desenvolvimento aberto com HBC no banco 75º', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/ZbQ5zsR6jdwmbE956eOa.png', sets: '4', reps: '10', carga: '7', obs: 'Método Simples (10 RM)', recovery: '30s' },
-            { name: 'Tríceps em pé no cross barra reta', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/OT1w5MN9V9Esd8B4muUH.png', sets: '6', reps: '10', carga: '6', obs: 'Método Simples (10 RM)', recovery: '30s' },
-            { name: 'Abdominal supra no solo', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/mnXs908TPzy2WU0kgNGd.png', sets: '4', reps: '20', carga: '0', obs: 'Método Simples (20 RM)', recovery: '30s' }
-        ],
+        'britodeandrade@gmail.com': {
+            'weeks_1_2': [
+                { name: 'Agachamento parcial no Smith', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/dMXSfHrCe2BQAKRvIvIg.png', sets: '4', reps: '10', carga: '15', obs: 'Método Simples (10 RM)', recovery: '30s' },
+                { name: 'Agachamento Livre com HBC', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/lik7g55hYpUjX2Rs6ASg.png', sets: '4', reps: '10', carga: '14', obs: 'Método Simples (10 RM)', recovery: '30s' },
+                { name: 'Cadeira extensora', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/CGVAnjor7i6F1Xj1IQoK.png', sets: '4', reps: '10', carga: '5', obs: 'Método Simples (10 RM)', recovery: '30s' },
+                { name: 'Supino inclinado com HBC (CONJUGADO 1)', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/WyYlLuQ2Ch6WAXdVcwHL.png', sets: '3', reps: '10', carga: '12', obs: 'Método Simples (10 RM)', recovery: '30s' },
+                { name: 'Extensão de cotovelos no solo (CONJUGADO 1)', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/kmM09RrmttVVMNq2Vvae.png', sets: '3', reps: '10', carga: '0', obs: 'Método Simples (10 RM)', recovery: '30s' },
+                { name: 'Crucifixo aberto na máquina', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/rhLOUSYFlEMyTYyADYUQ.png', sets: '6', reps: '10', carga: '8', obs: 'Método Simples (10 RM)', recovery: '30s' },
+                { name: 'Desenvolvimento aberto com HBC no banco 75º', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/ZbQ5zsR6jdwmbE956eOa.png', sets: '4', reps: '10', carga: '7', obs: 'Método Simples (10 RM)', recovery: '30s' },
+                { name: 'Tríceps em pé no cross barra reta', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/OT1w5MN9V9Esd8B4muUH.png', sets: '6', reps: '10', carga: '6', obs: 'Método Simples (10 RM)', recovery: '30s' },
+                { name: 'Abdominal supra no solo', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/mnXs908TPzy2WU0kgNGd.png', sets: '4', reps: '20', carga: '0', obs: 'Método Simples (20 RM)', recovery: '30s' }
+            ],
+            'weeks_3_4': treinosA_AndreBrito_Semana3e4,
+            'default': treinosA_AndreBrito_Semana3e4
+        },
         'marcellybispo92@gmail.com': [
             { name: 'Agachamento Livre', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/Rco3wwXc2fMICrkoKl2c.png', sets: '3', reps: '20', carga: '0', obs: 'Método Simples (20 RM)', recovery: '30s' },
             { name: 'Agachamento Livre em isometria', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/AOCzLpKQwD10WwAYARZz.png', sets: '3', reps: '20', carga: '0', obs: 'Método Simples (20 RM)', recovery: '30s' },
@@ -389,17 +403,21 @@ function initializeDatabase() {
     };
 
     const treinosB = {
-        'britodeandrade@gmail.com': [
-            { name: 'Agachamento sumô com HBC', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/XWSqloYwKucvRjtu5vEh.png', sets: '4', reps: '10', carga: '22', obs: 'Método Simples (10 RM)', recovery: '30s' },
-            { name: 'Stiff em pé com HBM', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/AOg50LojEKhCF6E4WA95.png', sets: '4', reps: '10', carga: '14', obs: 'Método Simples (10 RM)', recovery: '30s' },
-            { name: 'Extensão de quadril com caneleira', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/H0mkj0hrfyfWwcD3Kiji.png', sets: '4', reps: '10', carga: '7', obs: 'Método Simples (10 RM)', recovery: '30s' },
-            { name: 'Remada curvada aberta com HBC (CONJUGADO 1)', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/EpO1XQEqBEZRk5fiO1SF.png', sets: '3', reps: '10', carga: '8', obs: 'Método Simples (10 RM)', recovery: '30s' },
-            { name: 'Crucifixo inverso curvado com HBC (CONJUGADO 1)', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/HSKDTQoF1qrcgndeYxls.png', sets: '3', reps: '10', carga: '4', obs: 'Método Simples (10 RM)', recovery: '30s' },
-            { name: 'Crucifixo inverso na máquina', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/KQjB5PJHrOXvVDADQ9Z3.png', sets: '6', reps: '10', carga: '6', obs: 'Método Simples (10 RM)', recovery: '30s' },
-            { name: 'Puxada aberta no pulley alto', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/ehWDEGS6Z3S8dswAxczt.png', sets: '4', reps: '10', carga: '11', obs: 'Método Simples (10 RM)', recovery: '30s' },
-            { name: 'Bíceps em pé no cross barra reta', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/BB2HhbKsbNbV0CyYUrnV.avif', sets: '6', reps: '10', carga: '10', obs: 'Método Simples (10 RM)', recovery: '30s' },
-            { name: 'Abdominal supra no solo', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/mnXs908TPzy2WU0kgNGd.png', sets: '4', reps: '20', carga: '0', obs: 'Método Simples (20 RM)', recovery: '30s' }
-        ],
+        'britodeandrade@gmail.com': {
+            'weeks_1_2': [
+                { name: 'Agachamento sumô com HBC', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/XWSqloYwKucvRjtu5vEh.png', sets: '4', reps: '10', carga: '22', obs: 'Método Simples (10 RM)', recovery: '30s' },
+                { name: 'Stiff em pé com HBM', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/AOg50LojEKhCF6E4WA95.png', sets: '4', reps: '10', carga: '14', obs: 'Método Simples (10 RM)', recovery: '30s' },
+                { name: 'Extensão de quadril com caneleira', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/H0mkj0hrfyfWwcD3Kiji.png', sets: '4', reps: '10', carga: '7', obs: 'Método Simples (10 RM)', recovery: '30s' },
+                { name: 'Remada curvada aberta com HBC (CONJUGADO 1)', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/EpO1XQEqBEZRk5fiO1SF.png', sets: '3', reps: '10', carga: '8', obs: 'Método Simples (10 RM)', recovery: '30s' },
+                { name: 'Crucifixo inverso curvado com HBC (CONJUGADO 1)', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/HSKDTQoF1qrcgndeYxls.png', sets: '3', reps: '10', carga: '4', obs: 'Método Simples (10 RM)', recovery: '30s' },
+                { name: 'Crucifixo inverso na máquina', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/KQjB5PJHrOXvVDADQ9Z3.png', sets: '6', reps: '10', carga: '6', obs: 'Método Simples (10 RM)', recovery: '30s' },
+                { name: 'Puxada aberta no pulley alto', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/ehWDEGS6Z3S8dswAxczt.png', sets: '4', reps: '10', carga: '11', obs: 'Método Simples (10 RM)', recovery: '30s' },
+                { name: 'Bíceps em pé no cross barra reta', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/BB2HhbKsbNbV0CyYUrnV.avif', sets: '6', reps: '10', carga: '10', obs: 'Método Simples (10 RM)', recovery: '30s' },
+                { name: 'Abdominal supra no solo', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/mnXs908TPzy2WU0kgNGd.png', sets: '4', reps: '20', carga: '0', obs: 'Método Simples (20 RM)', recovery: '30s' }
+            ],
+            'weeks_3_4': treinosB_AndreBrito_Semana3e4,
+            'default': treinosB_AndreBrito_Semana3e4
+        },
         'marcellybispo92@gmail.com': [
             { name: 'Agachamento Livre', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/9bgKMf2SJ3Dpq9EnDPsV.png', sets: '3', reps: '20', carga: '0', obs: 'Método Simples (20 RM)', recovery: '30s' },
             { name: 'Agachamento Livre em isometria', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/UuNZ7xD4j6Hyfv5MxtNa.png', sets: '3', reps: '20', carga: '0', obs: 'Método Simples (20 RM)', recovery: '30s' },
@@ -489,19 +507,27 @@ function initializeDatabase() {
     const startDate = '2024-07-29';
     // Inicializa o histórico de carga e check-ins para cada usuário e exercício
     database.users.forEach(user => {
-        if (database.trainingPlans.treinosA[user.email]) {
-            database.trainingPlans.treinosA[user.email].forEach(ex => {
+        const initializeExercises = (exercises) => {
+            if (!exercises) return;
+            exercises.forEach(ex => {
                 ex.startDate = startDate;
                 if (!ex.historicoCarga) ex.historicoCarga = [{ data: startDate, carga: ex.carga }];
                 if (!ex.checkIns) ex.checkIns = [];
             });
+        };
+    
+        const userTreinosA = database.trainingPlans.treinosA[user.email];
+        if (Array.isArray(userTreinosA)) {
+            initializeExercises(userTreinosA);
+        } else if (userTreinosA) { // It's a weekly plan object
+            Object.values(userTreinosA).forEach(plan => initializeExercises(plan));
         }
-        if (database.trainingPlans.treinosB[user.email]) {
-            database.trainingPlans.treinosB[user.email].forEach(ex => {
-                ex.startDate = startDate;
-                if (!ex.historicoCarga) ex.historicoCarga = [{ data: startDate, carga: ex.carga }];
-                if (!ex.checkIns) ex.checkIns = [];
-            });
+    
+        const userTreinosB = database.trainingPlans.treinosB[user.email];
+        if (Array.isArray(userTreinosB)) {
+            initializeExercises(userTreinosB);
+        } else if (userTreinosB) { // It's a weekly plan object
+            Object.values(userTreinosB).forEach(plan => initializeExercises(plan));
         }
     });
 
@@ -665,11 +691,6 @@ window.addEventListener('load', () => {
                         button.classList.add('text-red-500');
                         (Array.from(navButtons).filter(b => b !== button)).forEach(b => b.classList.add('text-white'));
                         
-                        // Fix: Add function call for renderLiveCoachScreen
-                        if (targetScreenId === 'liveCoachScreen') {
-                            renderLiveCoachScreen(getCurrentUser());
-                        }
-
                         if (targetScreenId === 'evolutionScreen') renderEvolutionScreen(getCurrentUser());
 
                         transitionScreen(currentScreen, targetScreen);
@@ -684,10 +705,6 @@ window.addEventListener('load', () => {
                     const currentScreen = document.querySelector('.screen.active');
                     const targetScreen = document.getElementById(targetScreenId);
                     if (currentScreen && targetScreen) {
-                        // Fix: Add function call for stopLiveSession
-                        if (currentScreen.id === 'liveCoachScreen' && liveCoachState.isSessionActive) {
-                            stopLiveSession();
-                        }
                         transitionScreen(currentScreen, targetScreen, 'left');
                     }
                 });
@@ -807,7 +824,6 @@ function renderStudentProfile(email) {
         <button data-target="physioAssessmentScreen" id="physio-btn" class="bg-gray-800 hover:bg-gray-700 border border-gray-700 text-white font-bold p-2 rounded-xl flex flex-col items-center justify-center space-y-1 transition text-center h-24"><i data-feather="users"></i><span class="text-xs">Avaliação</span></button>
         <button data-target="outdoorSelectionScreen" class="bg-gray-800 hover:bg-gray-700 border border-gray-700 text-white font-bold p-2 rounded-xl flex flex-col items-center justify-center space-y-1 transition text-center h-24"><i data-feather="sun"></i><span class="text-xs">Outdoor</span></button>
         <button data-target="exerciciosScreen" id="exercicios-btn" class="bg-gray-800 hover:bg-gray-700 border border-gray-700 text-white font-bold p-2 rounded-xl flex flex-col items-center justify-center space-y-1 transition text-center h-24"><i data-feather="book-open"></i><span class="text-xs">Biblioteca</span></button>
-        <button data-target="liveCoachScreen" id="live-coach-btn" class="bg-teal-500 hover:bg-teal-600 col-span-3 text-white font-bold p-2 rounded-xl flex flex-col items-center justify-center space-y-1 transition text-center h-24"><i data-feather="radio"></i><span class="text-xs">Live Coach</span></button>
     `;
     // Fix: Call feather.replace() to render icons
     feather.replace();
@@ -841,9 +857,6 @@ function renderStudentProfile(email) {
                 renderStressLevelScreen(email);
             } else if (targetScreenId === 'raceCalendarScreen') {
                 renderRaceCalendarScreen(email);
-            // Fix: Add function call for renderLiveCoachScreen
-            } else if (targetScreenId === 'liveCoachScreen') {
-                renderLiveCoachScreen(email);
             }
 
 
@@ -889,9 +902,9 @@ function renderCalendar(email) {
     
     // Helper to check if a workout type was completed on a specific date
     const isWorkoutCompleted = (workoutDateStr, workoutType) => {
-        const exercises = workoutType === 'A' 
-            ? database.trainingPlans.treinosA[email] 
-            : database.trainingPlans.treinosB[email];
+        const user = database.users.find(u => u.email === email);
+        const currentWeek = getCurrentTrainingWeek(user);
+        const exercises = getTrainingPlanForWeek(email, workoutType, currentWeek);
         
         if (!exercises || exercises.length === 0) return false;
 
@@ -947,8 +960,25 @@ function renderTrainingHistory(email) {
     const container = document.getElementById('training-history-container');
     container.innerHTML = '';
 
-    const treinosA = database.trainingPlans.treinosA[email] || [];
-    const treinosB = database.trainingPlans.treinosB[email] || [];
+    const getFullPlan = (plansForUser) => {
+        if (!plansForUser) return [];
+        if (Array.isArray(plansForUser)) return plansForUser;
+        // It's a weekly plan, merge all exercises for history purposes
+        const allExercises = new Map();
+        Object.values(plansForUser).forEach(weeklyPlan => {
+            if (Array.isArray(weeklyPlan)) {
+                weeklyPlan.forEach(ex => {
+                    if (!allExercises.has(ex.name)) {
+                        allExercises.set(ex.name, ex);
+                    }
+                });
+            }
+        });
+        return Array.from(allExercises.values());
+    };
+
+    const treinosA = getFullPlan(database.trainingPlans.treinosA[email]);
+    const treinosB = getFullPlan(database.trainingPlans.treinosB[email]);
     const userCompletedWorkouts = database.completedWorkouts ? (database.completedWorkouts[email] || []) : [];
     
     // Fix: Explicitly type allCheckInsByDate
@@ -971,7 +1001,6 @@ function renderTrainingHistory(email) {
     const completedWorkouts = Object.entries(allCheckInsByDate)
         .map(([date, sets]) => {
             const completed = [];
-            // A workout is considered complete only if all its exercises are checked in.
             if (treinosA.length > 0 && sets.A.size === treinosA.length) {
                 completed.push('A');
             }
@@ -1032,13 +1061,24 @@ function getAllExercises() {
     const { treinosA, treinosB } = database.trainingPlans;
 
     const addExercisesFromPlan = (plan) => {
-        // Fix: Cast Object.values result to any[] to allow iteration
-        (Object.values(plan) as any[]).forEach((userExercises) => {
-            userExercises.forEach(ex => {
-                if (!uniqueExercises.has(ex.name)) {
-                    uniqueExercises.set(ex.name, ex);
-                }
-            });
+        Object.values(plan).forEach((userExercises: any) => {
+            if (Array.isArray(userExercises)) {
+                userExercises.forEach(ex => {
+                    if (!uniqueExercises.has(ex.name)) {
+                        uniqueExercises.set(ex.name, ex);
+                    }
+                });
+            } else if (typeof userExercises === 'object') { // Handle weekly plans
+                Object.values(userExercises).forEach((weeklyPlan: any) => {
+                    if (Array.isArray(weeklyPlan)) {
+                        weeklyPlan.forEach(ex => {
+                            if (!uniqueExercises.has(ex.name)) {
+                                uniqueExercises.set(ex.name, ex);
+                            }
+                        });
+                    }
+                });
+            }
         });
     };
 
@@ -1102,6 +1142,19 @@ function getCurrentTrainingWeek(user) {
     const daysDifference = Math.floor((todayUTC - startUTC) / millisecondsPerDay);
     const currentWeek = Math.floor(daysDifference / 7) + 1;
     return currentWeek;
+}
+
+function getTrainingPlanForWeek(email, trainingType, week) {
+    const plansSource = trainingType === 'A' ? database.trainingPlans.treinosA : database.trainingPlans.treinosB;
+    const plansForUser = plansSource[email];
+
+    if (!plansForUser) return [];
+    if (Array.isArray(plansForUser)) return plansForUser;
+
+    if (week <= 2) return plansForUser.weeks_1_2 || plansForUser.default || [];
+    if (week <= 4) return plansForUser.weeks_3_4 || plansForUser.default || [];
+    
+    return plansForUser.default || [];
 }
 
 function processExercises(exercises, email) {
@@ -1195,9 +1248,10 @@ function renderTrainingScreen(email, trainingType) {
     const notificationEl = document.getElementById('periodization-notification');
     notificationEl.innerHTML = '';
     notificationEl.classList.add('hidden');
+    
+    const currentWeek = getCurrentTrainingWeek(user);
 
     if (user.periodizationStartDate) {
-        const currentWeek = getCurrentTrainingWeek(user);
         const periodizacao = database.trainingPlans.periodizacao[email];
         if (periodizacao) {
             const getPhaseForWeek = (week) => {
@@ -1236,7 +1290,7 @@ function renderTrainingScreen(email, trainingType) {
         }
     }
 
-    const treinos = trainingType === 'A' ? database.trainingPlans.treinosA[email] : database.trainingPlans.treinosB[email];
+    const treinos = getTrainingPlanForWeek(email, trainingType, currentWeek);
     const processedExercises = processExercises(treinos, email);
     
     let cardsHtml = '';
@@ -1347,11 +1401,21 @@ function handleExerciseCheckIn(email, trainingType, exerciseName, isChecked) {
     const user = database.users.find(u => u.email === email);
     if (!user) return;
 
+    const userPlans = trainingType === 'A' ? database.trainingPlans.treinosA[email] : database.trainingPlans.treinosB[email];
     let exercise;
-    if (trainingType === 'A') {
-        exercise = database.trainingPlans.treinosA[email].find(ex => ex.name === exerciseName);
-    } else if (trainingType === 'B') {
-        exercise = database.trainingPlans.treinosB[email].find(ex => ex.name === exerciseName);
+
+    if (Array.isArray(userPlans)) {
+        exercise = userPlans.find(ex => ex.name === exerciseName);
+    } else { // User with weekly plans
+        for (const key in userPlans) {
+            if (Array.isArray(userPlans[key])) {
+                const found = userPlans[key].find(ex => ex.name === exerciseName);
+                if (found) {
+                    exercise = found;
+                    break;
+                }
+            }
+        }
     }
     
     if (exercise) {
@@ -1376,8 +1440,23 @@ function handleExerciseCheckIn(email, trainingType, exerciseName, isChecked) {
 
 
 function openExerciseModal(email, trainingType, exerciseName) {
-    const treinos = trainingType === 'A' ? database.trainingPlans.treinosA[email] : database.trainingPlans.treinosB[email];
-    const exercise = treinos.find(ex => ex.name === exerciseName);
+    const userPlans = trainingType === 'A' ? database.trainingPlans.treinosA[email] : database.trainingPlans.treinosB[email];
+    let exercise;
+
+    if (Array.isArray(userPlans)) {
+        exercise = userPlans.find(ex => ex.name === exerciseName);
+    } else { // User with weekly plans
+        for (const key in userPlans) {
+            if (Array.isArray(userPlans[key])) {
+                const found = userPlans[key].find(ex => ex.name === exerciseName);
+                if (found) {
+                    exercise = found;
+                    break;
+                }
+            }
+        }
+    }
+
     if (!exercise) {
         console.error('Exercício não encontrado:', exerciseName);
         return;
@@ -1691,9 +1770,14 @@ let treinoBChart: any = null;
 function renderEvolutionScreen(email) {
     const selectA = document.getElementById('select-treino-a');
     const selectB = document.getElementById('select-treino-b');
+    const user = database.users.find(u => u.email === email);
+    const currentWeek = getCurrentTrainingWeek(user);
     
-    selectA.innerHTML = database.trainingPlans.treinosA[email].map((ex, index) => `<option value="${index}">${processExercises([ex], email)[0].name}</option>`).join('');
-    selectB.innerHTML = database.trainingPlans.treinosB[email].map((ex, index) => `<option value="${index}">${processExercises([ex], email)[0].name}</option>`).join('');
+    const treinoAExercises = getTrainingPlanForWeek(email, 'A', currentWeek);
+    const treinoBExercises = getTrainingPlanForWeek(email, 'B', currentWeek);
+
+    selectA.innerHTML = treinoAExercises.map((ex, index) => `<option value="${index}">${processExercises([ex], email)[0].name}</option>`).join('');
+    selectB.innerHTML = treinoBExercises.map((ex, index) => `<option value="${index}">${processExercises([ex], email)[0].name}</option>`).join('');
     
     selectA.onchange = () => updateChart('A', email);
     selectB.onchange = () => updateChart('B', email);
@@ -1706,7 +1790,10 @@ function updateChart(type, email) {
     // Fix: Cast to HTMLSelectElement to access value property
     const select = document.getElementById(`select-treino-${type.toLowerCase()}`) as HTMLSelectElement;
     const exerciseIndex = parseInt(select.value);
-    const exercises = type === 'A' ? database.trainingPlans.treinosA[email] : database.trainingPlans.treinosB[email];
+
+    const user = database.users.find(u => u.email === email);
+    const currentWeek = getCurrentTrainingWeek(user);
+    const exercises = getTrainingPlanForWeek(email, type, currentWeek);
     const exercise = exercises[exerciseIndex];
 
     // Fix: Cast to HTMLCanvasElement to access getContext method
@@ -2677,288 +2764,6 @@ function renderRaceCalendarScreen(email) {
         });
     });
 }
-
-// Fix: Add missing Live Coach functions
-// --- LIVE COACH (GEMINI LIVE API) ---
-
-// --- Gemini Audio Helper Functions (as per guidelines) ---
-function encode(bytes: Uint8Array): string {
-  let binary = '';
-  const len = bytes.byteLength;
-  for (let i = 0; i < len; i++) {
-    binary += String.fromCharCode(bytes[i]);
-  }
-  return btoa(binary);
-}
-
-function decode(base64: string): Uint8Array {
-  const binaryString = atob(base64);
-  const len = binaryString.length;
-  const bytes = new Uint8Array(len);
-  for (let i = 0; i < len; i++) {
-    bytes[i] = binaryString.charCodeAt(i);
-  }
-  return bytes;
-}
-
-async function decodeAudioData(
-  data: Uint8Array,
-  ctx: AudioContext,
-  sampleRate: number,
-  numChannels: number,
-): Promise<AudioBuffer> {
-  const dataInt16 = new Int16Array(data.buffer);
-  const frameCount = dataInt16.length / numChannels;
-  const buffer = ctx.createBuffer(numChannels, frameCount, sampleRate);
-
-  for (let channel = 0; channel < numChannels; channel++) {
-    const channelData = buffer.getChannelData(channel);
-    for (let i = 0; i < frameCount; i++) {
-      channelData[i] = dataInt16[i * numChannels + channel] / 32768.0;
-    }
-  }
-  return buffer;
-}
-
-function createBlob(data: Float32Array): Blob {
-    const l = data.length;
-    const int16 = new Int16Array(l);
-    for (let i = 0; i < l; i++) {
-      int16[i] = data[i] * 32768;
-    }
-    return {
-      data: encode(new Uint8Array(int16.buffer)),
-      mimeType: 'audio/pcm;rate=16000',
-    };
-}
-
-async function startLiveSession(email: string) {
-    if (liveCoachState.isSessionActive) {
-        console.log("Session already active.");
-        return;
-    }
-
-    const user = database.users.find(u => u.email === email);
-    if (!user) {
-        throw new Error("Usuário não encontrado para iniciar a sessão.");
-    }
-
-    const startBtn = document.getElementById('start-live-session-btn');
-    const stopBtn = document.getElementById('stop-live-session-btn');
-    const statusEl = document.getElementById('live-coach-status');
-    const transcriptionEl = document.getElementById('live-coach-transcription');
-
-    if(statusEl) statusEl.textContent = 'Iniciando...';
-    if(startBtn) (startBtn as HTMLElement).style.display = 'none';
-    if(stopBtn) (stopBtn as HTMLElement).style.display = 'block';
-    if(transcriptionEl) transcriptionEl.innerHTML = '';
-    
-    // 1. Initialize API and Audio Contexts
-    liveCoachState.ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-    liveCoachState.inputAudioContext = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 16000 });
-    liveCoachState.outputAudioContext = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 24000 });
-    liveCoachState.nextStartTime = 0;
-    
-    // 2. Get microphone access
-    liveCoachState.micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-
-    // 3. Setup Live Session Promise
-    liveCoachState.sessionPromise = liveCoachState.ai.live.connect({
-        model: 'gemini-2.5-flash-native-audio-preview-09-2025',
-        callbacks: {
-            onopen: () => {
-                console.log("Live session opened.");
-                liveCoachState.isSessionActive = true;
-                if(statusEl) statusEl.textContent = 'Sessão ativa... Fale agora!';
-
-                const source = liveCoachState.inputAudioContext.createMediaStreamSource(liveCoachState.micStream);
-                const scriptProcessor = liveCoachState.inputAudioContext.createScriptProcessor(4096, 1, 1);
-                
-                scriptProcessor.onaudioprocess = (audioProcessingEvent) => {
-                    const inputData = audioProcessingEvent.inputBuffer.getChannelData(0);
-                    const pcmBlob = createBlob(inputData);
-                    // CRITICAL: Solely rely on sessionPromise resolves and then call `session.sendRealtimeInput`
-                    liveCoachState.sessionPromise.then((session) => {
-                        session.sendRealtimeInput({ media: pcmBlob });
-                    });
-                };
-
-                source.connect(scriptProcessor);
-                scriptProcessor.connect(liveCoachState.inputAudioContext.destination);
-                liveCoachState.scriptProcessor = scriptProcessor;
-            },
-            onmessage: async (message: LiveServerMessage) => {
-                const base64EncodedAudioString = message.serverContent?.modelTurn?.parts[0]?.inlineData?.data;
-                if (base64EncodedAudioString && liveCoachState.outputAudioContext) {
-                    liveCoachState.nextStartTime = Math.max(
-                        liveCoachState.nextStartTime,
-                        liveCoachState.outputAudioContext.currentTime,
-                    );
-                    const audioBuffer = await decodeAudioData(
-                        decode(base64EncodedAudioString),
-                        liveCoachState.outputAudioContext,
-                        24000,
-                        1,
-                    );
-                    const source = liveCoachState.outputAudioContext.createBufferSource();
-                    source.buffer = audioBuffer;
-                    source.connect(liveCoachState.outputAudioContext.destination);
-                    source.addEventListener('ended', () => {
-                        liveCoachState.sources.delete(source);
-                    });
-
-                    source.start(liveCoachState.nextStartTime);
-                    liveCoachState.nextStartTime = liveCoachState.nextStartTime + audioBuffer.duration;
-                    liveCoachState.sources.add(source);
-                }
-
-                if (message.serverContent?.outputTranscription) {
-                    liveCoachState.currentOutputTranscription += message.serverContent.outputTranscription.text;
-                } else if (message.serverContent?.inputTranscription) {
-                    liveCoachState.currentInputTranscription += message.serverContent.inputTranscription.text;
-                }
-
-                if (message.serverContent?.turnComplete) {
-                    if (transcriptionEl) {
-                        const fullInput = liveCoachState.currentInputTranscription;
-                        const fullOutput = liveCoachState.currentOutputTranscription;
-                        if (fullInput) transcriptionEl.innerHTML += `<p><strong>Você:</strong> ${fullInput}</p>`;
-                        if (fullOutput) transcriptionEl.innerHTML += `<p><strong>Coach:</strong> ${fullOutput}</p>`;
-                        transcriptionEl.scrollTop = transcriptionEl.scrollHeight;
-                    }
-                    liveCoachState.currentInputTranscription = '';
-                    liveCoachState.currentOutputTranscription = '';
-                }
-
-                const interrupted = message.serverContent?.interrupted;
-                if (interrupted) {
-                    for (const source of liveCoachState.sources.values()) {
-                        source.stop();
-                        liveCoachState.sources.delete(source);
-                    }
-                    liveCoachState.nextStartTime = 0;
-                }
-            },
-            onerror: (e: ErrorEvent) => {
-                console.error('Live session error:', e);
-                if(statusEl) statusEl.textContent = 'Erro na conexão.';
-                alert(`Erro na sessão: ${e.message}`);
-                stopLiveSession();
-            },
-            onclose: (e: CloseEvent) => {
-                console.log('Live session closed.');
-                if(statusEl) statusEl.textContent = 'Sessão encerrada.';
-                stopLiveSession(); // Ensure cleanup
-            },
-        },
-        config: {
-            responseModalities: [Modality.AUDIO],
-            inputAudioTranscription: {},
-            outputAudioTranscription: {},
-            speechConfig: {
-                voiceConfig: { prebuiltVoiceConfig: { voiceName: 'Zephyr' } },
-            },
-            systemInstruction: `Você é um personal trainer e coach de corrida chamado 'AB FIT Coach'. Você é motivador, positivo e técnico. Seu objetivo é guiar o usuário, ${user.name}, durante o treino de corrida dele. Use um tom de voz energético e encorajador. Dê dicas sobre postura, respiração e ritmo. Responda de forma concisa e direta.`,
-        },
-    });
-}
-
-
-function stopLiveSession() {
-    if (!liveCoachState.isSessionActive) {
-        return;
-    }
-
-    console.log("Stopping Live Session...");
-
-    if (liveCoachState.sessionPromise) {
-        liveCoachState.sessionPromise.then(session => {
-            if (session) {
-                session.close();
-            }
-        }).catch(console.error);
-        liveCoachState.sessionPromise = null;
-    }
-
-    if (liveCoachState.micStream) {
-        liveCoachState.micStream.getTracks().forEach(track => track.stop());
-        liveCoachState.micStream = null;
-    }
-
-    if (liveCoachState.scriptProcessor) {
-        liveCoachState.scriptProcessor.disconnect();
-        liveCoachState.scriptProcessor.onaudioprocess = null;
-        liveCoachState.scriptProcessor = null;
-    }
-    
-    if (liveCoachState.inputAudioContext && liveCoachState.inputAudioContext.state !== 'closed') {
-        liveCoachState.inputAudioContext.close().catch(console.error);
-    }
-    
-    if (liveCoachState.outputAudioContext && liveCoachState.outputAudioContext.state !== 'closed') {
-        liveCoachState.outputAudioContext.close().catch(console.error);
-    }
-
-    liveCoachState.sources.forEach(source => source.stop());
-    liveCoachState.sources.clear();
-    
-    liveCoachState.isSessionActive = false;
-    liveCoachState.nextStartTime = 0;
-    liveCoachState.currentInputTranscription = '';
-    liveCoachState.currentOutputTranscription = '';
-    liveCoachState.ai = null;
-
-    const statusEl = document.getElementById('live-coach-status');
-    const startBtn = document.getElementById('start-live-session-btn');
-    const stopBtn = document.getElementById('stop-live-session-btn');
-    
-    if (statusEl) statusEl.textContent = 'Toque para iniciar';
-    if (startBtn) (startBtn as HTMLElement).style.display = 'block';
-    if (stopBtn) (stopBtn as HTMLElement).style.display = 'none';
-
-    console.log("Live Session stopped.");
-}
-
-function renderLiveCoachScreen(email: string) {
-    const startBtn = document.getElementById('start-live-session-btn');
-    const stopBtn = document.getElementById('stop-live-session-btn');
-    const statusEl = document.getElementById('live-coach-status');
-
-    if (!startBtn || !stopBtn || !statusEl) {
-        console.error("Live coach UI elements not found.");
-        return;
-    }
-
-    if (liveCoachState.isSessionActive) {
-        statusEl.textContent = 'Sessão ativa...';
-        (startBtn as HTMLElement).style.display = 'none';
-        (stopBtn as HTMLElement).style.display = 'block';
-    } else {
-        statusEl.textContent = 'Toque para iniciar';
-        (startBtn as HTMLElement).style.display = 'block';
-        (stopBtn as HTMLElement).style.display = 'none';
-    }
-
-    const startSessionHandler = async () => {
-        try {
-            await startLiveSession(email);
-        } catch (error) {
-            console.error("Failed to start live session:", error);
-            alert(`Erro ao iniciar a sessão: ${(error as Error).message}`);
-            stopLiveSession(); // Cleanup on failure
-        }
-    };
-    
-    // Replace buttons to avoid duplicate listeners
-    const newStartBtn = startBtn.cloneNode(true);
-    startBtn.parentNode.replaceChild(newStartBtn, startBtn);
-    newStartBtn.addEventListener('click', startSessionHandler);
-
-    const newStopBtn = stopBtn.cloneNode(true);
-    stopBtn.parentNode.replaceChild(newStopBtn, stopBtn);
-    newStopBtn.addEventListener('click', stopLiveSession);
-}
-
 
 function openRaceDetailModal(raceId) {
     const race = database.raceCalendar.find(r => r.id === raceId);
