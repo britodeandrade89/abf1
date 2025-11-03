@@ -305,7 +305,7 @@ function initializeDatabase() {
         { week: '11ª, 12ª e 13ª', phase: 'Força', methods: 'Método de execução Pirâmide crescente de carga', reps: '12/10/8', volume: '9 séries/grupo', intensity: '70-75% 1RM', recovery: '30 Seg' },
     ];
     
-    const periodizacaoPlano2 = [
+    const periodizacaoPlanoGeral = [
         { week: '1ª e 2ª Semanas', phase: 'Adaptação/Hipertrofia', methods: 'Método de execução Simples', reps: '10', volume: '16 séries/grupo', intensity: '70-75% 1RM', recovery: '60-90s', metodo_desc: 'Método de execução Simples', descricao: 'Realizar o número prescrito de repetições com a carga determinada, mantendo técnica adequada em todas as repetições.' },
         { week: '3ª e 4ª Semanas', phase: 'Adaptação/Hipertrofia', methods: 'Método de execução Simples', reps: '8-9', volume: '16 séries/grupo', intensity: '70-75% 1RM', recovery: '60-90s', metodo_desc: 'Método Rest-Pause', descricao: 'Realizar uma série até a falha concêntrica, descansar apenas 10 segundos, realizar mais repetições até nova falha, repetir o total de séries prescritas por exercício.' },
         { week: '5ª e 6ª Semanas', phase: 'Força', methods: 'Método de execução Simples + Rest-Pause', reps: '6-7', volume: '14 séries/grupo', intensity: '80-85% 1RM', recovery: '90-120s', metodo_desc: 'Método Pirâmide Decrescente', descricao: 'Iniciar com carga para o número de repetições alvo, reduzir 2% da carga e realizar + 1 repetição, repetir o processo 3 vezes, ou seja, sempre manter a carga e aumentar as repetições a cada série.' },
@@ -315,9 +315,18 @@ function initializeDatabase() {
         { week: '12ª e 13ª Semanas', phase: 'Deload', methods: 'Método de execução Simples (recuperação)', reps: '6-8', volume: '8 séries/grupo', intensity: '50-60% 1RM', recovery: '60s', metodo_desc: null, descricao: null },
     ];
     
+    const periodizacaoPlanoAndre = [
+        { week: '1ª e 2ª Semanas', phase: 'Adaptação/Hipertrofia', methods: 'Método de execução Simples', reps: '8-9', volume: '16 séries/grupo', intensity: '70-75% 1RM', recovery: '60-90s', metodo_desc: 'Método Rest-Pause', descricao: 'Realizar uma série até a falha concêntrica, descansar apenas 10 segundos, realizar mais repetições até nova falha, repetir o total de séries prescritas por exercício.' },
+        { week: '3ª e 4ª Semanas', phase: 'Força', methods: 'Método de execução Simples + Rest-Pause', reps: '6-7', volume: '14 séries/grupo', intensity: '80-85% 1RM', recovery: '90-120s', metodo_desc: 'Método Pirâmide Decrescente', descricao: 'Iniciar com carga para o número de repetições alvo, reduzir 2% da carga e realizar + 1 repetição, repetir o processo 3 vezes, ou seja, sempre manter a carga e aumentar as repetições a cada série.' },
+        { week: '5ª e 6ª Semanas', phase: 'Força', methods: 'Método de execução Simples + Rest-Pause', reps: '5-6', volume: '12 séries/grupo', intensity: '80-85% 1RM', recovery: '90-120s', metodo_desc: null, descricao: null },
+        { week: '7ª e 8ª Semanas', phase: 'Força Máxima', methods: 'Método de execução Simples + Pirâmide', reps: '3 / 4 / 5', volume: '10 séries/grupo', intensity: '85-90% 1RM', recovery: '120-180s', metodo_desc: null, descricao: null },
+        { week: '9ª Semana', phase: 'Força Máxima', methods: 'Método de execução Simples + Rest-Pause + Pirâmide', reps: '3 / 4 / 5', volume: '10 séries/grupo', intensity: '85-90% 1RM', recovery: '120-180s', metodo_desc: null, descricao: null },
+        { week: '10ª e 11ª Semanas', phase: 'Deload', methods: 'Método de execução Simples (recuperação)', reps: '6-8', volume: '8 séries/grupo', intensity: '50-60% 1RM', recovery: '60s', metodo_desc: null, descricao: null },
+    ];
+
     const periodizacaoPorUsuario = {
-        'britodeandrade@gmail.com': periodizacaoPlano2,
-        'marcellybispo92@gmail.com': periodizacaoPlano2,
+        'britodeandrade@gmail.com': periodizacaoPlanoAndre,
+        'marcellybispo92@gmail.com': periodizacaoPlanoGeral,
         'andrademarcia.ucam@gmail.com': periodizacaoPlano1,
         'lilicatorres@gmail.com': periodizacaoPlano1,
         'arbrito.andrade@gmail.com': periodizacaoPlano1,
@@ -350,21 +359,7 @@ function initializeDatabase() {
     ];
 
     const treinosA = {
-        'britodeandrade@gmail.com': {
-            'weeks_1_2': [
-                { name: 'Agachamento parcial no Smith', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/dMXSfHrCe2BQAKRvIvIg.png', sets: '4', reps: '10', carga: '15', obs: 'Método Simples (10 RM)', recovery: '30s' },
-                { name: 'Agachamento Livre com HBC', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/lik7g55hYpUjX2Rs6ASg.png', sets: '4', reps: '10', carga: '14', obs: 'Método Simples (10 RM)', recovery: '30s' },
-                { name: 'Cadeira extensora', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/CGVAnjor7i6F1Xj1IQoK.png', sets: '4', reps: '10', carga: '5', obs: 'Método Simples (10 RM)', recovery: '30s' },
-                { name: 'Supino inclinado com HBC (CONJUGADO 1)', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/WyYlLuQ2Ch6WAXdVcwHL.png', sets: '3', reps: '10', carga: '12', obs: 'Método Simples (10 RM)', recovery: '30s' },
-                { name: 'Extensão de cotovelos no solo (CONJUGADO 1)', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/kmM09RrmttVVMNq2Vvae.png', sets: '3', reps: '10', carga: '0', obs: 'Método Simples (10 RM)', recovery: '30s' },
-                { name: 'Crucifixo aberto na máquina', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/rhLOUSYFlEMyTYyADYUQ.png', sets: '6', reps: '10', carga: '8', obs: 'Método Simples (10 RM)', recovery: '30s' },
-                { name: 'Desenvolvimento aberto com HBC no banco 75º', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/ZbQ5zsR6jdwmbE956eOa.png', sets: '4', reps: '10', carga: '7', obs: 'Método Simples (10 RM)', recovery: '30s' },
-                { name: 'Tríceps em pé no cross barra reta', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/OT1w5MN9V9Esd8B4muUH.png', sets: '6', reps: '10', carga: '6', obs: 'Método Simples (10 RM)', recovery: '30s' },
-                { name: 'Abdominal supra no solo', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/mnXs908TPzy2WU0kgNGd.png', sets: '4', reps: '20', carga: '0', obs: 'Método Simples (20 RM)', recovery: '30s' }
-            ],
-            'weeks_3_4': treinosA_AndreBrito_Semana3e4,
-            'default': treinosA_AndreBrito_Semana3e4
-        },
+        'britodeandrade@gmail.com': treinosA_AndreBrito_Semana3e4,
         'marcellybispo92@gmail.com': [
             { name: 'Agachamento Livre', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/Rco3wwXc2fMICrkoKl2c.png', sets: '3', reps: '20', carga: '0', obs: 'Método Simples (20 RM)', recovery: '30s' },
             { name: 'Agachamento Livre em isometria', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/AOCzLpKQwD10WwAYARZz.png', sets: '3', reps: '20', carga: '0', obs: 'Método Simples (20 RM)', recovery: '30s' },
@@ -403,21 +398,7 @@ function initializeDatabase() {
     };
 
     const treinosB = {
-        'britodeandrade@gmail.com': {
-            'weeks_1_2': [
-                { name: 'Agachamento sumô com HBC', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/XWSqloYwKucvRjtu5vEh.png', sets: '4', reps: '10', carga: '22', obs: 'Método Simples (10 RM)', recovery: '30s' },
-                { name: 'Stiff em pé com HBM', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/AOg50LojEKhCF6E4WA95.png', sets: '4', reps: '10', carga: '14', obs: 'Método Simples (10 RM)', recovery: '30s' },
-                { name: 'Extensão de quadril com caneleira', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/H0mkj0hrfyfWwcD3Kiji.png', sets: '4', reps: '10', carga: '7', obs: 'Método Simples (10 RM)', recovery: '30s' },
-                { name: 'Remada curvada aberta com HBC (CONJUGADO 1)', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/EpO1XQEqBEZRk5fiO1SF.png', sets: '3', reps: '10', carga: '8', obs: 'Método Simples (10 RM)', recovery: '30s' },
-                { name: 'Crucifixo inverso curvado com HBC (CONJUGADO 1)', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/HSKDTQoF1qrcgndeYxls.png', sets: '3', reps: '10', carga: '4', obs: 'Método Simples (10 RM)', recovery: '30s' },
-                { name: 'Crucifixo inverso na máquina', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/KQjB5PJHrOXvVDADQ9Z3.png', sets: '6', reps: '10', carga: '6', obs: 'Método Simples (10 RM)', recovery: '30s' },
-                { name: 'Puxada aberta no pulley alto', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/ehWDEGS6Z3S8dswAxczt.png', sets: '4', reps: '10', carga: '11', obs: 'Método Simples (10 RM)', recovery: '30s' },
-                { name: 'Bíceps em pé no cross barra reta', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/BB2HhbKsbNbV0CyYUrnV.avif', sets: '6', reps: '10', carga: '10', obs: 'Método Simples (10 RM)', recovery: '30s' },
-                { name: 'Abdominal supra no solo', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/mnXs908TPzy2WU0kgNGd.png', sets: '4', reps: '20', carga: '0', obs: 'Método Simples (20 RM)', recovery: '30s' }
-            ],
-            'weeks_3_4': treinosB_AndreBrito_Semana3e4,
-            'default': treinosB_AndreBrito_Semana3e4
-        },
+        'britodeandrade@gmail.com': treinosB_AndreBrito_Semana3e4,
         'marcellybispo92@gmail.com': [
             { name: 'Agachamento Livre', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/9bgKMf2SJ3Dpq9EnDPsV.png', sets: '3', reps: '20', carga: '0', obs: 'Método Simples (20 RM)', recovery: '30s' },
             { name: 'Agachamento Livre em isometria', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/UuNZ7xD4j6Hyfv5MxtNa.png', sets: '3', reps: '20', carga: '0', obs: 'Método Simples (20 RM)', recovery: '30s' },
@@ -1405,7 +1386,7 @@ function handleExerciseCheckIn(email, trainingType, exerciseName, isChecked) {
     let exercise;
 
     if (Array.isArray(userPlans)) {
-        exercise = userPlans.find(ex => ex.name === exerciseName);
+        exercise = userPlans.find(ex => ex.name.endsWith(exerciseName));
     } else { // User with weekly plans
         for (const key in userPlans) {
             if (Array.isArray(userPlans[key])) {
@@ -1444,7 +1425,7 @@ function openExerciseModal(email, trainingType, exerciseName) {
     let exercise;
 
     if (Array.isArray(userPlans)) {
-        exercise = userPlans.find(ex => ex.name === exerciseName);
+        exercise = userPlans.find(ex => ex.name.endsWith(exerciseName));
     } else { // User with weekly plans
         for (const key in userPlans) {
             if (Array.isArray(userPlans[key])) {
