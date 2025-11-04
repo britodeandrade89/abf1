@@ -2427,6 +2427,16 @@ function initializePhysioAssessmentScreen() {
     const saveAlunoForm = document.getElementById('form-novo-aluno') as HTMLFormElement;
 
     const openAddAlunoModal = () => {
+        const nascimentoInput = document.getElementById('nascimento-aluno') as HTMLInputElement;
+        // Set min and max dates to provide a reasonable range for date of birth, fixing browser inconsistencies.
+        if (nascimentoInput) {
+            const today = new Date();
+            const hundredYearsAgo = new Date(today.getFullYear() - 100, today.getMonth(), today.getDate());
+            
+            nascimentoInput.max = today.toISOString().split('T')[0];
+            nascimentoInput.min = hundredYearsAgo.toISOString().split('T')[0];
+        }
+
         addAlunoModal.classList.remove('hidden');
         setTimeout(() => {
             addAlunoModalContent.classList.remove('scale-95', 'opacity-0');
