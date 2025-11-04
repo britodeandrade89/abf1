@@ -2431,10 +2431,10 @@ function initializePhysioAssessmentScreen() {
         // Set min and max dates to provide a reasonable range for date of birth, fixing browser inconsistencies.
         if (nascimentoInput) {
             const today = new Date();
-            const hundredYearsAgo = new Date(today.getFullYear() - 100, today.getMonth(), today.getDate());
+            const farInThePast = new Date(today.getFullYear() - 125, today.getMonth(), today.getDate());
             
             nascimentoInput.max = today.toISOString().split('T')[0];
-            nascimentoInput.min = hundredYearsAgo.toISOString().split('T')[0];
+            nascimentoInput.min = farInThePast.toISOString().split('T')[0];
         }
 
         addAlunoModal.classList.remove('hidden');
