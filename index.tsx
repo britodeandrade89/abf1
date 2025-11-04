@@ -1,4 +1,3 @@
-
 import { GoogleGenAI } from "@google/genai";
 
 // Globals defined by imported scripts
@@ -2581,6 +2580,69 @@ function renderPhysioAlunoData(alunoId) {
     
     document.getElementById('btn-back-to-physio-dashboard').addEventListener('click', renderProfessorDashboard);
     document.getElementById('update-photo-btn').addEventListener('click', () => openCameraModal(aluno.id));
+    document.getElementById('btn-nova-avaliacao').addEventListener('click', () => renderNewAssessmentForm(aluno.id));
+}
+
+function renderNewAssessmentForm(alunoId) {
+    const alunos = getPhysioAlunosFromStorage();
+    const aluno = alunos.find(a => a.id === alunoId);
+    if (!aluno) return;
+
+    // Show form, hide other views
+    document.getElementById('professor-dashboard').style.display = 'none';
+    document.getElementById('view-aluno-data').style.display = 'none';
+    document.getElementById('form-avaliacao').style.display = 'block';
+
+    // Populate student name
+    document.getElementById('form-aluno-nome').textContent = aluno.nome;
+
+    // Configure form
+    const form = document.getElementById('avaliacao-form') as HTMLFormElement;
+    form.reset();
+    (document.getElementById('data') as HTMLInputElement).value = new Date().toISOString().split('T')[0];
+    
+    // Show skinfold fields based on gender
+    document.querySelectorAll('.skinfold-field-wrapper').forEach(el => {
+        const element = el as HTMLElement;
+        const requiredGender = element.dataset.gender;
+        if (requiredGender && requiredGender.includes(aluno.sexo)) {
+            element.style.display = 'block';
+        } else {
+            element.style.display = 'none';
+        }
+    });
+
+    // Handle form submission (clone to prevent duplicate listeners)
+    const newForm = form.cloneNode(true) as HTMLFormElement;
+    form.parentNode.replaceChild(newForm, form);
+
+    newForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const newAvaliacao = {
+            data: (document.getElementById('data') as HTMLInputElement).value,
+            peso: (document.getElementById('peso') as HTMLInputElement).value,
+            altura: (document.getElementById('altura') as HTMLInputElement).value,
+            dc_peitoral: (document.getElementById('dc_peitoral') as HTMLInputElement).value,
+            dc_abdominal: (document.getElementById('dc_abdominal') as HTMLInputElement).value,
+            dc_tricipital: (document.getElementById('dc_tricipital') as HTMLInputElement).value,
+            dc_suprailiaca: (document.getElementById('dc_suprailiaca') as HTMLInputElement).value,
+            dc_coxa: (document.getElementById('dc_coxa') as HTMLInputElement).value,
+        };
+
+        const alunoIndex = alunos.findIndex(a => a.id === alunoId);
+        if (alunoIndex !== -1) {
+            if (!alunos[alunoIndex].avaliacoes) {
+                alunos[alunoIndex].avaliacoes = [];
+            }
+            alunos[alunoIndex].avaliacoes.push(newAvaliacao);
+            savePhysioAlunosToStorage(alunos);
+            alert('Avaliação salva com sucesso!');
+            renderPhysioAlunoData(alunoId); // Go back to student profile
+        }
+    });
+    
+    // Handle back button on the form screen
+    document.getElementById('btn-back-to-dashboard').addEventListener('click', () => renderPhysioAlunoData(alunoId));
 }
 
 function renderAssessmentsHistory(aluno) {
