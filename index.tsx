@@ -361,14 +361,15 @@ function initializeDatabase() {
     const treinosA = {
         'britodeandrade@gmail.com': treinosA_AndreBrito_Semana3e4,
         'marcellybispo92@gmail.com': [
-            { name: 'Agachamento Livre', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/Rco3wwXc2fMICrkoKl2c.png', sets: '3', reps: '20', carga: '0', obs: 'Método Simples (20 RM)', recovery: '30s' },
-            { name: 'Agachamento Livre em isometria', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/AOCzLpKQwD10WwAYARZz.png', sets: '3', reps: '20', carga: '0', obs: 'Método Simples (20 RM)', recovery: '30s' },
-            { name: 'Agachamento Livre com HBC', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/s3EEHvDgNM2noyrFu942.png', sets: '4', reps: '10', carga: '0', obs: 'Método Simples (10 RM)', recovery: '30s' },
-            { name: 'Agachamento em passada com HBC e joelho encostando no step', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/4EYSuDx7ReXCgBd2KkFJ.jpg', sets: '3', reps: '10', carga: '0', obs: 'Método Simples (10 RM)', recovery: '30s' },
-            { name: 'Cadeira extensora', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/r6yfXvdiiDfGnxXxNIBO.png', sets: '3', reps: '10', carga: '0', obs: 'Método Simples (10 RM)', recovery: '30s' },
-            { name: 'Supino aberto banco reto com HBL', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/vOmGdQZbnsFoBoyDsQK6.png', sets: '3', reps: '10', carga: '0', obs: 'Método Simples (10 RM)', recovery: '30s' },
-            { name: 'Desenvolvimento aberto com HBC', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/nqg5uBvdfqzIvgMUDpSy.png', sets: '3', reps: '10', carga: '0', obs: 'Método Simples (10 RM)', recovery: '30s' },
-            { name: 'Tríceps no cross barra reta', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/2r3HFHUsIrmKlDW7IQSw.png', sets: '3', reps: '10', carga: '0', obs: '', recovery: '' }
+            { name: 'Agachamento livre com HBC (descer ao máximo) (CONJUGADO 1)', conjugado: 1, img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/s3EEHvDgNM2noyrFu942.png', sets: '4', reps: '9', carga: '0', obs: '', recovery: '30s' },
+            { name: 'Agachamento livre sem peso (descer ao máximo e subir até 30º de extensão de joelho) (CONJUGADO 1)', conjugado: 1, img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/Rco3wwXc2fMICrkoKl2c.png', sets: '4', reps: '9', carga: '0', obs: '', recovery: '30s' },
+            { name: 'Agachamento passada Búlgaro com 2 degrau e HBC', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/jo9jsMXR96Q17m4pXn7B.jpg', sets: '2', reps: '9', carga: '0', obs: '', recovery: '30s' },
+            { name: 'Leg press horizontal (CONJUGADO 2)', conjugado: 2, img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/7yRR2CeoHxGPlbi3mw89.png', sets: '4', reps: '9', carga: '0', obs: '', recovery: '30s' },
+            { name: 'Leg press horizontal unilateral (CONJUGADO 2)', conjugado: 2, img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/7yRR2CeoHxGPlbi3mw89.png', sets: '4', reps: '9', carga: '0', obs: '', recovery: '30s' },
+            { name: 'Supino aberto no banco inclinado ou reto com HBC (CONJUGADO 3)', conjugado: 3, img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/fWBlaY5LXefUGcXHz2tO.jpg', sets: '3', reps: '9', carga: '0', obs: '', recovery: '30s' },
+            { name: 'Desenvolvimento fechado neutro com HBC (CONJUGADO 3)', conjugado: 3, img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/nqg5uBvdfqzIvgMUDpSy.png', sets: '3', reps: '9', carga: '0', obs: '', recovery: '30s' },
+            { name: 'Extensão de cotovelos fechados no solo e de joelhos (CONJUGADO 4)', conjugado: 4, img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/eGNCCvzlv1jGWpSbs5nH.png', sets: '3', reps: '9', carga: '0', obs: '', recovery: '30s' },
+            { name: 'Abdominal supra remador no solo (CONJUGADO 4)', conjugado: 4, img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/7M5vMfWh1Jb7DnLIUs4g.png', sets: '3', reps: '15', carga: '0', obs: '', recovery: '30s' }
         ],
         'andrademarcia.ucam@gmail.com': [
             { name: 'Levantar e sentar de um banco reto com HBC', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/gzrfW5iW6Apsl4Q2pLXa.png', sets: '3', reps: '15', carga: '0', obs: 'Método Simples (15 RM)', recovery: '30s' },
@@ -1279,8 +1280,17 @@ function renderTrainingScreen(email, trainingType) {
         const today = new Date().toISOString().split('T')[0];
         const isChecked = ex.checkIns && ex.checkIns.includes(today);
         const originalName = ex.name.substring(ex.name.indexOf(' ') + 1);
+
+        const conjugadoColors = {
+            1: 'border-l-blue-500',
+            2: 'border-l-green-500',
+            3: 'border-l-purple-500',
+            4: 'border-l-orange-500',
+        };
+        const conjugadoClass = ex.conjugado ? `border-l-4 ${conjugadoColors[ex.conjugado]}` : '';
+
         cardsHtml += `
-            <div class="exercise-card bg-gray-800 p-3 rounded-xl border border-gray-700 flex items-center gap-3" data-exercise-name="${originalName}" data-training-type="${trainingType}">
+            <div class="exercise-card bg-gray-800 p-3 rounded-xl border border-gray-700 flex items-center gap-3 ${conjugadoClass}" data-exercise-name="${originalName}" data-training-type="${trainingType}">
                 <img src="${ex.img || 'https://via.placeholder.com/100x100/4b5563/FFFFFF?text=SEM+IMG'}" alt="thumbnail" class="exercise-thumbnail">
                 <div class="flex-grow">
                     <h3 class="font-bold text-md text-yellow-400">${ex.name}</h3>
