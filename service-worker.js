@@ -111,8 +111,11 @@ if (workbox) {
     new workbox.strategies.NetworkFirst({
       cacheName: 'weather-cache',
       plugins: [
+        new workbox.cacheableResponse.Plugin({
+            statuses: [0, 200], // Cache successful and opaque responses
+        }),
         new workbox.expiration.Plugin({
-          maxEntries: 1,
+          maxEntries: 10,
           maxAgeSeconds: 1 * 60 * 60, // 1 hour
         }),
       ],
