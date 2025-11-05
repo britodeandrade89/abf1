@@ -238,7 +238,7 @@
                 <div class="bg-blue-900/50 text-blue-200 text-sm p-3 rounded-lg border border-blue-700 mb-4">
                     <p><strong>Aviso:</strong> Esta é uma lista de exemplo e pode não estar 100% atualizada. Sempre confirme os detalhes no site oficial do evento.</p>
                 </div>
-                <div id="race-calendar-content" class="space-y-6 pb-24">
+                <div id="race-calendar-list" class="space-y-4 pb-24">
                     <!-- Race calendar content will be rendered here by JS -->
                 </div>
             </div>
@@ -315,165 +315,118 @@
 
             <!-- ======================= TELA AVALIAÇÃO FÍSICA ======================= -->
             <div id="physioAssessmentScreen" class="screen p-6">
-                <header class="flex items-center justify-between pt-6 pb-4">
+                <header class="flex items-center pt-6 pb-4">
                     <button class="back-btn p-2 rounded-full hover:bg-gray-800" data-target="studentProfileScreen"><i
                             data-feather="arrow-left" class="text-white"></i></button>
-                    <h1 class="text-2xl font-bold text-white">Avaliação Física</h1>
-                    <div class="w-10"></div>
                 </header>
-                <div class="space-y-4 pb-24">
-                    <!-- Navegação por abas -->
-                    <nav class="border-b border-gray-700">
+                 <header class="mb-8">
+                    <h1 class="text-4xl font-bold text-white mb-2">
+                        <i class="fas fa-dumbbell text-blue-400"></i> Avaliação Física
+                    </h1>
+                    <p class="text-gray-300">Sua plataforma de gestão de avaliações físicas.</p>
+                    <nav class="mt-6 border-b border-gray-700">
                         <div class="flex space-x-8">
-                            <button id="tab-professor"
-                                class="py-4 px-1 border-b-2 font-medium text-lg border-transparent text-white hover:text-blue-500 focus:outline-none tab-active">
+                            <button id="tab-professor" class="py-4 px-1 border-b-2 font-medium text-lg border-transparent text-gray-400 hover:text-blue-400 focus:outline-none tab-active">
                                 <i class="fas fa-user-tie mr-2"></i> Professor
                             </button>
-                            <button id="tab-aluno"
-                                class="py-4 px-1 border-b-2 font-medium text-lg border-transparent text-white hover:text-blue-500 focus:outline-none">
+                            <button id="tab-aluno" class="py-4 px-1 border-b-2 font-medium text-lg border-transparent text-gray-400 hover:text-blue-400 focus:outline-none">
                                 <i class="fas fa-user-graduate mr-2"></i> Aluno
                             </button>
                         </div>
                     </nav>
-
+                </header>
+                <main>
                     <!-- VISÃO DO PROFESSOR -->
                     <div id="view-professor">
                         <!-- Lista de Alunos e Ações -->
                         <div id="professor-dashboard">
                             <div class="flex justify-between items-center mb-6">
                                 <h2 class="text-2xl font-semibold text-white">Painel do Professor</h2>
-                                <button id="btn-add-aluno"
-                                    class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition-transform transform hover:scale-105">
+                                <button id="btn-add-aluno" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition-transform transform hover:scale-105">
                                     <i class="fas fa-user-plus mr-2"></i> Adicionar Aluno
                                 </button>
                             </div>
 
                             <div id="loader" class="text-center p-8">
-                                <i class="fas fa-spinner fa-spin text-4xl text-blue-500"></i>
-                                <p class="mt-2 text-white">Carregando alunos...</p>
+                                <i class="fas fa-spinner fa-spin text-4xl text-blue-400"></i>
+                                <p class="mt-2 text-gray-300">Carregando alunos...</p>
                             </div>
-
-                            <div id="lista-alunos" class="hidden grid grid-cols-1 gap-4">
+                            
+                            <div id="lista-alunos" class="hidden grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                                 <!-- Cards de alunos serão inseridos aqui pelo JS -->
                             </div>
-                            <div id="no-alunos-message"
-                                class="hidden text-center p-8 bg-gray-800 rounded-lg shadow-md">
-                                <i class="fas fa-users-slash text-4xl text-white mb-4"></i>
+                            <div id="no-alunos-message" class="hidden text-center p-8 bg-gray-800 rounded-lg shadow-md">
+                                <i class="fas fa-users-slash text-4xl text-gray-400 mb-4"></i>
                                 <h3 class="text-xl font-semibold text-white">Nenhum aluno encontrado</h3>
-                                <p class="text-white">Adicione seu primeiro aluno para começar a registrar as
-                                    avaliações.</p>
+                                <p class="text-gray-300">Adicione seu primeiro aluno para começar a registrar as avaliações.</p>
                             </div>
                         </div>
 
                         <!-- Formulário de Nova Avaliação -->
                         <div id="form-avaliacao" class="hidden">
                             <div class="flex items-center mb-6">
-                                <button id="btn-back-to-dashboard"
-                                    class="mr-4 bg-gray-700 hover:bg-gray-600 p-2 rounded-full text-white"><i
-                                        class="fas fa-arrow-left"></i></button>
-                                <h2 class="text-2xl font-semibold text-white">Nova Avaliação para <span
-                                        id="form-aluno-nome" class="text-blue-400"></span></h2>
+                                <button id="btn-back-to-dashboard" class="mr-4 bg-gray-700 hover:bg-gray-600 p-2 rounded-full"><i class="fas fa-arrow-left"></i></button>
+                                <h2 class="text-2xl font-semibold text-white">Nova Avaliação para <span id="form-aluno-nome" class="text-blue-400"></span></h2>
                             </div>
 
-                            <form id="avaliacao-form" class="space-y-6 bg-gray-800 p-6 rounded-2xl shadow-xl">
+                            <form id="avaliacao-form" class="space-y-8 bg-gray-800 p-8 rounded-2xl shadow-xl">
                                 <!-- Seção Dados Básicos -->
-                                <fieldset class="physio-fieldset">
-                                    <legend class="physio-legend">Dados Básicos</legend>
-                                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                        <div><label for="data" class="block text-sm font-medium text-white">Data da
-                                                Avaliação</label><input type="date" id="data" required
-                                                class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md py-2 px-3 text-white focus:ring-blue-500 focus:border-blue-500">
-                                        </div>
-                                        <div><label for="peso" class="block text-sm font-medium text-white">Peso
-                                                Corporal (kg)</label><input type="number" step="0.1" id="peso" required
-                                                class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md py-2 px-3 text-white focus:ring-blue-500 focus:border-blue-500">
-                                        </div>
-                                        <div><label for="altura" class="block text-sm font-medium text-white">Altura
-                                                (cm)</label><input type="number" step="0.1" id="altura" required
-                                                class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md py-2 px-3 text-white focus:ring-blue-500 focus:border-blue-500">
-                                        </div>
-                                    </div>
+                                <fieldset class="grid grid-cols-1 md:grid-cols-3 gap-6 border-l-4 border-blue-500 pl-4">
+                                    <legend class="text-xl font-bold mb-4 text-white">Dados Básicos</legend>
+                                    <div><label for="data" class="block text-sm font-medium text-gray-300">Data da Avaliação</label><input type="date" id="data" required class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md py-2 px-3 text-white focus:ring-blue-500 focus:border-blue-500"></div>
+                                    <div><label for="peso" class="block text-sm font-medium text-gray-300">Peso Corporal (kg)</label><input type="number" step="0.1" id="peso" required class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md py-2 px-3 text-white focus:ring-blue-500 focus:border-blue-500"></div>
+                                    <div><label for="altura" class="block text-sm font-medium text-gray-300">Altura (cm)</label><input type="number" step="0.1" id="altura" required class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md py-2 px-3 text-white focus:ring-blue-500 focus:border-blue-500"></div>
                                 </fieldset>
 
-                                <!-- Seção Dobras Cutâneas -->
-                                <fieldset class="physio-fieldset">
-                                    <legend class="physio-legend">Dobras Cutâneas (mm) - Protocolo Pollock 3</legend>
-                                    <div id="skinfold-fields-container" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <!-- Seção Dobras Cutâneas (Protocolo Pollock 3) -->
+                                <fieldset class="border-l-4 border-blue-500 pl-4">
+                                    <legend class="text-xl font-bold mb-4 text-white">Dobras Cutâneas (mm) - Protocolo Pollock 3</legend>
+                                    <div id="skinfold-fields-container" class="grid grid-cols-1 md:grid-cols-3 gap-6">
                                         <!-- Campos dinâmicos baseados no sexo -->
-                                        <div class="skinfold-field-wrapper" data-gender="Masculino"><label
-                                                for="dc_peitoral"
-                                                class="block text-sm font-medium text-white">Peitoral</label><input
-                                                type="number" step="0.1" id="dc_peitoral"
-                                                class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md py-2 px-3 text-white focus:ring-blue-500 focus:border-blue-500">
-                                        </div>
-                                        <div class="skinfold-field-wrapper" data-gender="Masculino"><label
-                                                for="dc_abdominal"
-                                                class="block text-sm font-medium text-white">Abdominal</label><input
-                                                type="number" step="0.1" id="dc_abdominal"
-                                                class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md py-2 px-3 text-white focus:ring-blue-500 focus:border-blue-500">
-                                        </div>
-                                        <div class="skinfold-field-wrapper" data-gender="Feminino"><label
-                                                for="dc_tricipital"
-                                                class="block text-sm font-medium text-white">Tricipital</label><input
-                                                type="number" step="0.1" id="dc_tricipital"
-                                                class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md py-2 px-3 text-white focus:ring-blue-500 focus:border-blue-500">
-                                        </div>
-                                        <div class="skinfold-field-wrapper" data-gender="Feminino"><label
-                                                for="dc_suprailiaca"
-                                                class="block text-sm font-medium text-white">Suprailíaca</label><input
-                                                type="number" step="0.1" id="dc_suprailiaca"
-                                                class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md py-2 px-3 text-white focus:ring-blue-500 focus:border-blue-500">
-                                        </div>
-                                        <div class="skinfold-field-wrapper" data-gender="Masculino Feminino"><label
-                                                for="dc_coxa"
-                                                class="block text-sm font-medium text-white">Coxa</label><input
-                                                type="number" step="0.1" id="dc_coxa"
-                                                class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md py-2 px-3 text-white focus:ring-blue-500 focus:border-blue-500">
-                                        </div>
+                                        <div class="skinfold-field-wrapper" data-gender="Masculino"><label for="dc_peitoral" class="block text-sm font-medium text-gray-300">Peitoral</label><input type="number" step="0.1" id="dc_peitoral" class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md py-2 px-3 text-white focus:ring-blue-500 focus:border-blue-500"></div>
+                                        <div class="skinfold-field-wrapper" data-gender="Masculino"><label for="dc_abdominal" class="block text-sm font-medium text-gray-300">Abdominal</label><input type="number" step="0.1" id="dc_abdominal" class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md py-2 px-3 text-white focus:ring-blue-500 focus:border-blue-500"></div>
+                                        <div class="skinfold-field-wrapper" data-gender="Feminino"><label for="dc_tricipital" class="block text-sm font-medium text-gray-300">Tricipital</label><input type="number" step="0.1" id="dc_tricipital" class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md py-2 px-3 text-white focus:ring-blue-500 focus:border-blue-500"></div>
+                                        <div class="skinfold-field-wrapper" data-gender="Feminino"><label for="dc_suprailiaca" class="block text-sm font-medium text-gray-300">Suprailíaca</label><input type="number" step="0.1" id="dc_suprailiaca" class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md py-2 px-3 text-white focus:ring-blue-500 focus:border-blue-500"></div>
+                                        <div class="skinfold-field-wrapper" data-gender="Masculino Feminino"><label for="dc_coxa" class="block text-sm font-medium text-gray-300">Coxa</label><input type="number" step="0.1" id="dc_coxa" class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md py-2 px-3 text-white focus:ring-blue-500 focus:border-blue-500"></div>
                                     </div>
                                 </fieldset>
 
                                 <!-- Seção Perímetros -->
-                                <fieldset class="physio-fieldset">
-                                    <legend class="physio-legend">Perímetros (cm)</legend>
-                                    <div class="grid grid-cols-2 gap-x-4 gap-y-4">
-                                        <div><label for="p_torax" class="block text-sm font-medium text-white">Tórax</label><input type="number" step="0.1" id="p_torax" class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md py-2 px-3 text-white focus:ring-blue-500 focus:border-blue-500"></div>
-                                        <div><label for="p_abdomen" class="block text-sm font-medium text-white">Abdômen</label><input type="number" step="0.1" id="p_abdomen" class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md py-2 px-3 text-white focus:ring-blue-500 focus:border-blue-500"></div>
-                                        <div><label for="p_cintura" class="block text-sm font-medium text-white">Cintura</label><input type="number" step="0.1" id="p_cintura" class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md py-2 px-3 text-white focus:ring-blue-500 focus:border-blue-500"></div>
-                                        <div><label for="p_quadril" class="block text-sm font-medium text-white">Quadril</label><input type="number" step="0.1" id="p_quadril" class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md py-2 px-3 text-white focus:ring-blue-500 focus:border-blue-500"></div>
-                                        <div><label for="p_braco_d" class="block text-sm font-medium text-white">Braço Direito</label><input type="number" step="0.1" id="p_braco_d" class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md py-2 px-3 text-white focus:ring-blue-500 focus:border-blue-500"></div>
-                                        <div><label for="p_braco_e" class="block text-sm font-medium text-white">Braço Esquerdo</label><input type="number" step="0.1" id="p_braco_e" class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md py-2 px-3 text-white focus:ring-blue-500 focus:border-blue-500"></div>
-                                        <div><label for="p_antebraco_d" class="block text-sm font-medium text-white">Antebraço Direito</label><input type="number" step="0.1" id="p_antebraco_d" class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md py-2 px-3 text-white focus:ring-blue-500 focus:border-blue-500"></div>
-                                        <div><label for="p_antebraco_e" class="block text-sm font-medium text-white">Antebraço Esquerdo</label><input type="number" step="0.1" id="p_antebraco_e" class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md py-2 px-3 text-white focus:ring-blue-500 focus:border-blue-500"></div>
-                                        <div><label for="p_coxa_prox_d" class="block text-sm font-medium text-white">Coxa Proximal D (PX)</label><input type="number" step="0.1" id="p_coxa_prox_d" class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md py-2 px-3 text-white focus:ring-blue-500 focus:border-blue-500"></div>
-                                        <div><label for="p_coxa_prox_e" class="block text-sm font-medium text-white">Coxa Proximal E (PX)</label><input type="number" step="0.1" id="p_coxa_prox_e" class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md py-2 px-3 text-white focus:ring-blue-500 focus:border-blue-500"></div>
-                                        <div><label for="p_coxa_medial_d" class="block text-sm font-medium text-white">Coxa Medial Direita</label><input type="number" step="0.1" id="p_coxa_medial_d" class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md py-2 px-3 text-white focus:ring-blue-500 focus:border-blue-500"></div>
-                                        <div><label for="p_coxa_medial_e" class="block text-sm font-medium text-white">Coxa Medial Esquerda</label><input type="number" step="0.1" id="p_coxa_medial_e" class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md py-2 px-3 text-white focus:ring-blue-500 focus:border-blue-500"></div>
-                                        <div><label for="p_coxa_distal_d" class="block text-sm font-medium text-white">Coxa Distal D (DT)</label><input type="number" step="0.1" id="p_coxa_distal_d" class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md py-2 px-3 text-white focus:ring-blue-500 focus:border-blue-500"></div>
-                                        <div><label for="p_coxa_distal_e" class="block text-sm font-medium text-white">Coxa Distal E (DT)</label><input type="number" step="0.1" id="p_coxa_distal_e" class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md py-2 px-3 text-white focus:ring-blue-500 focus:border-blue-500"></div>
-                                        <div><label for="p_panturrilha_d" class="block text-sm font-medium text-white">Panturrilha Direita</label><input type="number" step="0.1" id="p_panturrilha_d" class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md py-2 px-3 text-white focus:ring-blue-500 focus:border-blue-500"></div>
-                                        <div><label for="p_panturrilha_e" class="block text-sm font-medium text-white">Panturrilha Esquerda</label><input type="number" step="0.1" id="p_panturrilha_e" class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md py-2 px-3 text-white focus:ring-blue-500 focus:border-blue-500"></div>
-                                    </div>
+                                <fieldset class="grid grid-cols-2 md:grid-cols-4 gap-6 border-l-4 border-blue-500 pl-4">
+                                    <legend class="text-xl font-bold mb-4 text-white">Perímetros (cm)</legend>
+                                    <div><label for="p_torax" class="block text-sm font-medium text-gray-300">Tórax</label><input type="number" step="0.1" id="p_torax" class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md py-2 px-3 text-white focus:ring-blue-500 focus:border-blue-500"></div>
+                                    <div><label for="p_abdomen" class="block text-sm font-medium text-gray-300">Abdômen</label><input type="number" step="0.1" id="p_abdomen" class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md py-2 px-3 text-white focus:ring-blue-500 focus:border-blue-500"></div>
+                                    <div><label for="p_cintura" class="block text-sm font-medium text-gray-300">Cintura</label><input type="number" step="0.1" id="p_cintura" class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md py-2 px-3 text-white focus:ring-blue-500 focus:border-blue-500"></div>
+                                    <div><label for="p_quadril" class="block text-sm font-medium text-gray-300">Quadril</label><input type="number" step="0.1" id="p_quadril" class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md py-2 px-3 text-white focus:ring-blue-500 focus:border-blue-500"></div>
+                                    <div><label for="p_braco_d" class="block text-sm font-medium text-gray-300">Braço Direito</label><input type="number" step="0.1" id="p_braco_d" class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md py-2 px-3 text-white focus:ring-blue-500 focus:border-blue-500"></div>
+                                    <div><label for="p_braco_e" class="block text-sm font-medium text-gray-300">Braço Esquerdo</label><input type="number" step="0.1" id="p_braco_e" class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md py-2 px-3 text-white focus:ring-blue-500 focus:border-blue-500"></div>
+                                    <div><label for="p_antebraco_d" class="block text-sm font-medium text-gray-300">Antebraço Direito</label><input type="number" step="0.1" id="p_antebraco_d" class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md py-2 px-3 text-white focus:ring-blue-500 focus:border-blue-500"></div>
+                                    <div><label for="p_antebraco_e" class="block text-sm font-medium text-gray-300">Antebraço Esquerdo</label><input type="number" step="0.1" id="p_antebraco_e" class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md py-2 px-3 text-white focus:ring-blue-500 focus:border-blue-500"></div>
+                                    <div><label for="p_coxa_proximal_d" class="block text-sm font-medium text-gray-300">Coxa Proximal D (PX)</label><input type="number" step="0.1" id="p_coxa_proximal_d" class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md py-2 px-3 text-white focus:ring-blue-500 focus:border-blue-500"></div>
+                                    <div><label for="p_coxa_proximal_e" class="block text-sm font-medium text-gray-300">Coxa Proximal E (PX)</label><input type="number" step="0.1" id="p_coxa_proximal_e" class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md py-2 px-3 text-white focus:ring-blue-500 focus:border-blue-500"></div>
+                                    <div><label for="p_coxa_d" class="block text-sm font-medium text-gray-300">Coxa Medial Direita</label><input type="number" step="0.1" id="p_coxa_d" class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md py-2 px-3 text-white focus:ring-blue-500 focus:border-blue-500"></div>
+                                    <div><label for="p_coxa_e" class="block text-sm font-medium text-gray-300">Coxa Medial Esquerda</label><input type="number" step="0.1" id="p_coxa_e" class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md py-2 px-3 text-white focus:ring-blue-500 focus:border-blue-500"></div>
+                                    <div><label for="p_coxa_distal_d" class="block text-sm font-medium text-gray-300">Coxa Distal D (DT)</label><input type="number" step="0.1" id="p_coxa_distal_d" class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md py-2 px-3 text-white focus:ring-blue-500 focus:border-blue-500"></div>
+                                    <div><label for="p_coxa_distal_e" class="block text-sm font-medium text-gray-300">Coxa Distal E (DT)</label><input type="number" step="0.1" id="p_coxa_distal_e" class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md py-2 px-3 text-white focus:ring-blue-500 focus:border-blue-500"></div>
+                                    <div><label for="p_panturrilha_d" class="block text-sm font-medium text-gray-300">Panturrilha Direita</label><input type="number" step="0.1" id="p_panturrilha_d" class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md py-2 px-3 text-white focus:ring-blue-500 focus:border-blue-500"></div>
+                                    <div><label for="p_panturrilha_e" class="block text-sm font-medium text-gray-300">Panturrilha Esquerda</label><input type="number" step="0.1" id="p_panturrilha_e" class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md py-2 px-3 text-white focus:ring-blue-500 focus:border-blue-500"></div>
                                 </fieldset>
 
                                 <!-- Seção Bioimpedância -->
-                                <fieldset class="physio-fieldset">
-                                    <legend class="physio-legend">Bioimpedância</legend>
-                                    <div class="grid grid-cols-2 gap-x-4 gap-y-4">
-                                        <div><label for="bio_agua" class="block text-sm font-medium text-white">Água Corporal (%)</label><input type="number" step="0.1" id="bio_agua" class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md py-2 px-3 text-white focus:ring-blue-500 focus:border-blue-500"></div>
-                                        <div><label for="bio_proteina" class="block text-sm font-medium text-white">Proteína (%)</label><input type="number" step="0.1" id="bio_proteina" class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md py-2 px-3 text-white focus:ring-blue-500 focus:border-blue-500"></div>
-                                        <div><label for="bio_minerais" class="block text-sm font-medium text-white">Minerais (%)</label><input type="number" step="0.1" id="bio_minerais" class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md py-2 px-3 text-white focus:ring-blue-500 focus:border-blue-500"></div>
-                                        <div><label for="bio_massa_gordura" class="block text-sm font-medium text-white">Massa Gordura (kg)</label><input type="number" step="0.1" id="bio_massa_gordura" class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md py-2 px-3 text-white focus:ring-blue-500 focus:border-blue-500"></div>
-                                        <div><label for="bio_massa_magra" class="block text-sm font-medium text-white">Massa Magra (kg)</label><input type="number" step="0.1" id="bio_massa_magra" class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md py-2 px-3 text-white focus:ring-blue-500 focus:border-blue-500"></div>
-                                        <div><label for="bio_tmb" class="block text-sm font-medium text-white">TMB (kcal)</label><input type="number" step="0.1" id="bio_tmb" class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md py-2 px-3 text-white focus:ring-blue-500 focus:border-blue-500"></div>
-                                        <div><label for="bio_gordura_visceral" class="block text-sm font-medium text-white">Gordura Visceral</label><input type="number" step="1" id="bio_gordura_visceral" class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md py-2 px-3 text-white focus:ring-blue-500 focus:border-blue-500"></div>
-                                        <div><label for="bio_grau_obesidade" class="block text-sm font-medium text-white">Grau Obesidade (%)</label><input type="number" step="0.1" id="bio_grau_obesidade" class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md py-2 px-3 text-white focus:ring-blue-500 focus:border-blue-500"></div>
-                                    </div>
+                                <fieldset class="grid grid-cols-2 md:grid-cols-4 gap-6 border-l-4 border-blue-500 pl-4">
+                                    <legend class="text-xl font-bold mb-4 text-white">Bioimpedância</legend>
+                                    <div><label for="bio_agua_corporal" class="block text-sm font-medium text-gray-300">Água Corporal (%)</label><input type="number" step="0.1" id="bio_agua_corporal" class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md py-2 px-3 text-white focus:ring-blue-500 focus:border-blue-500"></div>
+                                    <div><label for="bio_proteina" class="block text-sm font-medium text-gray-300">Proteína (%)</label><input type="number" step="0.1" id="bio_proteina" class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md py-2 px-3 text-white focus:ring-blue-500 focus:border-blue-500"></div>
+                                    <div><label for="bio_minerais" class="block text-sm font-medium text-gray-300">Minerais (%)</label><input type="number" step="0.1" id="bio_minerais" class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md py-2 px-3 text-white focus:ring-blue-500 focus:border-blue-500"></div>
+                                    <div><label for="bio_massa_gordura" class="block text-sm font-medium text-gray-300">Massa Gordura (kg)</label><input type="number" step="0.1" id="bio_massa_gordura" class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md py-2 px-3 text-white focus:ring-blue-500 focus:border-blue-500"></div>
+                                    <div><label for="bio_massa_magra" class="block text-sm font-medium text-gray-300">Massa Magra (kg)</label><input type="number" step="0.1" id="bio_massa_magra" class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md py-2 px-3 text-white focus:ring-blue-500 focus:border-blue-500"></div>
+                                    <div><label for="bio_tmb" class="block text-sm font-medium text-gray-300">TMB (kcal)</label><input type="number" id="bio_tmb" class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md py-2 px-3 text-white focus:ring-blue-500 focus:border-blue-500"></div>
+                                    <div><label for="bio_gordura_visceral" class="block text-sm font-medium text-gray-300">Gordura Visceral</label><input type="number" id="bio_gordura_visceral" class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md py-2 px-3 text-white focus:ring-blue-500 focus:border-blue-500"></div>
+                                    <div><label for="bio_grau_obesidade" class="block text-sm font-medium text-gray-300">Grau Obesidade (%)</label><input type="number" step="0.1" id="bio_grau_obesidade" class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md py-2 px-3 text-white focus:ring-blue-500 focus:border-blue-500"></div>
                                 </fieldset>
 
                                 <div class="flex justify-end pt-4">
-                                    <button type="submit" id="btn-salvar-avaliacao"
-                                        class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg shadow-lg transition-transform transform hover:scale-105">
+                                    <button type="submit" id="btn-salvar-avaliacao" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg shadow-lg transition-transform transform hover:scale-105">
                                         <i class="fas fa-save mr-2"></i> Salvar Avaliação
                                     </button>
                                 </div>
@@ -490,8 +443,7 @@
                     <div id="view-aluno" class="hidden">
                         <div id="aluno-login-screen">
                             <h2 class="text-2xl font-semibold text-white mb-4">Selecione seu nome</h2>
-                            <select id="aluno-selector"
-                                class="block w-full max-w-md bg-gray-700 border border-gray-600 rounded-md shadow-sm py-3 px-4 text-white focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                            <select id="aluno-selector" class="block w-full max-w-md bg-gray-800 border border-gray-700 rounded-md shadow-sm py-3 px-4 text-white focus:outline-none focus:ring-blue-500 focus:border-blue-500">
                                 <option>Carregando...</option>
                             </select>
                         </div>
@@ -499,7 +451,7 @@
                             <!-- Conteúdo do dashboard do aluno preenchido pelo JS -->
                         </div>
                     </div>
-                </div>
+                </main>
             </div>
 
             <!-- ======================= INÍCIO DAS TELAS DE RASTREAMENTO OUTDOOR ======================= -->
@@ -765,82 +717,31 @@
         </div>
     </div>
 
-    <!-- Modal Detalhes da Corrida -->
-    <div id="raceDetailModal" class="fixed inset-0 bg-black/70 flex items-end justify-center hidden z-50 p-4">
-        <div id="race-modal-content"
-            class="bg-gray-900 rounded-t-2xl max-w-lg w-full transform translate-y-full transition-transform duration-300 border-t border-gray-700">
-            <header class="p-4 border-b border-gray-700 flex justify-between items-center">
-                <h2 id="modal-race-name" class="text-lg font-bold">Nome da Corrida</h2>
-                <button id="closeRaceModalBtn" class="p-2 rounded-full hover:bg-gray-800"><i
-                        data-feather="x"></i></button>
-            </header>
-            <div id="race-modal-body" class="p-4 space-y-4 max-h-[60vh] overflow-y-auto">
-                <div class="grid grid-cols-2 gap-4 text-center">
-                    <div class="bg-gray-800 p-3 rounded-lg">
-                        <p class="text-sm font-semibold">Data</p>
-                        <p id="modal-race-date" class="font-bold text-lg"></p>
-                    </div>
-                    <div class="bg-gray-800 p-3 rounded-lg">
-                        <p class="text-sm font-semibold">Horário</p>
-                        <p id="modal-race-time" class="font-bold text-lg"></p>
-                    </div>
+    <!-- Modal Adicionar Aluno (Avaliação Física) -->
+    <div id="modal-add-aluno" class="hidden fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
+        <div class="bg-gray-900 p-8 rounded-xl shadow-2xl w-full max-w-md transform transition-all scale-95 opacity-0 border border-gray-700" id="modal-content">
+            <h3 class="text-2xl font-bold mb-6 text-white">Novo Aluno</h3>
+            <form id="form-novo-aluno">
+                <div class="mb-4">
+                    <label for="nome-aluno" class="block text-sm font-medium text-gray-300">Nome Completo</label>
+                    <input type="text" id="nome-aluno" required class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-blue-500 focus:border-blue-500">
                 </div>
-                <div class="bg-gray-800 p-3 rounded-lg">
-                    <p class="text-sm font-semibold">Local</p>
-                    <p id="modal-race-location" class="font-bold"></p>
+                 <div class="mb-4">
+                    <label for="sexo-aluno" class="block text-sm font-medium text-gray-300">Sexo</label>
+                    <select id="sexo-aluno" required class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                        <option value="Masculino">Masculino</option>
+                        <option value="Feminino">Feminino</option>
+                    </select>
                 </div>
-                <div class="bg-gray-800 p-3 rounded-lg">
-                    <p class="text-sm font-semibold">Distâncias</p>
-                    <p id="modal-race-distances" class="font-bold"></p>
+                <div class="mb-6">
+                    <label for="nascimento-aluno" class="block text-sm font-medium text-gray-300">Data de Nascimento</label>
+                    <input type="date" id="nascimento-aluno" required class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-blue-500 focus:border-blue-500" style="color-scheme: dark;">
                 </div>
-                <div class="bg-gray-800 p-3 rounded-lg">
-                    <p class="text-sm font-semibold">Valores</p>
-                    <p id="modal-race-price" class="font-bold"></p>
+                <div class="flex justify-end space-x-4">
+                    <button type="button" id="btn-cancel-modal" class="bg-gray-600 hover:bg-gray-500 text-white font-bold py-2 px-4 rounded-lg">Cancelar</button>
+                    <button type="submit" id="btn-salvar-aluno" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg"><i class="fas fa-save mr-2"></i>Salvar Aluno</button>
                 </div>
-            </div>
-            <div class="p-4 border-t border-gray-700">
-                <a id="modal-race-link" href="#" target="_blank"
-                    class="block w-full text-center bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-xl">
-                    Inscreva-se
-                </a>
-            </div>
-        </div>
-    </div>
-    
-     <!-- Modal Adicionar Aluno (Avaliação Física) -->
-    <div id="modal-add-aluno" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 hidden z-50">
-        <div id="modal-add-aluno-content"
-            class="bg-gray-900 rounded-2xl shadow-xl w-full max-w-lg transform scale-95 opacity-0 transition-all duration-300 border border-gray-700">
-            <div class="p-6">
-                <h2 class="text-2xl font-bold text-white mb-6">Cadastrar Novo Aluno</h2>
-                <form id="form-novo-aluno" class="space-y-4">
-                    <div>
-                        <label for="nome-aluno" class="block text-sm font-medium text-white mb-1">Nome Completo</label>
-                        <input type="text" id="nome-aluno" required
-                            class="w-full p-3 border border-gray-600 bg-gray-700 text-white rounded-lg focus:ring-blue-500 focus:border-blue-500">
-                    </div>
-                    <div>
-                        <label for="sexo-aluno" class="block text-sm font-medium text-white mb-1">Sexo</label>
-                        <select id="sexo-aluno" required
-                            class="w-full p-3 border border-gray-600 bg-gray-700 text-white rounded-lg focus:ring-blue-500 focus:border-blue-500">
-                            <option value="Masculino">Masculino</option>
-                            <option value="Feminino">Feminino</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label for="nascimento-aluno" class="block text-sm font-medium text-white mb-1">Data de Nascimento</label>
-                        <input type="date" id="nascimento-aluno" required style="color-scheme: dark;"
-                            class="w-full p-3 border border-gray-600 bg-gray-700 text-white rounded-lg focus:ring-blue-500 focus:border-blue-500">
-                    </div>
-                    <div class="pt-6 flex justify-end space-x-4">
-                        <button type="button" id="btn-cancel-modal"
-                            class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-6 rounded-lg transition">Cancelar</button>
-                        <button type="submit"
-                            class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg transition">Salvar
-                            Aluno</button>
-                    </div>
-                </form>
-            </div>
+            </form>
         </div>
     </div>
     

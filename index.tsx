@@ -1,4 +1,5 @@
 
+
 import { GoogleGenAI } from "@google/genai";
 
 // Globals defined by imported scripts
@@ -105,45 +106,6 @@ const database = {
     completedWorkouts: {},
     activeSessions: {},
     raceCalendar: []
-};
-
-// --- SISTEMA DE AVALIAção FÍSICA ---
-const PHYSIO_DB_KEY = 'abfit_physio_alunos';
-const getPhysioAlunosFromStorage = () => JSON.parse(localStorage.getItem(PHYSIO_DB_KEY) || '[]');
-const savePhysioAlunosToStorage = (alunosData) => localStorage.setItem(PHYSIO_DB_KEY, JSON.stringify(alunosData));
-const calculateBodyComposition = (avaliacao, aluno) => {
-    const idade = aluno.nascimento ? new Date().getFullYear() - new Date(aluno.nascimento).getFullYear() : 0;
-    const sexo = aluno.sexo;
-    const peso = avaliacao.peso;
-    const altura = avaliacao.altura;
-    if (!peso || !altura) return {};
-    const imc = (peso / ((altura / 100) ** 2));
-    let somaDobras = 0;
-    if (sexo === 'Masculino') {
-        somaDobras = (parseFloat(avaliacao.dc_peitoral) || 0) + (parseFloat(avaliacao.dc_abdominal) || 0) + (parseFloat(avaliacao.dc_coxa) || 0);
-    } else { // Feminino
-        somaDobras = (parseFloat(avaliacao.dc_tricipital) || 0) + (parseFloat(avaliacao.dc_suprailiaca) || 0) + (parseFloat(avaliacao.dc_coxa) || 0);
-    }
-    if (somaDobras === 0 || !idade || !sexo) {
-        return { imc: imc.toFixed(1) };
-    }
-    let densidadeCorporal = 0;
-    if (sexo === 'Masculino') {
-        densidadeCorporal = 1.10938 - (0.0008267 * somaDobras) + (0.0000016 * (somaDobras ** 2)) - (0.0002574 * idade);
-    } else { // Feminino
-        densidadeCorporal = 1.0994921 - (0.0009929 * somaDobras) + (0.0000023 * (somaDobras ** 2)) - (0.0001392 * idade);
-    }
-    const percentualGordura = densidadeCorporal > 0 ? ((4.95 / densidadeCorporal) - 4.5) * 100 : 0;
-    const pesoGordo = peso * (percentualGordura / 100);
-    const pesoMagro = peso - pesoGordo;
-    return {
-        somaDobras: somaDobras.toFixed(1),
-        densidadeCorporal: densidadeCorporal.toFixed(4),
-        percentualGordura: percentualGordura.toFixed(1),
-        pesoGordo: pesoGordo.toFixed(1),
-        pesoMagro: pesoMagro.toFixed(1),
-        imc: imc.toFixed(1)
-    };
 };
 
 // --- OFFLINE STORAGE SYSTEM ---
@@ -838,8 +800,8 @@ function renderStudentProfile(email) {
             } else if (targetScreenId === 'stressLevelScreen') {
                 renderStressLevelScreen(email);
             } else if (targetScreenId === 'raceCalendarScreen') {
-// FIX: renderRaceCalendarScreen was not defined
-                renderRaceCalendarScreen(email);
+                // FIX: `renderRaceCalendarScreen` does not take any arguments.
+                renderRaceCalendarScreen();
             }
 
 
@@ -2262,7 +2224,7 @@ function renderAiAnalysisScreen(email: string) {
 }
 
 // FIX: Add missing function renderRaceCalendarScreen
-function renderRaceCalendarScreen(email: string) {
+function renderRaceCalendarScreen() {
     const listEl = document.getElementById('race-calendar-list');
     if (!listEl) return;
 
@@ -2512,364 +2474,452 @@ function initializeOutdoorSelectionScreen() {
     // Placeholder for outdoor selection screen logic
 }
 
-// --- AVALIAÇÃO FÍSICA & CÂMERA ---
-let cameraStream: MediaStream | null = null;
-let currentAlunoIdForPhoto = null;
+// --- SISTEMA DE AVALIAÇÃO FÍSICA ---
+const PHYSIO_DB_KEY = 'abfit_physio_alunos';
 
-async function openCameraModal(alunoId) {
-    currentAlunoIdForPhoto = alunoId;
-    const modal = document.getElementById('cameraModal');
-    // Fix: Cast to HTMLVideoElement to access srcObject
-    const video = document.getElementById('camera-stream') as HTMLVideoElement;
+let physioState = {
+    currentAlunoId: null as string | null,
+    alunos: [] as any[],
+    editingAlunoId: null as string | null,
+};
+
+const getPhysioAlunosFromStorage = () => {
+    const data = localStorage.getItem(PHYSIO_DB_KEY);
+    return data ? JSON.parse(data) : [];
+};
+
+const savePhysioAlunosToStorage = (alunosData) => {
+    localStorage.setItem(PHYSIO_DB_KEY, JSON.stringify(alunosData));
+};
+
+const calculateBodyComposition = (avaliacao, aluno) => {
+    const idade = aluno.nascimento ? new Date().getFullYear() - new Date(aluno.nascimento).getFullYear() : 0;
+    const sexo = aluno.sexo;
+    const peso = avaliacao.peso;
+    const altura = avaliacao.altura;
+
+    if (!peso || !altura) return {};
+
+    const imc = (peso / ((altura / 100) ** 2));
     
-    modal.classList.remove('hidden');
-
-    try {
-        cameraStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
-        video.srcObject = cameraStream;
-    } catch (err) {
-        console.error("Error accessing camera: ", err);
-        alert("Não foi possível acessar a câmera. Verifique as permissões do seu navegador.");
-        closeCameraModal();
+    let somaDobras = 0;
+    if (sexo === 'Masculino') {
+        somaDobras = (parseFloat(avaliacao.dc_peitoral) || 0) + (parseFloat(avaliacao.dc_abdominal) || 0) + (parseFloat(avaliacao.dc_coxa) || 0);
+    } else { // Feminino
+        somaDobras = (parseFloat(avaliacao.dc_tricipital) || 0) + (parseFloat(avaliacao.dc_suprailiaca) || 0) + (parseFloat(avaliacao.dc_coxa) || 0);
     }
-}
 
-function closeCameraModal() {
-    if (cameraStream) {
-        cameraStream.getTracks().forEach(track => track.stop());
+    if (somaDobras === 0 || !idade || !sexo) {
+        return { imc: imc.toFixed(1) };
     }
-    cameraStream = null;
-    currentAlunoIdForPhoto = null;
-    const modal = document.getElementById('cameraModal');
-    modal.classList.add('hidden');
-}
-
-function capturePhoto() {
-    if (!currentAlunoIdForPhoto) return;
-
-    // Fix: Cast to HTMLVideoElement and HTMLCanvasElement
-    const video = document.getElementById('camera-stream') as HTMLVideoElement;
-    const canvas = document.getElementById('camera-canvas') as HTMLCanvasElement;
-    const context = canvas.getContext('2d');
-
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-    context.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-    const dataUrl = canvas.toDataURL('image/jpeg');
     
-    const alunos = getPhysioAlunosFromStorage();
-    const alunoIndex = alunos.findIndex(a => a.id === currentAlunoIdForPhoto);
-    if (alunoIndex !== -1) {
-        alunos[alunoIndex].photo = dataUrl;
-        savePhysioAlunosToStorage(alunos);
-        
-        const photoEl = document.getElementById('physio-aluno-photo');
-        if (photoEl) {
-            // Fix: Cast to HTMLImageElement to set src
-            (photoEl as HTMLImageElement).src = dataUrl;
-        }
-        
-        const alunoCardPhoto = document.querySelector(`.aluno-card[data-aluno-id="${currentAlunoIdForPhoto}"] img`);
-        if (alunoCardPhoto) {
-            // Fix: Cast to HTMLImageElement to set src
-            (alunoCardPhoto as HTMLImageElement).src = dataUrl;
-        }
+    let densidadeCorporal = 0;
+    if (sexo === 'Masculino') {
+        densidadeCorporal = 1.10938 - (0.0008267 * somaDobras) + (0.0000016 * (somaDobras**2)) - (0.0002574 * idade);
+    } else { // Feminino
+        densidadeCorporal = 1.0994921 - (0.0009929 * somaDobras) + (0.0000023 * (somaDobras**2)) - (0.0001392 * idade);
     }
 
-    closeCameraModal();
-}
+    const percentualGordura = densidadeCorporal > 0 ? ((4.95 / densidadeCorporal) - 4.5) * 100 : 0;
+    const pesoGordo = peso * (percentualGordura / 100);
+    const pesoMagro = peso - pesoGordo;
+    const rcq = avaliacao.p_quadril > 0 && avaliacao.p_cintura > 0 ? (avaliacao.p_cintura / avaliacao.p_quadril) : 0;
+
+    return {
+        somaDobras: somaDobras.toFixed(1),
+        densidadeCorporal: densidadeCorporal.toFixed(4),
+        percentualGordura: percentualGordura.toFixed(1),
+        pesoGordo: pesoGordo.toFixed(1),
+        pesoMagro: pesoMagro.toFixed(1),
+        imc: imc.toFixed(1),
+        rcq: rcq.toFixed(2)
+    };
+};
 
 function initializePhysioAssessmentScreen() {
-    const professorView = document.getElementById('view-professor');
-    const alunoView = document.getElementById('view-aluno');
-    const professorTab = document.getElementById('tab-professor');
-    const alunoTab = document.getElementById('tab-aluno');
-    
+    physioState.alunos = getPhysioAlunosFromStorage();
+
+    const tabProfessor = document.getElementById('tab-professor');
+    const tabAluno = document.getElementById('tab-aluno');
+    const viewProfessor = document.getElementById('view-professor');
+    const viewAluno = document.getElementById('view-aluno');
+    const btnAddAluno = document.getElementById('btn-add-aluno');
+    const modalAddAluno = document.getElementById('modal-add-aluno');
+    const modalContent = document.getElementById('modal-content');
+    const btnCancelModal = document.getElementById('btn-cancel-modal');
+    const formNovoAluno = document.getElementById('form-novo-aluno') as HTMLFormElement;
+    const listaAlunosEl = document.getElementById('lista-alunos');
     const professorDashboard = document.getElementById('professor-dashboard');
     const formAvaliacao = document.getElementById('form-avaliacao');
     const viewAlunoData = document.getElementById('view-aluno-data');
+    const btnBackToDashboard = document.getElementById('btn-back-to-dashboard');
+    const avaliacaoFormEl = document.getElementById('avaliacao-form') as HTMLFormElement;
+    const alunoSelector = document.getElementById('aluno-selector') as HTMLSelectElement;
+    const alunoLoginScreen = document.getElementById('aluno-login-screen');
+    const alunoDashboard = document.getElementById('aluno-dashboard');
+    const cameraModal = document.getElementById('cameraModal');
+    const videoStream = document.getElementById('camera-stream') as HTMLVideoElement;
+    const captureBtn = document.getElementById('capture-photo-btn');
+    const closeCameraBtn = document.getElementById('close-camera-modal-btn');
 
-    professorTab.addEventListener('click', () => {
-        professorTab.classList.add('tab-active');
-        alunoTab.classList.remove('tab-active');
-        professorView.style.display = 'block';
-        alunoView.style.display = 'none';
-    });
 
-    alunoTab.addEventListener('click', () => {
-        alunoTab.classList.add('tab-active');
-        professorTab.classList.remove('tab-active');
-        alunoView.style.display = 'block';
-        professorView.style.display = 'none';
-        renderAlunoViewSelector();
-    });
-
-    professorTab.click();
-    
-    const addAlunoModal = document.getElementById('modal-add-aluno');
-    const addAlunoModalContent = document.getElementById('modal-add-aluno-content');
-    const addAlunoBtn = document.getElementById('btn-add-aluno');
-    const cancelAlunoBtn = document.getElementById('btn-cancel-modal');
-    // Fix: Cast to HTMLFormElement to access reset method
-    const saveAlunoForm = document.getElementById('form-novo-aluno') as HTMLFormElement;
-
-    const openAddAlunoModal = () => {
-        const nascimentoInput = document.getElementById('nascimento-aluno') as HTMLInputElement;
-        // Set min and max dates to provide a reasonable range for date of birth, fixing browser inconsistencies.
-        if (nascimentoInput) {
-            const today = new Date();
-            const farInThePast = new Date(today.getFullYear() - 125, today.getMonth(), today.getDate());
-            
-            nascimentoInput.max = today.toISOString().split('T')[0];
-            nascimentoInput.min = farInThePast.toISOString().split('T')[0];
+    const switchView = (viewToShow) => {
+        if (viewToShow === 'professor') {
+            tabProfessor.classList.add('tab-active');
+            tabAluno.classList.remove('tab-active');
+            viewProfessor.classList.remove('hidden');
+            viewAluno.classList.add('hidden');
+            renderProfessorDashboard();
+        } else {
+            tabAluno.classList.add('tab-active');
+            tabProfessor.classList.remove('tab-active');
+            viewAluno.classList.remove('hidden');
+            viewProfessor.classList.add('hidden');
+            renderAlunoLogin();
         }
+    };
+    
+    const showScreenView = (view) => {
+        [professorDashboard, formAvaliacao, viewAlunoData].forEach(el => el.classList.add('hidden'));
+        view.classList.remove('hidden');
+    }
 
-        addAlunoModal.classList.remove('hidden');
-        setTimeout(() => {
-            addAlunoModalContent.classList.remove('scale-95', 'opacity-0');
-        }, 10);
+    tabProfessor.onclick = () => switchView('professor');
+    tabAluno.onclick = () => switchView('aluno');
+    
+    const showAddAlunoModal = (alunoToEdit = null) => {
+        physioState.editingAlunoId = alunoToEdit ? alunoToEdit.id : null;
+        formNovoAluno.reset();
+        (document.getElementById('nome-aluno') as HTMLInputElement).value = alunoToEdit ? alunoToEdit.nome : '';
+        (document.getElementById('sexo-aluno') as HTMLSelectElement).value = alunoToEdit ? alunoToEdit.sexo : 'Masculino';
+        (document.getElementById('nascimento-aluno') as HTMLInputElement).value = alunoToEdit ? alunoToEdit.nascimento : '';
+        (modalAddAluno.querySelector('h3') as HTMLElement).textContent = alunoToEdit ? 'Editar Aluno' : 'Novo Aluno';
+        
+        modalAddAluno.classList.remove('hidden');
+        requestAnimationFrame(() => {
+            modalContent.classList.remove('scale-95', 'opacity-0');
+        });
     };
 
-    const closeAddAlunoModal = () => {
-        addAlunoModalContent.classList.add('scale-95', 'opacity-0');
+    const hideAddAlunoModal = () => {
+        modalContent.classList.add('scale-95', 'opacity-0');
         setTimeout(() => {
-            addAlunoModal.classList.add('hidden');
+            modalAddAluno.classList.add('hidden');
         }, 300);
     };
-    
-    addAlunoBtn.addEventListener('click', openAddAlunoModal);
-    cancelAlunoBtn.addEventListener('click', closeAddAlunoModal);
-    addAlunoModal.addEventListener('click', (e) => {
-        if (e.target === addAlunoModal) closeAddAlunoModal();
-    });
 
-    saveAlunoForm.addEventListener('submit', (e) => {
+    btnAddAluno.onclick = () => showAddAlunoModal();
+    btnCancelModal.onclick = hideAddAlunoModal;
+
+    formNovoAluno.onsubmit = (e) => {
         e.preventDefault();
-        // Fix: Cast to access value property
         const nome = (document.getElementById('nome-aluno') as HTMLInputElement).value;
         const sexo = (document.getElementById('sexo-aluno') as HTMLSelectElement).value;
         const nascimento = (document.getElementById('nascimento-aluno') as HTMLInputElement).value;
-        
-        const alunos = getPhysioAlunosFromStorage();
-        const newAluno = {
-            id: `aluno-${Date.now()}`,
-            nome,
-            sexo,
-            nascimento,
-            avaliacoes: [],
-            photo: null
-        };
-        alunos.push(newAluno);
-        savePhysioAlunosToStorage(alunos);
-        
-        saveAlunoForm.reset();
-        closeAddAlunoModal();
-        renderProfessorDashboard();
-    });
-    
-    document.getElementById('close-camera-modal-btn').addEventListener('click', closeCameraModal);
-    document.getElementById('capture-photo-btn').addEventListener('click', capturePhoto);
 
-    renderProfessorDashboard();
-}
-
-function renderProfessorDashboard() {
-    const alunos = getPhysioAlunosFromStorage();
-    const listaAlunosEl = document.getElementById('lista-alunos');
-    const loader = document.getElementById('loader');
-    const noAlunosMsg = document.getElementById('no-alunos-message');
-    
-    document.getElementById('professor-dashboard').style.display = 'block';
-    document.getElementById('form-avaliacao').style.display = 'none';
-    document.getElementById('view-aluno-data').style.display = 'none';
-
-    loader.style.display = 'block';
-    listaAlunosEl.style.display = 'none';
-    noAlunosMsg.style.display = 'none';
-
-    setTimeout(() => {
-        loader.style.display = 'none';
-        if (alunos.length === 0) {
-            noAlunosMsg.style.display = 'block';
+        if (physioState.editingAlunoId) {
+             const aluno = physioState.alunos.find(a => a.id === physioState.editingAlunoId);
+             if(aluno) {
+                aluno.nome = nome;
+                aluno.sexo = sexo;
+                aluno.nascimento = nascimento;
+             }
         } else {
-            listaAlunosEl.innerHTML = '';
-            alunos.forEach(aluno => {
-                const card = document.createElement('div');
-                card.className = 'aluno-card bg-gray-800 p-4 rounded-xl shadow-md flex items-center justify-between cursor-pointer hover:bg-gray-700 transition';
-                card.dataset.alunoId = aluno.id;
-                card.innerHTML = `
-                    <div class="flex items-center space-x-4">
-                        <img src="${aluno.photo || 'https://via.placeholder.com/64x64/4b5563/FFFFFF?text=SEM+FOTO'}" alt="Foto do Aluno" class="w-16 h-16 rounded-full object-cover border-2 border-gray-600">
-                        <div>
-                            <h4 class="font-bold text-lg">${aluno.nome}</h4>
-                            <p class="text-sm">${aluno.avaliacoes.length} avaliações</p>
+             const newAluno = {
+                id: `aluno-${Date.now()}`,
+                nome,
+                sexo,
+                nascimento,
+                photo: 'https://via.placeholder.com/150/4b5563/FFFFFF?text=SEM+FOTO',
+                avaliacoes: []
+            };
+            physioState.alunos.push(newAluno);
+        }
+
+        savePhysioAlunosToStorage(physioState.alunos);
+        renderProfessorDashboard();
+        hideAddAlunoModal();
+    };
+    
+    const calculateAge = (dob) => {
+        if (!dob) return '';
+        const birthDate = new Date(dob);
+        const today = new Date();
+        let age = today.getFullYear() - birthDate.getFullYear();
+        const m = today.getMonth() - birthDate.getMonth();
+        if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+            age--;
+        }
+        return age;
+    }
+    
+    const renderProfessorDashboard = () => {
+        showScreenView(professorDashboard);
+        const loader = document.getElementById('loader');
+        const noAlunosMsg = document.getElementById('no-alunos-message');
+        
+        loader.classList.remove('hidden');
+        listaAlunosEl.classList.add('hidden');
+        noAlunosMsg.classList.add('hidden');
+
+        setTimeout(() => {
+            loader.classList.add('hidden');
+            if (physioState.alunos.length === 0) {
+                noAlunosMsg.classList.remove('hidden');
+            } else {
+                listaAlunosEl.innerHTML = physioState.alunos.map(aluno => `
+                     <div class="bg-gray-800 rounded-2xl shadow-lg overflow-hidden border border-gray-700">
+                        <div class="p-5">
+                            <div class="flex items-center space-x-4">
+                                <img src="${aluno.photo || 'https://via.placeholder.com/150'}" alt="Foto do Aluno" class="w-16 h-16 rounded-full border-2 border-blue-500 object-cover">
+                                <div>
+                                    <h3 class="text-xl font-bold text-white">${aluno.nome}</h3>
+                                    <p class="text-sm text-gray-400">${aluno.sexo}, ${calculateAge(aluno.nascimento)} anos</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bg-gray-900/50 p-3 grid grid-cols-2 gap-2 text-sm">
+                            <button class="aluno-action-btn view-aluno" data-id="${aluno.id}"><i class="fas fa-chart-bar mr-2"></i>Ver Dados</button>
+                            <button class="aluno-action-btn add-avaliacao" data-id="${aluno.id}"><i class="fas fa-plus mr-2"></i>Avaliar</button>
+                             <button class="aluno-action-btn edit-aluno" data-id="${aluno.id}"><i class="fas fa-edit mr-2"></i>Editar</button>
+                             <button class="aluno-action-btn delete-aluno" data-id="${aluno.id}"><i class="fas fa-trash mr-2"></i>Excluir</button>
+                             <button class="aluno-action-btn add-photo" data-id="${aluno.id}"><i class="fas fa-camera mr-2"></i>Foto</button>
                         </div>
                     </div>
-                    <i class="fas fa-chevron-right text-gray-400"></i>
-                `;
-                card.addEventListener('click', () => renderPhysioAlunoData(aluno.id));
-                listaAlunosEl.appendChild(card);
-            });
-            listaAlunosEl.style.display = 'grid';
-        }
-    }, 500);
-}
-
-function renderPhysioAlunoData(alunoId) {
-    const aluno = getPhysioAlunosFromStorage().find(a => a.id === alunoId);
-    if (!aluno) return;
-
-    document.getElementById('professor-dashboard').style.display = 'none';
-    document.getElementById('form-avaliacao').style.display = 'none';
-    const viewContainer = document.getElementById('view-aluno-data');
-    viewContainer.style.display = 'block';
-
-    const idade = aluno.nascimento ? new Date().getFullYear() - new Date(aluno.nascimento).getFullYear() : 'N/A';
-
-    viewContainer.innerHTML = `
-        <div class="flex items-center mb-6">
-            <button id="btn-back-to-physio-dashboard" class="mr-4 bg-gray-700 hover:bg-gray-600 p-2 rounded-full text-white"><i class="fas fa-arrow-left"></i></button>
-            <h2 class="text-2xl font-semibold text-white">Perfil de <span class="text-blue-400">${aluno.nome}</span></h2>
-        </div>
-        <div class="bg-gray-800 p-6 rounded-2xl shadow-xl mb-6">
-            <div class="flex items-center space-x-4">
-                <div class="relative">
-                    <img id="physio-aluno-photo" src="${aluno.photo || 'https://via.placeholder.com/100x100/4b5563/FFFFFF?text=SEM+FOTO'}" alt="Foto do Aluno" class="w-24 h-24 rounded-full object-cover border-4 border-blue-500">
-                    <button id="update-photo-btn" aria-label="Atualizar foto do perfil" class="absolute bottom-0 right-0 bg-white text-gray-800 p-2 rounded-full shadow-md hover:bg-gray-200 transition">
-                        <i data-feather="camera" class="w-4 h-4" aria-hidden="true"></i>
-                    </button>
-                </div>
-                <div>
-                    <h3 class="text-xl font-bold">${aluno.nome}</h3>
-                    <p>${aluno.sexo}</p>
-                    <p>${idade} anos</p>
-                </div>
-            </div>
-        </div>
-        <div class="flex justify-between items-center mb-4">
-            <h3 class="text-xl font-bold text-white">Histórico de Avaliações</h3>
-            <button id="btn-nova-avaliacao" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg"><i class="fas fa-plus mr-2"></i> Nova Avaliação</button>
-        </div>
-        <div id="assessments-history-list" class="space-y-4"></div>
-    `;
-    // Fix: Call feather.replace() to render icons
-    feather.replace();
-    renderAssessmentsHistory(aluno);
-    
-    document.getElementById('btn-back-to-physio-dashboard').addEventListener('click', renderProfessorDashboard);
-    document.getElementById('update-photo-btn').addEventListener('click', () => openCameraModal(aluno.id));
-    document.getElementById('btn-nova-avaliacao').addEventListener('click', () => renderNewAssessmentForm(aluno.id));
-}
-
-function renderNewAssessmentForm(alunoId) {
-    const alunos = getPhysioAlunosFromStorage();
-    const aluno = alunos.find(a => a.id === alunoId);
-    if (!aluno) return;
-
-    // Show form, hide other views
-    document.getElementById('professor-dashboard').style.display = 'none';
-    document.getElementById('view-aluno-data').style.display = 'none';
-    document.getElementById('form-avaliacao').style.display = 'block';
-
-    // Populate student name
-    document.getElementById('form-aluno-nome').textContent = aluno.nome;
-
-    // Configure form
-    const form = document.getElementById('avaliacao-form') as HTMLFormElement;
-    form.reset();
-    (document.getElementById('data') as HTMLInputElement).value = new Date().toISOString().split('T')[0];
-    
-    // Show skinfold fields based on gender
-    document.querySelectorAll('.skinfold-field-wrapper').forEach(el => {
-        const element = el as HTMLElement;
-        const requiredGender = element.dataset.gender;
-        if (requiredGender && requiredGender.includes(aluno.sexo)) {
-            element.style.display = 'block';
-        } else {
-            element.style.display = 'none';
-        }
-    });
-
-    // Handle form submission (clone to prevent duplicate listeners)
-    const newForm = form.cloneNode(true) as HTMLFormElement;
-    form.parentNode.replaceChild(newForm, form);
-
-    newForm.addEventListener('submit', (e) => {
-        e.preventDefault();
-        const newAvaliacao = {
-            // Dados Básicos
-            data: (document.getElementById('data') as HTMLInputElement).value,
-            peso: (document.getElementById('peso') as HTMLInputElement).value,
-            altura: (document.getElementById('altura') as HTMLInputElement).value,
-            
-            // Dobras Cutâneas
-            dc_peitoral: (document.getElementById('dc_peitoral') as HTMLInputElement).value,
-            dc_abdominal: (document.getElementById('dc_abdominal') as HTMLInputElement).value,
-            dc_tricipital: (document.getElementById('dc_tricipital') as HTMLInputElement).value,
-            dc_suprailiaca: (document.getElementById('dc_suprailiaca') as HTMLInputElement).value,
-            dc_coxa: (document.getElementById('dc_coxa') as HTMLInputElement).value,
-
-            // Perímetros
-            p_torax: (document.getElementById('p_torax') as HTMLInputElement).value,
-            p_abdomen: (document.getElementById('p_abdomen') as HTMLInputElement).value,
-            p_cintura: (document.getElementById('p_cintura') as HTMLInputElement).value,
-            p_quadril: (document.getElementById('p_quadril') as HTMLInputElement).value,
-            p_braco_d: (document.getElementById('p_braco_d') as HTMLInputElement).value,
-            p_braco_e: (document.getElementById('p_braco_e') as HTMLInputElement).value,
-            p_antebraco_d: (document.getElementById('p_antebraco_d') as HTMLInputElement).value,
-            p_antebraco_e: (document.getElementById('p_antebraco_e') as HTMLInputElement).value,
-            p_coxa_prox_d: (document.getElementById('p_coxa_prox_d') as HTMLInputElement).value,
-            p_coxa_prox_e: (document.getElementById('p_coxa_prox_e') as HTMLInputElement).value,
-            p_coxa_medial_d: (document.getElementById('p_coxa_medial_d') as HTMLInputElement).value,
-            p_coxa_medial_e: (document.getElementById('p_coxa_medial_e') as HTMLInputElement).value,
-            p_coxa_distal_d: (document.getElementById('p_coxa_distal_d') as HTMLInputElement).value,
-            p_coxa_distal_e: (document.getElementById('p_coxa_distal_e') as HTMLInputElement).value,
-            p_panturrilha_d: (document.getElementById('p_panturrilha_d') as HTMLInputElement).value,
-            p_panturrilha_e: (document.getElementById('p_panturrilha_e') as HTMLInputElement).value,
-
-            // Bioimpedância
-            bio_agua: (document.getElementById('bio_agua') as HTMLInputElement).value,
-            bio_proteina: (document.getElementById('bio_proteina') as HTMLInputElement).value,
-            bio_minerais: (document.getElementById('bio_minerais') as HTMLInputElement).value,
-            bio_massa_gordura: (document.getElementById('bio_massa_gordura') as HTMLInputElement).value,
-            bio_massa_magra: (document.getElementById('bio_massa_magra') as HTMLInputElement).value,
-            bio_tmb: (document.getElementById('bio_tmb') as HTMLInputElement).value,
-            bio_gordura_visceral: (document.getElementById('bio_gordura_visceral') as HTMLInputElement).value,
-            bio_grau_obesidade: (document.getElementById('bio_grau_obesidade') as HTMLInputElement).value,
-        };
-
-        const alunoIndex = alunos.findIndex(a => a.id === alunoId);
-        if (alunoIndex !== -1) {
-            if (!alunos[alunoIndex].avaliacoes) {
-                alunos[alunoIndex].avaliacoes = [];
+                `).join('');
+                listaAlunosEl.classList.remove('hidden');
             }
-            alunos[alunoIndex].avaliacoes.push(newAvaliacao);
-            savePhysioAlunosToStorage(alunos);
-            alert('Avaliação salva com sucesso!');
-            renderPhysioAlunoData(alunoId); // Go back to student profile
+        }, 500);
+    };
+
+    listaAlunosEl.onclick = (e) => {
+        const target = e.target as HTMLElement;
+        const button = target.closest('.aluno-action-btn');
+        if (!button) return;
+
+        // FIX: The `closest` method returns a generic `Element`, which does not have the `dataset` property.
+        // Cast the element to `HTMLElement` to safely access `dataset`.
+        const alunoId = (button as HTMLElement).dataset.id;
+        
+        if (button.classList.contains('view-aluno')) {
+            renderAlunoDataView(alunoId);
+        } else if (button.classList.contains('add-avaliacao')) {
+            renderFormAvaliacao(alunoId);
+        } else if (button.classList.contains('edit-aluno')) {
+            const aluno = physioState.alunos.find(a => a.id === alunoId);
+            if(aluno) showAddAlunoModal(aluno);
+        } else if (button.classList.contains('delete-aluno')) {
+            if (confirm('Tem certeza que deseja excluir este aluno e todos os seus dados?')) {
+                physioState.alunos = physioState.alunos.filter(a => a.id !== alunoId);
+                savePhysioAlunosToStorage(physioState.alunos);
+                renderProfessorDashboard();
+            }
+        } else if (button.classList.contains('add-photo')) {
+            openCamera(alunoId);
         }
-    });
+    };
     
-    // Handle back button on the form screen
-    document.getElementById('btn-back-to-dashboard').addEventListener('click', () => renderPhysioAlunoData(alunoId));
-}
+    const openCamera = async (alunoId) => {
+        physioState.currentAlunoId = alunoId;
+        cameraModal.classList.remove('hidden');
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
+            videoStream.srcObject = stream;
+        } catch (err) {
+            console.error("Error accessing camera: ", err);
+            alert("Não foi possível acessar a câmera. Verifique as permissões.");
+            closeCamera();
+        }
+    };
 
-function renderAssessmentsHistory(aluno) {
-    const listEl = document.getElementById('assessments-history-list');
-    if (!aluno.avaliacoes || aluno.avaliacoes.length === 0) {
-        listEl.innerHTML = '<p class="text-center p-4 bg-gray-800 rounded-lg">Nenhuma avaliação registrada.</p>';
-        return;
-    }
-    listEl.innerHTML = aluno.avaliacoes.map(av => `<div class="bg-gray-800 p-4 rounded-lg">Avaliação de ${new Date(av.data).toLocaleDateString('pt-BR', { timeZone: 'UTC' })}</div>`).join('');
-}
+    const closeCamera = () => {
+        const stream = videoStream.srcObject as MediaStream;
+        if (stream) {
+            stream.getTracks().forEach(track => track.stop());
+        }
+        videoStream.srcObject = null;
+        cameraModal.classList.add('hidden');
+        physioState.currentAlunoId = null;
+    };
+    
+    closeCameraBtn.onclick = closeCamera;
+    
+    captureBtn.onclick = () => {
+        const canvas = document.getElementById('camera-canvas') as HTMLCanvasElement;
+        canvas.width = videoStream.videoWidth;
+        canvas.height = videoStream.videoHeight;
+        const context = canvas.getContext('2d');
+        context.drawImage(videoStream, 0, 0, canvas.width, canvas.height);
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+        
+        const aluno = physioState.alunos.find(a => a.id === physioState.currentAlunoId);
+        if (aluno) {
+            aluno.photo = dataUrl;
+            savePhysioAlunosToStorage(physioState.alunos);
+            renderProfessorDashboard();
+        }
+        closeCamera();
+    };
 
-function renderAlunoViewSelector() {
-    const selector = document.getElementById('aluno-selector');
-    const alunos = getPhysioAlunosFromStorage();
-    if (alunos.length > 0) {
-        selector.innerHTML = '<option value="">Selecione seu nome</option>' + alunos.map(a => `<option value="${a.id}">${a.nome}</option>`).join('');
-    } else {
-        selector.innerHTML = '<option>Nenhum aluno cadastrado</option>';
-    }
+    const renderFormAvaliacao = (alunoId) => {
+        physioState.currentAlunoId = alunoId;
+        const aluno = physioState.alunos.find(a => a.id === alunoId);
+        if (!aluno) return;
+
+        (document.getElementById('form-aluno-nome') as HTMLElement).textContent = aluno.nome;
+        avaliacaoFormEl.reset();
+        
+        // Adjust skinfold fields based on gender
+        const skinfoldFields = document.querySelectorAll('.skinfold-field-wrapper');
+        skinfoldFields.forEach(field => {
+            const el = field as HTMLElement;
+            if(el.dataset.gender.includes(aluno.sexo)) {
+                el.classList.remove('hidden');
+                (el.querySelector('input') as HTMLInputElement).required = true;
+            } else {
+                el.classList.add('hidden');
+                (el.querySelector('input') as HTMLInputElement).required = false;
+            }
+        });
+
+        showScreenView(formAvaliacao);
+    };
+    
+    btnBackToDashboard.onclick = () => showScreenView(professorDashboard);
+
+    avaliacaoFormEl.onsubmit = (e) => {
+        e.preventDefault();
+        const formData = new FormData(avaliacaoFormEl);
+        const avaliacao = {};
+        for (const [key, value] of formData.entries()) {
+            if (value) {
+                avaliacao[key] = value;
+            }
+        }
+        
+        const aluno = physioState.alunos.find(a => a.id === physioState.currentAlunoId);
+        if(aluno) {
+            if(!aluno.avaliacoes) aluno.avaliacoes = [];
+            aluno.avaliacoes.push(avaliacao);
+            savePhysioAlunosToStorage(physioState.alunos);
+            renderAlunoDataView(aluno.id);
+        }
+    };
+    
+    let comparisonChart = null;
+    const renderAlunoDataView = (alunoId) => {
+        const aluno = physioState.alunos.find(a => a.id === alunoId);
+        if (!aluno) return;
+
+        const sortedAvaliations = (aluno.avaliacoes || []).sort((a,b) => new Date(b.data).getTime() - new Date(a.data).getTime());
+        const lastAvaliacao = sortedAvaliations[0];
+        const prevAvaliacao = sortedAvaliations[1];
+
+        const getMetric = (avaliacao) => {
+            if (!avaliacao) return { pesoGordo: 0, pesoMagro: 0, percentualGordura: 0, imc: 0 };
+            const results = calculateBodyComposition(avaliacao, aluno);
+            return {
+                pesoGordo: parseFloat(results.pesoGordo) || 0,
+                pesoMagro: parseFloat(results.pesoMagro) || 0,
+                percentualGordura: parseFloat(results.percentualGordura) || 0,
+                imc: parseFloat(results.imc) || 0,
+            };
+        };
+        
+        const lastMetrics = getMetric(lastAvaliacao);
+        const prevMetrics = getMetric(prevAvaliacao);
+
+        const renderComparison = (label, current, previous) => {
+            const diff = current - previous;
+            const icon = diff > 0 ? 'fa-arrow-up text-green-400' : 'fa-arrow-down text-red-400';
+            const diffText = isNaN(diff) || !isFinite(diff) ? '' : `(${diff.toFixed(1)})`;
+            return `
+                 <div class="bg-gray-900/50 p-3 rounded-lg text-center">
+                    <h4 class="text-sm text-gray-400">${label}</h4>
+                    <p class="text-xl font-bold">${current.toFixed(1)}</p>
+                    ${previous ? `<p class="text-xs ${icon.split(' ')[1]}"><i class="fas ${icon.split(' ')[0]}"></i> ${diffText}</p>` : ''}
+                </div>
+            `;
+        }
+
+        let viewHtml = `
+            <div class="flex items-center mb-6">
+                <button id="btn-back-to-dashboard-from-data" class="mr-4 bg-gray-700 hover:bg-gray-600 p-2 rounded-full"><i class="fas fa-arrow-left"></i></button>
+                <img src="${aluno.photo}" class="w-12 h-12 rounded-full mr-4 border-2 border-blue-400">
+                <h2 class="text-2xl font-semibold text-white">${aluno.nome}</h2>
+            </div>
+        `;
+        
+        if(lastAvaliacao) {
+            viewHtml += `
+                <div class="mb-6 bg-gray-800 p-4 rounded-xl border border-gray-700">
+                    <h3 class="text-lg font-bold mb-3">Última Avaliação (${new Date(lastAvaliacao.data).toLocaleDateString('pt-BR', {timeZone: 'UTC'})})</h3>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                       ${renderComparison('Gordura (kg)', lastMetrics.pesoGordo, prevMetrics.pesoGordo)}
+                       ${renderComparison('Massa Magra (kg)', lastMetrics.pesoMagro, prevMetrics.pesoMagro)}
+                       ${renderComparison('% Gordura', lastMetrics.percentualGordura, prevMetrics.percentualGordura)}
+                       ${renderComparison('IMC', lastMetrics.imc, prevMetrics.imc)}
+                    </div>
+                </div>
+                <div class="mb-6 bg-gray-800 p-4 rounded-xl border border-gray-700">
+                    <h3 class="text-lg font-bold mb-3">Evolução Corporal</h3>
+                    <canvas id="comparisonChart"></canvas>
+                </div>
+            `;
+        } else {
+             viewHtml += `<p class="text-center bg-gray-800 p-4 rounded-lg">Nenhuma avaliação encontrada.</p>`;
+        }
+        
+        viewAlunoData.innerHTML = viewHtml;
+        
+        if (lastAvaliacao && comparisonChart) {
+            comparisonChart.destroy();
+        }
+        if (lastAvaliacao) {
+            const ctx = (document.getElementById('comparisonChart') as HTMLCanvasElement).getContext('2d');
+            comparisonChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: sortedAvaliations.map(a => new Date(a.data).toLocaleDateString('pt-BR', {timeZone: 'UTC'})).reverse(),
+                    datasets: [
+                        { label: '% Gordura', data: sortedAvaliations.map(a => getMetric(a).percentualGordura).reverse(), borderColor: '#ef4444', tension: 0.1 },
+                        { label: 'Massa Magra (kg)', data: sortedAvaliations.map(a => getMetric(a).pesoMagro).reverse(), borderColor: '#3b82f6', tension: 0.1 }
+                    ]
+                },
+                options: { scales: { y: { beginAtZero: true, ticks: {color: 'white'}}, x: {ticks: {color: 'white'}}} }
+            });
+        }
+        
+        document.getElementById('btn-back-to-dashboard-from-data').onclick = () => showScreenView(professorDashboard);
+        showScreenView(viewAlunoData);
+    };
+    
+    const renderAlunoLogin = () => {
+        alunoSelector.innerHTML = '<option value="">Selecione seu nome</option>' + physioState.alunos.map(a => `<option value="${a.id}">${a.nome}</option>`).join('');
+        alunoLoginScreen.classList.remove('hidden');
+        alunoDashboard.classList.add('hidden');
+    };
+    
+    alunoSelector.onchange = () => {
+        const alunoId = alunoSelector.value;
+        if(alunoId) {
+             renderAlunoDataView(alunoId);
+             // Hijack the data view, but make it read-only
+             document.getElementById('view-aluno-data').classList.remove('hidden');
+             document.getElementById('professor-dashboard').classList.add('hidden');
+             document.getElementById('form-avaliacao').classList.add('hidden');
+             alunoLoginScreen.classList.add('hidden');
+             
+             // Since we reuse the professor's data view, we need to adapt it slightly for the student
+             const backBtn = document.getElementById('btn-back-to-dashboard-from-data');
+             if(backBtn) {
+                 backBtn.onclick = () => {
+                    switchView('aluno'); // Go back to student login
+                 };
+             }
+        }
+    };
+    
+    // Initial render
+    switchView('professor');
 }

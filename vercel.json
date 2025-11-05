@@ -11,8 +11,8 @@
   ],
   "routes": [
     {
-      "src": "/service-worker.js",
-      "headers": { "Content-Type": "application/javascript", "Cache-Control": "no-cache" }
+      "src": "/(service-worker\\.js|index\\.html|index\\.js|index\\.css)",
+      "headers": { "Cache-Control": "no-cache" }
     },
     {
       "handle": "filesystem"
