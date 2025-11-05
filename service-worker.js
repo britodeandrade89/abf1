@@ -101,6 +101,21 @@ if (workbox) {
     })
   );
 
+  // 4. Weather API - Network First
+  // Try to get the latest weather data, but fall back to the cached version if offline.
+  workbox.routing.registerRoute(
+    ({url}) => url.hostname === 'api.open-meteo.com',
+    new workbox.strategies.NetworkFirst({
+      cacheName: 'weather-cache',
+      plugins: [
+        new workbox.expiration.Plugin({
+          maxEntries: 1, // Only cache the latest forecast
+          maxAgeSeconds: 1 * 60 * 60, // Cache for 1 hour
+        }),
+      ],
+    })
+  );
+
 } else {
   console.log(`Workbox didn't load`);
 }
