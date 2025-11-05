@@ -363,14 +363,15 @@ function initializeDatabase() {
     const treinosB = {
         'britodeandrade@gmail.com': treinosB_AndreBrito_Semana3e4,
         'marcellybispo92@gmail.com': [
-            { name: 'Agachamento Livre', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/9bgKMf2SJ3Dpq9EnDPsV.png', sets: '3', reps: '20', carga: '0', obs: 'Método Simples (20 RM)', recovery: '30s' },
-            { name: 'Agachamento Livre em isometria', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/UuNZ7xD4j6Hyfv5MxtNa.png', sets: '3', reps: '20', carga: '0', obs: 'Método Simples (20 RM)', recovery: '30s' },
-            { name: 'Agachamento sumô com HBC', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/ppcH4fGDEECXlMqXrCE6.png', sets: '4', reps: '10', carga: '0', obs: 'Método Simples (10 RM)', recovery: '30s' },
-            { name: 'Stiff em pé com HBM', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/3K80Z1TYwuZVPzJGl6hF.png', sets: '4', reps: '10', carga: '0', obs: 'Método Simples (10 RM)', recovery: '30s' },
-            { name: 'Extensão de quadril com caneleira', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/sSegYH7wUf0Xq08nCzxJ.png', sets: '4', reps: '10', carga: '0', obs: 'Método Simples (10 RM)', recovery: '30s' },
-            { name: 'Remada aberta na máquina (ou aberta sentada pulley baixo)', img: '', sets: '3', reps: '10', carga: '0', obs: 'Método Simples (10 RM)', recovery: '30s' },
-            { name: 'Crucifixo inverso com HBC (ou curvada com HBC)', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/74otdJGwmHzhduMk2bkb.png', sets: '3', reps: '10', carga: '0', obs: 'Método Simples (10 RM)', recovery: '30s' },
-            { name: 'Bíceps em pé no cross barra reta', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/Ee9RkUYguPhJsylsOOr2.avif', sets: '3', reps: '10', carga: '0', obs: 'Método Simples (10 RM)', recovery: '30s' }
+            { name: 'Agachamento sumô com HBC (CONJUGADO 1)', conjugado: 1, img: '', sets: '4', reps: '9', carga: '0', obs: 'Método Simples (9 RM)', recovery: '30s' },
+            { name: 'Stiff em pé com HBC (CONJUGADO 1)', conjugado: 1, img: '', sets: '4', reps: '9', carga: '0', obs: 'Método Simples (9 RM)', recovery: '30s' },
+            { name: 'Elevação de quadril no solo (CONJUGADO 2)', conjugado: 2, img: '', sets: '4', reps: '9', carga: '0', obs: 'Método Simples (9 RM)', recovery: '30s' },
+            { name: 'Abdominal supra remador no solo (CONJUGADO 2)', conjugado: 2, img: '', sets: '4', reps: '15', carga: '0', obs: 'Método Simples (15 RM)', recovery: '30s' },
+            { name: 'Extensão de quadril e joelho em pé com caneleira (CONJUGADO 3)', conjugado: 3, img: '', sets: '4', reps: '9', carga: '0', obs: 'Método Simples (9 RM)', recovery: '30s' },
+            { name: 'Flexão de joelho em pé com caneleira (CONJUGADO 3)', conjugado: 3, img: '', sets: '4', reps: '9', carga: '0', obs: 'Método Simples (15 RM)', recovery: '30s' },
+            { name: 'Remada curvada supinada no cross barra reta (CONJUGADO 4)', conjugado: 4, img: '', sets: '3', reps: '9', carga: '0', obs: 'Método Simples (9 RM)', recovery: '30s' },
+            { name: 'Bíceps em pé no cross barra reta (CONJUGADO 4)', conjugado: 4, img: '', sets: '3', reps: '9', carga: '0', obs: 'Método Simples (9 RM)', recovery: '30s' },
+            { name: 'Puxada aberta no pulley alto', img: '', sets: '3', reps: '9', carga: '0', obs: 'Método Simples (9 RM)', recovery: '30s' }
         ],
         'andrademarcia.ucam@gmail.com': [
             { name: 'Extensão de quadril em pé (caneleira) ou máquina', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/3ozI0U0TzKEwRNqcxiv4.png', sets: '3', reps: '15', carga: '0', obs: 'Método Simples (15 RM)', recovery: '30s' },
