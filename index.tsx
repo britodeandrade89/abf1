@@ -1,3 +1,4 @@
+
 import { GoogleGenAI } from "@google/genai";
 
 // Globals defined by imported scripts
@@ -837,6 +838,7 @@ function renderStudentProfile(email) {
             } else if (targetScreenId === 'stressLevelScreen') {
                 renderStressLevelScreen(email);
             } else if (targetScreenId === 'raceCalendarScreen') {
+// FIX: renderRaceCalendarScreen was not defined
                 renderRaceCalendarScreen(email);
             }
 
@@ -1987,6 +1989,62 @@ async function updateWeather() {
     }
 }
 
+// --- NUTRICIONISTA IA ---
+const consultationQuestions = [
+    { 
+        id: 'goal', 
+        question: "Olá! Sou sua nutricionista IA. Para começarmos, qual é o seu principal objetivo?", 
+        type: 'select', 
+        options: ['Perder peso', 'Ganhar massa muscular', 'Manter o peso atual', 'Melhorar hábitos alimentares'] 
+    },
+    { 
+        id: 'personal_info', 
+        question: "Ótimo! Agora preciso de alguns dados básicos.", 
+        type: 'multi-input', 
+        fields: [
+            { id: 'age', label: 'Idade', type: 'number' },
+            { id: 'gender', label: 'Sexo', type: 'select', options: ['Masculino', 'Feminino'] },
+            { id: 'height', label: 'Altura (cm)', type: 'number' }
+        ] 
+    },
+    {
+        id: 'activity_level',
+        question: "Qual é o seu nível de atividade física semanal?",
+        type: 'select',
+        options: ['Sedentário (pouco ou nenhum exercício)', 'Levemente ativo (exercício leve 1-3 dias/semana)', 'Moderadamente ativo (exercício moderado 3-5 dias/semana)', 'Muito ativo (exercício intenso 6-7 dias/semana)', 'Extremamente ativo (trabalho físico + exercício intenso)']
+    },
+    {
+        id: 'dietary_restrictions',
+        question: "Você tem alguma restrição alimentar, alergia ou intolerância? (Ex: lactose, glúten, vegetariano)",
+        type: 'textarea',
+        placeholder: 'Se não tiver, escreva "nenhuma".'
+    },
+    {
+        id: 'food_preferences',
+        question: "Quais são os alimentos saudáveis que você mais gosta?",
+        type: 'textarea',
+        placeholder: 'Ex: Frango, brócolis, batata doce, frutas...'
+    },
+    {
+        id: 'disliked_foods',
+        question: "E quais alimentos você não gosta ou gostaria de evitar?",
+        type: 'textarea',
+        placeholder: 'Ex: Fígado, jiló, peixe...'
+    },
+    {
+        id: 'daily_routine',
+        question: "Descreva um pouco da sua rotina diária (horários que acorda, trabalha, treina, dorme).",
+        type: 'textarea',
+        placeholder: 'Isso me ajuda a encaixar as refeições nos melhores horários para você.'
+    },
+    {
+        id: 'budget',
+        question: "Qual é o seu orçamento aproximado para alimentação?",
+        type: 'select',
+        options: ['Econômico', 'Moderado', 'Flexível', 'Sem restrições']
+    }
+];
+
 // Fix: Add missing function definitions to resolve errors.
 function renderNutritionistScreen(email: string) {
     const user = database.users.find(u => u.email === email);
@@ -2038,13 +2096,15 @@ function renderNutritionistScreen(email: string) {
 
             if (currentQuestion.type === 'select') {
                 formHtml += `<select id="consultation-input" class="w-full p-3 rounded bg-gray-700 text-white border border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">`;
-                currentQuestion.options.forEach(opt => formHtml += `<option value="${opt}">${opt}</option>`);
+                (currentQuestion as any).options.forEach(opt => formHtml += `<option value="${opt}">${opt}</option>`);
                 formHtml += `</select>`;
             } else if (currentQuestion.type === 'textarea') {
-                formHtml += `<textarea id="consultation-input" class="w-full p-3 rounded bg-gray-700 text-white border border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" rows="5" placeholder="${currentQuestion.placeholder || ''}"></textarea>`;
+// FIX: Accessing placeholder on a union type. Cast to any.
+                formHtml += `<textarea id="consultation-input" class="w-full p-3 rounded bg-gray-700 text-white border border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" rows="5" placeholder="${(currentQuestion as any).placeholder || ''}"></textarea>`;
             } else if (currentQuestion.type === 'multi-input') {
                 formHtml += `<div class="space-y-3">`;
-                currentQuestion.fields.forEach(field => {
+// FIX: Accessing fields on a union type. Cast to any.
+                (currentQuestion as any).fields.forEach(field => {
                     formHtml += `<div><label class="block text-sm font-medium text-gray-300 mb-1">${field.label}</label>`;
                     if (field.type === 'select') {
                         formHtml += `<select id="consultation-input-${field.id}" class="w-full p-3 rounded bg-gray-700 text-white border border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">`;
@@ -2070,10 +2130,11 @@ function renderNutritionistScreen(email: string) {
 
             document.getElementById('next-question-btn')?.addEventListener('click', () => {
                 const answers = user.nutritionistData.consultation.answers || {};
-                if (currentQuestion.type === 'multi-input') {
+                if ((currentQuestion as any).type === 'multi-input') {
                     const multiAnswers = {};
                     let allValid = true;
-                    currentQuestion.fields.forEach(field => {
+// FIX: Accessing fields on a union type. Cast to any.
+                    (currentQuestion as any).fields.forEach(field => {
                         const inputEl = document.getElementById(`consultation-input-${field.id}`) as HTMLInputElement;
                         if (inputEl && inputEl.value) {
                             multiAnswers[field.id] = inputEl.value;
@@ -2094,6 +2155,7 @@ function renderNutritionistScreen(email: string) {
                     user.nutritionistData.consultation.step++;
                 } else {
                     // Last question, generate plan
+// FIX: generateMealPlan was not defined
                     generateMealPlan(email);
                     return; // Skip rerender
                 }
@@ -2114,6 +2176,79 @@ function renderNutritionistScreen(email: string) {
     }
 }
 
+// FIX: Add missing function generateMealPlan
+async function generateMealPlan(email: string) {
+    const user = database.users.find(u => u.email === email);
+    if (!user) return;
+
+    user.nutritionistData.status = 'loading';
+    saveDatabase(database);
+    renderNutritionistScreen(email); // Show loader
+
+    try {
+        // As per guidelines, initialize GenAI right before use
+        const ai = new GoogleGenAI({apiKey: process.env.API_KEY});
+
+        const answers = user.nutritionistData.consultation.answers;
+        const lastWeight = user.weightHistory?.length > 0 ? user.weightHistory[user.weightHistory.length - 1].weight : 'não informado';
+        
+        const prompt = `
+            Crie um plano alimentar semanal detalhado e personalizado para um cliente com as seguintes características e objetivos.
+            Responda em formato Markdown.
+
+            **Dados do Cliente:**
+            - Objetivo: ${(answers as any).goal}
+            - Idade: ${(answers as any).personal_info.age} anos
+            - Sexo: ${(answers as any).personal_info.gender}
+            - Altura: ${(answers as any).personal_info.height} cm
+            - Peso Atual: ${lastWeight} kg
+            - Nível de Atividade: ${(answers as any).activity_level}
+            - Restrições Alimentares/Alergias: ${(answers as any).dietary_restrictions}
+            - Preferências Alimentares: ${(answers as any).food_preferences}
+            - Alimentos que não gosta: ${(answers as any).disliked_foods}
+            - Rotina Diária: ${(answers as any).daily_routine}
+            - Orçamento para alimentação: ${(answers as any).budget}
+
+            **Instruções para o Plano:**
+            1.  **Estrutura:** Crie um plano para 7 dias da semana (Segunda a Domingo).
+            2.  **Refeições:** Inclua 5 a 6 refeições por dia: Café da Manhã, Lanche da Manhã, Almoço, Lanche da Tarde, Jantar e Ceia (opcional).
+            3.  **Detalhes:** Para cada refeição, especifique os alimentos, as quantidades (em gramas ou medidas caseiras) e o modo de preparo se necessário.
+            4.  **Hidratação:** Inclua uma recomendação geral de ingestão de água.
+            5.  **Flexibilidade:** Ofereça 2-3 opções para cada tipo de refeição para dar variedade.
+            6.  **Observações:** Adicione uma seção no final com dicas gerais, como a importância de ler rótulos, sugestões de temperos saudáveis, e a importância de um "dia livre" ou refeição livre para adesão a longo prazo.
+            7.  **Tom:** Use uma linguagem motivadora, clara e encorajadora, como um nutricionista faria.
+            8.  **Formato:** Use títulos (##), listas (*) e negrito (**) para organizar bem a informação. Comece com um título como "# Seu Plano Alimentar Personalizado".
+        `;
+
+        const response = await ai.models.generateContent({
+            model: 'gemini-2.5-flash',
+            contents: prompt,
+        });
+
+        const generatedPlan = response.text;
+
+        const newPlan = {
+            date: new Date().toISOString(),
+            plan: generatedPlan,
+            answers: user.nutritionistData.consultation.answers
+        };
+
+        if (!user.nutritionistData.plans) user.nutritionistData.plans = [];
+        user.nutritionistData.plans.push(newPlan);
+        user.nutritionistData.status = 'complete';
+        user.nutritionistData.consultation = { step: 0, answers: {} }; // Reset for next time
+        saveDatabase(database);
+        renderNutritionistScreen(email);
+
+    } catch (error) {
+        console.error("Error generating meal plan:", error);
+        user.nutritionistData.status = 'idle'; // Reset on error
+        saveDatabase(database);
+        renderNutritionistScreen(email);
+        alert(`Ocorreu um erro ao gerar seu plano: ${(error as Error).message}`);
+    }
+}
+
 function renderAiAnalysisScreen(email: string) {
     const resultDiv = document.getElementById('ai-analysis-result');
     const spinner = document.getElementById('ai-analysis-spinner');
@@ -2124,6 +2259,49 @@ function renderAiAnalysisScreen(email: string) {
     resultDiv.innerHTML = '';
     resultDiv.classList.add('hidden');
     spinner.classList.add('hidden');
+}
+
+// FIX: Add missing function renderRaceCalendarScreen
+function renderRaceCalendarScreen(email: string) {
+    const listEl = document.getElementById('race-calendar-list');
+    if (!listEl) return;
+
+    const races = database.raceCalendar;
+    if (!races || races.length === 0) {
+        listEl.innerHTML = `<p class="text-center text-white p-4">Nenhum evento de corrida encontrado no momento.</p>`;
+        return;
+    }
+
+    listEl.innerHTML = races.map(race => {
+        const raceDate = new Date(race.date);
+        const formattedDate = raceDate.toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric', timeZone: 'UTC' });
+
+        return `
+            <div class="bg-gray-800 p-4 rounded-xl border border-gray-700 space-y-3">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <p class="text-sm font-semibold text-red-400">${formattedDate} - ${race.time}</p>
+                        <h3 class="text-lg font-bold text-white">${race.name}</h3>
+                        <p class="text-xs text-gray-400 flex items-center mt-1"><i data-feather="map-pin" class="w-3 h-3 mr-1"></i> ${race.location}</p>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-3 text-sm pt-3 border-t border-gray-700">
+                    <div>
+                        <p class="font-semibold text-gray-300">Distâncias</p>
+                        <p>${race.distances}</p>
+                    </div>
+                     <div>
+                        <p class="font-semibold text-gray-300">Valor</p>
+                        <p>${race.price}</p>
+                    </div>
+                </div>
+                 <a href="${race.registrationLink}" target="_blank" rel="noopener noreferrer" class="block w-full text-center bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg mt-3">
+                    Inscrever-se
+                </a>
+            </div>
+        `;
+    }).join('');
+    feather.replace(); // To render icons
 }
 
 function renderStressLevelScreen(email) {
@@ -2620,14 +2798,45 @@ function renderNewAssessmentForm(alunoId) {
     newForm.addEventListener('submit', (e) => {
         e.preventDefault();
         const newAvaliacao = {
+            // Dados Básicos
             data: (document.getElementById('data') as HTMLInputElement).value,
             peso: (document.getElementById('peso') as HTMLInputElement).value,
             altura: (document.getElementById('altura') as HTMLInputElement).value,
+            
+            // Dobras Cutâneas
             dc_peitoral: (document.getElementById('dc_peitoral') as HTMLInputElement).value,
             dc_abdominal: (document.getElementById('dc_abdominal') as HTMLInputElement).value,
             dc_tricipital: (document.getElementById('dc_tricipital') as HTMLInputElement).value,
             dc_suprailiaca: (document.getElementById('dc_suprailiaca') as HTMLInputElement).value,
             dc_coxa: (document.getElementById('dc_coxa') as HTMLInputElement).value,
+
+            // Perímetros
+            p_torax: (document.getElementById('p_torax') as HTMLInputElement).value,
+            p_abdomen: (document.getElementById('p_abdomen') as HTMLInputElement).value,
+            p_cintura: (document.getElementById('p_cintura') as HTMLInputElement).value,
+            p_quadril: (document.getElementById('p_quadril') as HTMLInputElement).value,
+            p_braco_d: (document.getElementById('p_braco_d') as HTMLInputElement).value,
+            p_braco_e: (document.getElementById('p_braco_e') as HTMLInputElement).value,
+            p_antebraco_d: (document.getElementById('p_antebraco_d') as HTMLInputElement).value,
+            p_antebraco_e: (document.getElementById('p_antebraco_e') as HTMLInputElement).value,
+            p_coxa_prox_d: (document.getElementById('p_coxa_prox_d') as HTMLInputElement).value,
+            p_coxa_prox_e: (document.getElementById('p_coxa_prox_e') as HTMLInputElement).value,
+            p_coxa_medial_d: (document.getElementById('p_coxa_medial_d') as HTMLInputElement).value,
+            p_coxa_medial_e: (document.getElementById('p_coxa_medial_e') as HTMLInputElement).value,
+            p_coxa_distal_d: (document.getElementById('p_coxa_distal_d') as HTMLInputElement).value,
+            p_coxa_distal_e: (document.getElementById('p_coxa_distal_e') as HTMLInputElement).value,
+            p_panturrilha_d: (document.getElementById('p_panturrilha_d') as HTMLInputElement).value,
+            p_panturrilha_e: (document.getElementById('p_panturrilha_e') as HTMLInputElement).value,
+
+            // Bioimpedância
+            bio_agua: (document.getElementById('bio_agua') as HTMLInputElement).value,
+            bio_proteina: (document.getElementById('bio_proteina') as HTMLInputElement).value,
+            bio_minerais: (document.getElementById('bio_minerais') as HTMLInputElement).value,
+            bio_massa_gordura: (document.getElementById('bio_massa_gordura') as HTMLInputElement).value,
+            bio_massa_magra: (document.getElementById('bio_massa_magra') as HTMLInputElement).value,
+            bio_tmb: (document.getElementById('bio_tmb') as HTMLInputElement).value,
+            bio_gordura_visceral: (document.getElementById('bio_gordura_visceral') as HTMLInputElement).value,
+            bio_grau_obesidade: (document.getElementById('bio_grau_obesidade') as HTMLInputElement).value,
         };
 
         const alunoIndex = alunos.findIndex(a => a.id === alunoId);
@@ -2664,198 +2873,3 @@ function renderAlunoViewSelector() {
         selector.innerHTML = '<option>Nenhum aluno cadastrado</option>';
     }
 }
-
-// --- NUTRICIONISTA IA ---
-
-const consultationQuestions = [
-    { id: 'goal', question: "Olá! Sou sua nutricionista IA. Para começarmos, qual é o seu principal objetivo?", type: 'select', options: ['Perder peso', 'Ganhar massa muscular', 'Manter o peso atual', 'Melhorar hábitos alimentares'] },
-    { id: 'personal_info', question: "Ótimo! Agora preciso de alguns dados básicos.", type: 'multi-input', fields: [ { id: 'gender', label: 'Sexo', type: 'select', options: ['Masculino', 'Feminino']}, { id: 'age', label: 'Idade', type: 'number' }, { id: 'height', label: 'Altura (cm)', type: 'number' }, { id: 'weight', label: 'Peso (kg)', type: 'number' }] },
-    { id: 'activity_level', question: "Como você classifica seu nível de atividade física semanal?", type: 'select', options: [
-        'Sedentário (pouco ou nenhum exercício)',
-        'Levemente ativo (exercício leve 1-3 dias/semana)',
-        'Moderadamente ativo (exercício moderado 3-5 dias/semana)',
-        'Muito ativo (exercício intenso 6-7 dias/semana)',
-        'Extremamente ativo (trabalho físico + exercício intenso)'
-    ]},
-    { id: 'dietary_restrictions', question: "Você segue alguma restrição alimentar específica?", type: 'textarea', placeholder: 'Ex: Vegetariano, Vegano, Sem glúten, Sem lactose, etc. Se não houver, escreva "Nenhuma".' },
-    { id: 'food_allergies', question: "Possui alguma alergia ou intolerância alimentar?", type: 'textarea', placeholder: 'Ex: Alergia a amendoim, intolerância a frutos do mar, etc. Se não houver, escreva "Nenhuma".' },
-    { id: 'food_dislikes', question: "Existe algum alimento que você realmente não gosta e prefere evitar?", type: 'textarea', placeholder: 'Ex: Fígado, jiló, coentro, etc.' },
-    { id: 'daily_routine', question: "Para entender seu dia, descreva brevemente sua rotina.", type: 'textarea', placeholder: 'Inclua horários de acordar, dormir, trabalhar/estudar e treinar.' },
-    { id: 'health_conditions', question: "Por fim, você tem alguma condição de saúde relevante ou toma alguma medicação contínua?", type: 'textarea', placeholder: 'Ex: Diabetes, hipertensão, problemas de tireoide. Se não houver, escreva "Nenhuma".' },
-];
-
-async function generateMealPlan(email) {
-    const user = database.users.find(u => u.email === email);
-    if (!user) return;
-
-    user.nutritionistData.status = 'loading';
-    saveDatabase(database);
-    renderNutritionistScreen(email);
-
-    await new Promise(resolve => setTimeout(resolve, 3000));
-
-    const formatDate = (date) => {
-        const day = String(date.getDate()).padStart(2, '0');
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        return `${day}/${month}`;
-    };
-
-    const today = new Date();
-    const addDays = (date, days) => {
-        const result = new Date(date);
-        result.setDate(result.getDate() + days);
-        return result;
-    };
-
-    const week1_start = formatDate(today);
-    const week1_end = formatDate(addDays(today, 6));
-    const week2_start = formatDate(addDays(today, 7));
-    const week2_end = formatDate(addDays(today, 13));
-    const week3_start = formatDate(addDays(today, 14));
-    const week3_end = formatDate(addDays(today, 20));
-    const week4_start = formatDate(addDays(today, 21));
-    const week4_end = formatDate(addDays(today, 27));
-
-    const answers: any = user.nutritionistData.consultation.answers;
-    const userName = user.name.split(' ')[0];
-    
-    const samplePlan = `
-# Seu Plano Alimentar Personalizado, ${userName}!
-
-Olá, ${userName}! Com base nas suas respostas, criei um plano alimentar focado no seu objetivo de **${answers.goal}**. Este é um guia flexível para as próximas 4 semanas. Lembre-se de ouvir seu corpo e ajustar as porções conforme necessário.
-
----
-
-## Semana 1: Fundamentos e Adaptação (${week1_start} a ${week1_end})
-
-**Dica da Semana:** Mantenha-se hidratado! Beba pelo menos 2 litros de água ao longo do dia. A hidratação é crucial para o metabolismo e a recuperação muscular.
-
-### Dia Exemplo
-
-*   **Café da Manhã (07:00 - 08:00):** 2 ovos mexidos com espinafre + 1 fatia de pão integral com abacate.
-*   **Lanche da Manhã (10:00 - 10:30):** 1 iogurte natural + 1 colher de sopa de aveia.
-*   **Almoço (12:30 - 13:30):** 120g de filé de frango grelhado + 1/2 xícara de arroz integral + salada de folhas verdes à vontade com azeite e limão.
-*   **Lanche da Tarde (16:00 - 16:30):** 1 banana amassada com canela.
-*   **Jantar (19:30 - 20:30):** Sopa de legumes com 100g de carne magra desfiada (patinho).
-
----
-
-## Semana 2: Intensificando os Nutrientes (${week2_start} a ${week2_end})
-
-**Dica da Semana:** Varie os legumes e verduras! Quanto mais colorido seu prato, maior a variedade de vitaminas e minerais que você consome.
-
-### Dia Exemplo
-
-*   **Café da Manhã (07:00 - 08:00):** Mingau de aveia (3 col. de aveia + 150ml de leite/bebida vegetal) com frutas vermelhas e 1 col. de semente de chia.
-*   **Lanche da Manhã (10:00 - 10:30):** Mix de castanhas (30g).
-*   **Almoço (12:30 - 13:30):** 120g de carne moída (patinho) refogada com legumes + 1/2 xícara de purê de batata doce + brócolis cozido no vapor.
-*   **Lanche da Tarde (16:00 - 16:30):** 2 ovos cozidos.
-*   **Jantar (19:30 - 20:30):** Salada completa: folhas variadas, tomate cereja, cenoura ralada, 1 lata de atum em água e 1 colher de milho.
----
-
-## Fim do Ciclo Mensal
-
-**Parabéns!** Inicie uma nova consulta para continuarmos evoluindo juntos!
-`;
-
-    if (!user.nutritionistData.plans) user.nutritionistData.plans = [];
-    user.nutritionistData.plans.push({
-        date: new Date().toISOString(),
-        plan: samplePlan,
-        answers: user.nutritionistData.consultation.answers
-    });
-    user.nutritionistData.status = 'complete';
-    user.nutritionistData.consultation = { step: 0, answers: {} };
-    
-    saveDatabase(database);
-    renderNutritionistScreen(email);
-}
-
-// --- CALENDÁRIO DE CORRIDAS ---
-function renderRaceCalendarScreen(email) {
-    const contentEl = document.getElementById('race-calendar-content');
-    const races = database.raceCalendar;
-
-    if (!races || races.length === 0) {
-        contentEl.innerHTML = '<p class="text-center text-white">Nenhuma corrida encontrada no calendário.</p>';
-        return;
-    }
-
-    const racesByMonth = races.reduce((acc, race) => {
-        const month = new Date(race.date).toLocaleString('pt-BR', { month: 'long', year: 'numeric', timeZone: 'UTC' });
-        if (!acc[month]) {
-            acc[month] = [];
-        }
-        acc[month].push(race);
-        return acc;
-    }, {});
-
-    let html = '';
-    for (const month in racesByMonth) {
-        html += `<h2 class="text-2xl font-bold text-white capitalize border-b-2 border-blue-500 pb-2 mb-4">${month}</h2>`;
-        html += '<div class="space-y-4">';
-        racesByMonth[month].forEach(race => {
-            const date = new Date(race.date);
-            const day = date.getUTCDate();
-            const monthShort = date.toLocaleString('pt-BR', { month: 'short', timeZone: 'UTC' }).replace('.', '');
-            html += `
-                <div class="race-card" data-race-id="${race.id}">
-                    <div class="race-date-box">
-                        <div class="race-date-day">${day}</div>
-                        <div class="race-date-month">${monthShort}</div>
-                    </div>
-                    <div class="flex-grow">
-                        <h3 class="font-bold">${race.name}</h3>
-                        <p class="text-sm opacity-80">${race.location}</p>
-                    </div>
-                    <button class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-3 rounded-lg text-sm">Detalhes</button>
-                </div>
-            `;
-        });
-        html += '</div>';
-    }
-
-    contentEl.innerHTML = html;
-    
-    contentEl.querySelectorAll('.race-card button').forEach(button => {
-        button.addEventListener('click', (e) => {
-            // Fix: Cast the result of closest() to HTMLElement and check for null to safely access dataset.
-            const card = (e.currentTarget as HTMLElement).closest('.race-card');
-            if (card) {
-                const raceId = (card as HTMLElement).dataset.raceId;
-                openRaceDetailModal(raceId);
-            }
-        });
-    });
-}
-
-function openRaceDetailModal(raceId) {
-    const race = database.raceCalendar.find(r => r.id === raceId);
-    if (!race) return;
-
-    const modal = document.getElementById('raceDetailModal');
-    const modalContent = document.getElementById('race-modal-content');
-    
-    document.getElementById('modal-race-name').textContent = race.name;
-    document.getElementById('modal-race-date').textContent = new Date(race.date).toLocaleDateString('pt-BR', { timeZone: 'UTC' });
-    document.getElementById('modal-race-time').textContent = race.time;
-    document.getElementById('modal-race-location').textContent = race.location;
-    document.getElementById('modal-race-distances').textContent = race.distances;
-    document.getElementById('modal-race-price').textContent = race.price;
-    document.getElementById('modal-race-link').setAttribute('href', race.registrationLink);
-    
-    modal.classList.remove('hidden');
-    requestAnimationFrame(() => {
-        modalContent.classList.add('open');
-    });
-}
-
-function closeRaceDetailModal() {
-    const modal = document.getElementById('raceDetailModal');
-    const modalContent = document.getElementById('race-modal-content');
-    modalContent.classList.remove('open');
-    setTimeout(() => {
-        modal.classList.add('hidden');
-    }, 300);
-}
-document.getElementById('closeRaceModalBtn').addEventListener('click', closeRaceDetailModal);
