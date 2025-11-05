@@ -4,14 +4,22 @@ importScripts('https://storage.googleapis.com/workbox-cdn/releases/5.1.2/workbox
 if (workbox) {
   console.log(`Workbox is loaded`);
 
+  const CACHE_VERSION = 'v6'; // Central version for all caches. Increment to force update.
   const OFFLINE_FALLBACK_PAGE = 'offline.html';
-  const CACHE_NAME = 'abfit-cache-v5'; // Incremented version to force update
+
+  // Define versioned cache names
+  const FALLBACK_CACHE_NAME = `abfit-fallback-${CACHE_VERSION}`;
+  const HTML_CACHE_NAME = `abfit-html-${CACHE_VERSION}`;
+  const ASSET_CACHE_NAME = `abfit-assets-${CACHE_VERSION}`;
+  const IMAGE_CACHE_NAME = `abfit-images-${CACHE_VERSION}`;
+  const WEATHER_CACHE_NAME = `abfit-weather-${CACHE_VERSION}`;
+
 
   // --- Installation: Take control immediately ---
   self.addEventListener('install', (event) => {
     self.skipWaiting(); // Force the new service worker to become active immediately.
     event.waitUntil(
-      caches.open(CACHE_NAME).then((cache) => {
+      caches.open(FALLBACK_CACHE_NAME).then((cache) => {
         console.log('[Service Worker] Caching offline fallback page');
         return cache.add(OFFLINE_FALLBACK_PAGE);
       })
@@ -24,7 +32,8 @@ if (workbox) {
       caches.keys().then(cacheNames => {
         return Promise.all(
           cacheNames.map(cacheName => {
-            if (cacheName !== CACHE_NAME) {
+            // If the cache is from this app but doesn't have the current version string, delete it.
+            if (cacheName.startsWith('abfit-') && !cacheName.endsWith(CACHE_VERSION)) {
               console.log('[Service Worker] Deleting old cache:', cacheName);
               return caches.delete(cacheName);
             }
@@ -51,7 +60,7 @@ if (workbox) {
 
   // 1. Navigation (HTML pages) - Network First, falling back to offline page
   const networkFirstWithOfflineFallback = new workbox.strategies.NetworkFirst({
-      cacheName: 'html-cache',
+      cacheName: HTML_CACHE_NAME,
       plugins: [
           new workbox.cacheableResponse.Plugin({
               statuses: [0, 200], // Cache opaque responses for cross-origin resources
@@ -71,7 +80,7 @@ if (workbox) {
             return await networkFirstWithOfflineFallback.handle(args);
         } catch (error) {
             console.log('[Service Worker] Fetch failed for navigation; returning offline page.');
-            const cache = await caches.open(CACHE_NAME);
+            const cache = await caches.open(FALLBACK_CACHE_NAME);
             return cache.match(OFFLINE_FALLBACK_PAGE);
         }
     }
@@ -85,7 +94,7 @@ if (workbox) {
       request.destination === 'script' ||
       request.destination === 'worker',
     new workbox.strategies.NetworkFirst({
-      cacheName: 'asset-cache',
+      cacheName: ASSET_CACHE_NAME,
     })
   );
 
@@ -94,7 +103,7 @@ if (workbox) {
   workbox.routing.registerRoute(
     ({ request }) => request.destination === 'image',
     new workbox.strategies.CacheFirst({
-      cacheName: 'image-cache',
+      cacheName: IMAGE_CACHE_NAME,
       plugins: [
         new workbox.expiration.Plugin({
           maxEntries: 60,
@@ -105,11 +114,12 @@ if (workbox) {
   );
 
   // 4. Weather API - Network First
-  // Get latest weather, but have a fallback.
+  // Get latest weather, but have a fallback. Added a network timeout for resilience on slow networks.
   workbox.routing.registerRoute(
     ({url}) => url.hostname === 'api.open-meteo.com',
     new workbox.strategies.NetworkFirst({
-      cacheName: 'weather-cache',
+      cacheName: WEATHER_CACHE_NAME,
+      networkTimeoutSeconds: 3, // Fallback to cache if network is slow (3 seconds)
       plugins: [
         new workbox.cacheableResponse.Plugin({
             statuses: [0, 200], // Cache successful and opaque responses
