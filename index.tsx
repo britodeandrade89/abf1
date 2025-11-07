@@ -363,14 +363,15 @@ function initializeDatabase() {
     const treinosB = {
         'britodeandrade@gmail.com': treinosB_AndreBrito_Semana3e4,
         'marcellybispo92@gmail.com': [
-            { name: 'Stiff com HBM (CONJUGADO 1)', conjugado: 1, img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/isKs5qzBPblirwR4IHPO.png', sets: '4', reps: '9', carga: '0', obs: 'Método Rest-Pause', recovery: '60s' },
-            { name: 'Elevação Pélvica com HBM (CONJUGADO 1)', conjugado: 1, img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/3ozI0U0TzKEwRNqcxiv4.png', sets: '4', reps: '9', carga: '0', obs: 'Método Rest-Pause', recovery: '60s' },
-            { name: 'Cadeira Flexora (CONJUGADO 2)', conjugado: 2, img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/iLHTNGWVYUEGS4hbvQNe.png', sets: '4', reps: '9', carga: '0', obs: 'Método Simples (9 RM)', recovery: '60s' },
-            { name: 'Cadeira Abdutora (CONJUGADO 2)', conjugado: 2, img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/6tnHeV7VNw7bQClFlJTv.webp', sets: '4', reps: '9', carga: '0', obs: 'Método Simples (9 RM)', recovery: '90s' },
-            { name: 'Remada Curvada com Barra (CONJUGADO 3)', conjugado: 3, img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/Vw4Wjum0oI5o4JiuTomc.jpg', sets: '4', reps: '9', carga: '0', obs: 'Método Rest-Pause', recovery: '60s' },
-            { name: 'Puxada Alta Supinada (CONJUGADO 3)', conjugado: 3, img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/Rmve8zGQZaEmRNHZC1G6.jpg', sets: '4', reps: '9', carga: '0', obs: 'Método Rest-Pause', recovery: '90s' },
-            { name: 'Rosca Direta com Barra W', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/o8z8KzDoOqceSMHJvdLB.jpg', sets: '4', reps: '9', carga: '0', obs: 'Método Simples (9 RM)', recovery: '60s' },
-            { name: 'Prancha Abdominal Isométrica', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/JjtFkVUdIjopuD5v28Hp.png', sets: '4', reps: 'FALHA', carga: '0', obs: 'Segurar até a falha', recovery: '60s' }
+            { name: 'Agachamento sumô com HBC (CONJUGADO 1)', conjugado: 1, img: '', sets: '4', reps: '9', carga: '0', obs: 'Método Simples (9 RM)', recovery: '30s' },
+            { name: 'Stiff em pé com HBC (CONJUGADO 1)', conjugado: 1, img: '', sets: '4', reps: '9', carga: '0', obs: 'Método Simples (9 RM)', recovery: '30s' },
+            { name: 'Elevação de quadril no solo (CONJUGADO 2)', conjugado: 2, img: '', sets: '4', reps: '9', carga: '0', obs: 'Método Simples (9 RM)', recovery: '30s' },
+            { name: 'Abdominal supra remador no solo (CONJUGADO 2)', conjugado: 2, img: '', sets: '4', reps: '15', carga: '0', obs: 'Método Simples (15 RM)', recovery: '30s' },
+            { name: 'Extensão de quadril e joelho em pé com caneleira (CONJUGADO 3)', conjugado: 3, img: '', sets: '4', reps: '9', carga: '0', obs: 'Método Simples (9 RM)', recovery: '30s' },
+            { name: 'Flexão de joelho em pé com caneleira (CONJUGADO 3)', conjugado: 3, img: '', sets: '4', reps: '9', carga: '0', obs: 'Método Simples (15 RM)', recovery: '30s' },
+            { name: 'Remada curvada supinada no cross barra reta (CONJUGADO 4)', conjugado: 4, img: '', sets: '3', reps: '9', carga: '0', obs: 'Método Simples (9 RM)', recovery: '30s' },
+            { name: 'Bíceps em pé no cross barra reta (CONJUGADO 4)', conjugado: 4, img: '', sets: '3', reps: '9', carga: '0', obs: 'Método Simples (9 RM)', recovery: '30s' },
+            { name: 'Puxada aberta no pulley alto', img: '', sets: '3', reps: '9', carga: '0', obs: 'Método Simples (9 RM)', recovery: '30s' }
         ],
         'andrademarcia.ucam@gmail.com': [
             { name: 'Extensão de quadril em pé (caneleira) ou máquina', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/3ozI0U0TzKEwRNqcxiv4.png', sets: '3', reps: '15', carga: '0', obs: 'Método Simples (15 RM)', recovery: '30s' },
