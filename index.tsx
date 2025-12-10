@@ -774,7 +774,7 @@ function renderStudentProfile(email) {
         <button data-target="weightControlScreen" id="weight-control-btn" class="bg-gray-800 hover:bg-gray-700 border border-gray-700 text-white font-bold p-2 rounded-xl flex flex-col items-center justify-center space-y-1 transition text-center h-24"><i data-feather="bar-chart-2"></i><span class="text-xs">Peso</span></button>
         <button data-target="iaNutritionistScreen" id="ia-nutritionist-btn" class="bg-gray-800 hover:bg-gray-700 border border-gray-700 text-white font-bold p-2 rounded-xl flex flex-col items-center justify-center space-y-1 transition text-center h-24"><i data-feather="heart"></i><span class="text-xs">Nutri IA</span></button>
         <button data-target="stressLevelScreen" id="stress-level-btn" class="bg-gray-800 hover:bg-gray-700 border border-gray-700 text-white font-bold p-2 rounded-xl flex flex-col items-center justify-center space-y-1 transition text-center h-24"><i data-feather="activity"></i><span class="text-xs">Estresse</span></button>
-        <button data-target="raceCalendarScreen" id="race-calendar-btn" class="bg-gray-800 hover:bg-gray-700 border border-gray-700 text-white font-bold p-2 rounded-xl flex flex-col items-center justify-center space-y-1 transition text-center h-24"><i data-feather="award"></i><span class="text-xs">Corridas</span></button>
+        <button data-target="raceCalendarScreen" id="race-calendar-btn" class="bg-gray-800 hover:bg-gray-700 border border-gray-700 text-white font-bold p-2 rounded-xl flex flex-col items-center justify-center space-y-1 transition text-center h-24"><i data-feather="award"></i><span class="text-xs">Provas de Corrida</span></button>
         <button data-target="aiAnalysisScreen" id="ai-analysis-btn" class="bg-gray-800 hover:bg-gray-700 border border-gray-700 text-white font-bold p-2 rounded-xl flex flex-col items-center justify-center space-y-1 transition text-center h-24"><i data-feather="cpu"></i><span class="text-xs">Análise IA</span></button>
         <button data-target="physioAssessmentScreen" id="physio-btn" class="bg-gray-800 hover:bg-gray-700 border border-gray-700 text-white font-bold p-2 rounded-xl flex flex-col items-center justify-center space-y-1 transition text-center h-24"><i data-feather="users"></i><span class="text-xs">Avaliação</span></button>
         <button data-target="outdoorSelectionScreen" class="bg-gray-800 hover:bg-gray-700 border border-gray-700 text-white font-bold p-2 rounded-xl flex flex-col items-center justify-center space-y-1 transition text-center h-24"><i data-feather="sun"></i><span class="text-xs">Outdoor</span></button>
@@ -899,7 +899,7 @@ function renderCalendar(email) {
             classes += ' today';
         }
 
-        calendarGrid.innerHTML += `<div class="${classes}" data-day="${day}">${day}</div>`;
+        calendarGrid.innerHTML += `<div class="calendar-day" data-day="${day}">${day}</div>`;
     }
 }
 
