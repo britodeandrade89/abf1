@@ -1,5 +1,3 @@
-
-
 import { GoogleGenAI } from "@google/genai";
 
 // Globals defined by imported scripts
@@ -91,7 +89,7 @@ const stressAssessmentQuestions = [
 // --- DATABASE ---
 const database = {
     users: [
-        { id: 1, name: 'André Brito', email: 'britodeandrade@gmail.com', photo: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/3Zy4n6ZmWp9DW98VtXpO.jpeg', weightHistory: [], nutritionistData: { consultation: { step: 0, answers: {} }, plans: [], status: 'idle' }, periodizationStartDate: null, stressData: { assessments: [] } },
+        { id: 1, name: 'André Brito', email: 'britodeandrade@gmail.com', photo: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/3Zy4n6ZmWp9DW98VtXpO.jpeg', weightHistory: [], nutritionistData: { consultation: { step: 0, answers: {} }, plans: [], status: 'idle' }, periodizationStartDate: new Date().toISOString().split('T')[0], stressData: { assessments: [] } },
         { id: 2, name: 'Marcelly Bispo', email: 'marcellybispo92@gmail.com', photo: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/2VWhNV4eSyDNkwEzPGvq.jpeg', weightHistory: [], nutritionistData: { consultation: { step: 0, answers: {} }, plans: [], status: 'idle' }, periodizationStartDate: null, stressData: { assessments: [] } },
         { id: 3, name: 'Marcia Brito', email: 'andrademarcia.ucam@gmail.com', photo: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/huS3I3wDTHbXGY1EuLjf.jpg', weightHistory: [], nutritionistData: { consultation: { step: 0, answers: {} }, plans: [], status: 'idle' }, periodizationStartDate: null, stressData: { assessments: [] } },
         { id: 4, name: 'Liliane Torres', email: 'lilicatorres@gmail.com', photo: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/ebw5cplf2cypx4laU7fu.jpg', weightHistory: [], nutritionistData: { consultation: { step: 0, answers: {} }, plans: [], status: 'idle' }, periodizationStartDate: null, stressData: { assessments: [] } },
@@ -155,6 +153,33 @@ function generateCyclicRunningWorkouts(baseWorkouts) {
 
 
 function initializeDatabase() {
+    // Definir os treinos do André Brito aqui para garantir que sejam aplicados tanto na inicialização limpa quanto na migração
+    const treinosA_AndreBrito_Semana3e4 = [
+        { name: 'Agachamento parcial no Smith (CONJUGADO 1)', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/dMXSfHrCe2BQAKRvIvIg.png', sets: '3', reps: '9', carga: '20', obs: 'Método Simples (9 RM)', recovery: '30s' },
+        { name: 'Agachamento Livre com HBC (CONJUGADO 1)', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/77Uth2fQUxtPXvqu1UCb.png', sets: '3', reps: '9', carga: '16', obs: 'Método Simples (9 RM)', recovery: '30s' },
+        { name: 'Agachamento Búlgaro com HBC no banco ou step', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/jo9jsMXR96Q17m4pXn7B.jpg', sets: '3', reps: '9', carga: '8', obs: 'Método Simples (9 RM)', recovery: '30s' },
+        { name: 'Cadeira extensora', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/rQ8l64KvygQUAa8FZXyp.jpg', sets: '3', reps: '9', carga: '7', obs: 'Método Simples (9 RM)', recovery: '30s' },
+        { name: 'Supino inclinado com HBC (CONJUGADO 2)', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/fWBlaY5LXefUGcXHz2tO.jpg', sets: '3', reps: '9', carga: '14', obs: 'Método Simples (9 RM)', recovery: '30s' },
+        { name: 'Desenvolvimento aberto com HBC (CONJUGADO 2)', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/niXdGuQHlniNh7f6xh5i.png', sets: '3', reps: '9', carga: '9', obs: 'Método Simples (9 RM)', recovery: '30s' },
+        { name: 'Crucifixo aberto no banco inclinado com HBC (CONJUGADO 3)', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/6RBiU0w8EtT9enxOTM6Q.jpg', sets: '3', reps: '9', carga: '6', obs: 'Método Simples (9 RM)', recovery: '30s' },
+        { name: 'Extensão de cotovelos no solo (CONJUGADO 3)', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/eGNCCvzlv1jGWpSbs5nH.png', sets: '3', reps: '9', carga: '0', obs: 'Método Simples (9 RM)', recovery: '30s' },
+        { name: 'Tríceps fechado no solo de joelhos', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/cVidpH3PfsrBhLcAGKmI.jpg', sets: '3', reps: '9', carga: '0', obs: 'Método Simples (9 RM)', recovery: '30s' },
+        { name: 'Abdominal supra no solo', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/7M5vMfWh1Jb7DnLIUs4g.png', sets: '3', reps: '9', carga: '0', obs: 'Método Simples (15 RM)', recovery: '30s' }
+    ];
+
+    const treinosB_AndreBrito_Semana3e4 = [
+        { name: 'Agachamento sumô com HBC (CONJUGADO 1)', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/sGz9YqGUPf7lIqX8vULE.png', sets: '3', reps: '9', carga: '22', obs: 'Método Simples (9 RM)', recovery: '30s' },
+        { name: 'Agachamento no smith ao fundo pés alinhados a barra (CONJUGADO 1)', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/qF4Qx4su0tiGLT3oTZqu.png', sets: '3', reps: '9', carga: '14', obs: 'Método Simples (9 RM)', recovery: '30s' },
+        { name: 'Stiff em pé com HBM (CONJUGADO 2)', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/isKs5qzBPblirwR4IHPO.png', sets: '3', reps: '9', carga: '7', obs: 'Método Simples (9 RM)', recovery: '30s' },
+        { name: 'Flexão de joelho em pé com caneleira (CONJUGADO 2)', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/ZEcYnpswJBmu24PWZXwq.jpg', sets: '3', reps: '9', carga: '14', obs: 'Método Simples (9 RM)', recovery: '30s' },
+        { name: 'Remada declinada no Smith (CONJUGADO 3)', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/gSfHTcM8MNU22aYUa0zH.jpg', sets: '3', reps: '9', carga: '7', obs: 'Método Simples (9 RM)', recovery: '30s' },
+        { name: 'Abdominal supra no solo (CONJUGADO 3)', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/De8VrobzH9PPMDIAr7Cn.png', sets: '3', reps: '9', carga: '8', obs: 'Método Simples (15 RM)', recovery: '30s' },
+        { name: 'Remada curvada supinada no cross barra reta (CONJUGADO 4)', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/Vw4Wjum0oI5o4JiuTomc.jpg', sets: '3', reps: '9', carga: '4', obs: 'Método Simples (9 RM)', recovery: '30s' },
+        { name: 'Bíceps em pé no cross barra reta (CONJUGADO 4)', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/o8z8KzDoOqceSMHJvdLB.jpg', sets: '3', reps: '9', carga: '6', obs: 'Método Simples (9 RM)', recovery: '30s' },
+        { name: 'Puxada aberta no pulley alto (CONJUGADO 5)', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/EqnYYAVM1GKUbaAUibQF.jpg', sets: '3', reps: '9', carga: '11', obs: 'Método Simples (9 RM)', recovery: '30s' },
+        { name: 'Puxada supinada no pulley alto (CONJUGADO 5)', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/Rmve8zGQZaEmRNHZC1G6.jpg', sets: '3', reps: '10', carga: '10', obs: 'Método Simples (9 RM)', recovery: '30s' }
+    ];
+
     const savedDB = JSON.parse(localStorage.getItem(STORAGE_KEYS.DATABASE));
     if (savedDB) {
         Object.assign(database, savedDB);
@@ -180,7 +205,18 @@ function initializeDatabase() {
             if (!user.stressData) {
                 user.stressData = { assessments: [] };
             }
+            // Force reset periodization for Andre Brito to today
+            if (user.email === 'britodeandrade@gmail.com') {
+                 user.periodizationStartDate = new Date().toISOString().split('T')[0];
+            }
         });
+
+        // Force update workouts for André Brito to ensure 3 sets
+        if (database.trainingPlans) {
+            if (database.trainingPlans.treinosA) database.trainingPlans.treinosA['britodeandrade@gmail.com'] = treinosA_AndreBrito_Semana3e4;
+            if (database.trainingPlans.treinosB) database.trainingPlans.treinosB['britodeandrade@gmail.com'] = treinosB_AndreBrito_Semana3e4;
+        }
+
         if (!database.completedWorkouts) {
             database.completedWorkouts = {};
         }
@@ -293,32 +329,6 @@ function initializeDatabase() {
         'lilicatorres@gmail.com': periodizacaoPlano1,
         'arbrito.andrade@gmail.com': periodizacaoPlano1,
     };
-
-    const treinosA_AndreBrito_Semana3e4 = [
-        { name: 'Agachamento parcial no Smith (CONJUGADO 1)', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/dMXSfHrCe2BQAKRvIvIg.png', sets: '4', reps: '9', carga: '20', obs: 'Método Simples (9 RM)', recovery: '30s' },
-        { name: 'Agachamento Livre com HBC (CONJUGADO 1)', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/77Uth2fQUxtPXvqu1UCb.png', sets: '4', reps: '9', carga: '16', obs: 'Método Simples (9 RM)', recovery: '30s' },
-        { name: 'Agachamento Búlgaro com HBC no banco ou step', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/jo9jsMXR96Q17m4pXn7B.jpg', sets: '4', reps: '9', carga: '8', obs: 'Método Simples (9 RM)', recovery: '30s' },
-        { name: 'Cadeira extensora', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/rQ8l64KvygQUAa8FZXyp.jpg', sets: '4', reps: '9', carga: '7', obs: 'Método Simples (9 RM)', recovery: '30s' },
-        { name: 'Supino inclinado com HBC (CONJUGADO 2)', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/fWBlaY5LXefUGcXHz2tO.jpg', sets: '4', reps: '9', carga: '14', obs: 'Método Simples (9 RM)', recovery: '30s' },
-        { name: 'Desenvolvimento aberto com HBC (CONJUGADO 2)', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/niXdGuQHlniNh7f6xh5i.png', sets: '4', reps: '9', carga: '9', obs: 'Método Simples (9 RM)', recovery: '30s' },
-        { name: 'Crucifixo aberto no banco inclinado com HBC (CONJUGADO 3)', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/6RBiU0w8EtT9enxOTM6Q.jpg', sets: '4', reps: '9', carga: '6', obs: 'Método Simples (9 RM)', recovery: '30s' },
-        { name: 'Extensão de cotovelos no solo (CONJUGADO 3)', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/eGNCCvzlv1jGWpSbs5nH.png', sets: '4', reps: '9', carga: '0', obs: 'Método Simples (9 RM)', recovery: '30s' },
-        { name: 'Tríceps fechado no solo de joelhos', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/cVidpH3PfsrBhLcAGKmI.jpg', sets: '6', reps: '9', carga: '0', obs: 'Método Simples (9 RM)', recovery: '30s' },
-        { name: 'Abdominal supra no solo', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/7M5vMfWh1Jb7DnLIUs4g.png', sets: '6', reps: '9', carga: '0', obs: 'Método Simples (15 RM)', recovery: '30s' }
-    ];
-
-    const treinosB_AndreBrito_Semana3e4 = [
-        { name: 'Agachamento sumô com HBC (CONJUGADO 1)', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/sGz9YqGUPf7lIqX8vULE.png', sets: '4', reps: '9', carga: '22', obs: 'Método Simples (9 RM)', recovery: '30s' },
-        { name: 'Agachamento no smith ao fundo pés alinhados a barra (CONJUGADO 1)', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/qF4Qx4su0tiGLT3oTZqu.png', sets: '4', reps: '9', carga: '14', obs: 'Método Simples (9 RM)', recovery: '30s' },
-        { name: 'Stiff em pé com HBM (CONJUGADO 2)', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/isKs5qzBPblirwR4IHPO.png', sets: '4', reps: '9', carga: '7', obs: 'Método Simples (9 RM)', recovery: '30s' },
-        { name: 'Flexão de joelho em pé com caneleira (CONJUGADO 2)', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/ZEcYnpswJBmu24PWZXwq.jpg', sets: '4', reps: '9', carga: '14', obs: 'Método Simples (9 RM)', recovery: '30s' },
-        { name: 'Remada declinada no Smith (CONJUGADO 3)', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/gSfHTcM8MNU22aYUa0zH.jpg', sets: '4', reps: '9', carga: '7', obs: 'Método Simples (9 RM)', recovery: '30s' },
-        { name: 'Abdominal supra no solo (CONJUGADO 3)', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/De8VrobzH9PPMDIAr7Cn.png', sets: '4', reps: '9', carga: '8', obs: 'Método Simples (15 RM)', recovery: '30s' },
-        { name: 'Remada curvada supinada no cross barra reta (CONJUGADO 4)', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/Vw4Wjum0oI5o4JiuTomc.jpg', sets: '4', reps: '9', carga: '4', obs: 'Método Simples (9 RM)', recovery: '30s' },
-        { name: 'Bíceps em pé no cross barra reta (CONJUGADO 4)', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/o8z8KzDoOqceSMHJvdLB.jpg', sets: '4', reps: '9', carga: '6', obs: 'Método Simples (9 RM)', recovery: '30s' },
-        { name: 'Puxada aberta no pulley alto (CONJUGADO 5)', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/EqnYYAVM1GKUbaAUibQF.jpg', sets: '4', reps: '9', carga: '11', obs: 'Método Simples (9 RM)', recovery: '30s' },
-        { name: 'Puxada supinada no pulley alto (CONJUGADO 5)', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/Rmve8zGQZaEmRNHZC1G6.jpg', sets: '4', reps: '10', carga: '10', obs: 'Método Simples (9 RM)', recovery: '30s' }
-    ];
 
     const treinosA = {
         'britodeandrade@gmail.com': treinosA_AndreBrito_Semana3e4,
@@ -818,7 +828,7 @@ function renderStudentProfile(email) {
     const footerContainer = document.querySelector('#studentProfileScreen > .text-center.pt-8.pb-24');
     if (footerContainer) {
         footerContainer.innerHTML = `
-            <p class="text-xs">Versão 1.1</p>
+            <p class="text-xs">Versão 1.2</p>
             <p class="text-xs">Desenvolvido por André Brito</p>
         `;
     }
