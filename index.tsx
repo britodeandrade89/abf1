@@ -1253,28 +1253,70 @@ function renderTrainingScreen(email, trainingType) {
     
     let cardsHtml = '';
     
-    // Create timeline structure
-    cardsHtml += '<div class="absolute left-4 top-0 bottom-0 w-1 bg-gradient-to-b from-red-600 to-red-900 rounded"></div>';
+    // Removed continuous vertical line
     
     processedExercises.forEach((ex, index) => {
         const today = new Date().toISOString().split('T')[0];
         const isChecked = ex.checkIns && ex.checkIns.includes(today);
         const originalName = ex.name.substring(ex.name.indexOf(' ') + 1);
 
-        const conjugadoColors = {
-            1: 'border-l-blue-500',
-            2: 'border-l-green-500',
-            3: 'border-l-purple-500',
-            4: 'border-l-orange-500',
+        // Helper to extract conjugado number from name if property is missing
+        const getConjugadoInfo = (name) => {
+            if (ex.conjugado) return ex.conjugado;
+            const match = name.match(/CONJUGADO\s*(\d+)/i);
+            return match ? parseInt(match[1]) : null;
         };
-        const conjugadoClass = ex.conjugado ? `border-l-4 ${conjugadoColors[ex.conjugado]}` : '';
+
+        const currentC = getConjugadoInfo(ex.name);
+        const prevEx = index > 0 ? processedExercises[index - 1] : null;
+        const nextEx = index < processedExercises.length - 1 ? processedExercises[index + 1] : null;
+        
+        const prevC = prevEx ? getConjugadoInfo(prevEx.name) : null;
+        const nextC = nextEx ? getConjugadoInfo(nextEx.name) : null;
+
+        let bracketHtml = '';
+        
+        // Define colors for different conjugate groups
+        const colors = {
+            1: 'border-red-600',
+            2: 'border-blue-600',
+            3: 'border-green-600',
+            4: 'border-yellow-600'
+        };
+        const borderColor = currentC ? (colors[currentC] || 'border-gray-500') : '';
+
+        // Only draw brackets if part of a conjugate pair
+        if (currentC) {
+            const isStart = currentC !== prevC;
+            const isEnd = currentC !== nextC;
+            const isMiddle = !isStart && !isEnd;
+            const isSingle = isStart && isEnd; // Should not happen for conjugate, but handle gracefully
+
+            if (!isSingle) {
+                if (isStart) {
+                     // Start bracket: Vertical line goes down from center, horizontal top
+                     bracketHtml = `
+                        <div class="absolute left-0 top-1/2 w-4 h-full border-l-4 border-t-4 rounded-tl-xl ${borderColor} border-b-0 border-r-0"></div>
+                     `;
+                } else if (isEnd) {
+                    // End bracket: Vertical line comes from top, horizontal bottom
+                    bracketHtml = `
+                        <div class="absolute left-0 top-0 w-4 h-1/2 border-l-4 border-b-4 rounded-bl-xl ${borderColor} border-t-0 border-r-0"></div>
+                    `;
+                } else if (isMiddle) {
+                    // Middle: Full vertical line
+                    bracketHtml = `
+                        <div class="absolute left-0 top-0 w-4 h-full border-l-4 ${borderColor}"></div>
+                    `;
+                }
+            }
+        }
 
         cardsHtml += `
-            <div class="relative pl-8 mb-4">
-                 <!-- Timeline Dot -->
-                <div class="absolute left-2 top-8 w-5 h-5 bg-red-600 rounded-full border-2 border-black z-10 -ml-0.5"></div>
+            <div class="relative pl-6 mb-4">
+                 ${bracketHtml}
                 
-                <div class="exercise-card metal-card-dark p-0 rounded-xl flex items-center gap-0 ${conjugadoClass} overflow-hidden" data-exercise-name="${originalName}" data-training-type="${trainingType}">
+                <div class="exercise-card metal-card-dark p-0 rounded-xl flex items-center gap-0 overflow-hidden" data-exercise-name="${originalName}" data-training-type="${trainingType}">
                     <div class="w-24 h-24 flex-shrink-0 relative">
                         <img src="${ex.img || 'https://via.placeholder.com/100x100/4b5563/FFFFFF?text=SEM+IMG'}" alt="thumbnail" class="w-full h-full object-cover">
                          <div class="absolute bottom-0 left-0 bg-black/70 text-white text-xs px-1 font-bold rounded-tr">${index + 1}</div>
@@ -1782,9 +1824,9 @@ function renderEvolutionScreen(email: string) {
     
     // Placeholder implementation for charts
     const ctx = document.getElementById('evolution-chart') as HTMLCanvasElement;
-    if (ctx && window.Chart) {
+    if (ctx && Chart) {
         // Destroy existing chart if any (need to track it, but simplifying for fix)
-        new window.Chart(ctx, {
+        new Chart(ctx, {
             type: 'line',
             data: {
                 labels: user.weightHistory?.map(w => w.date) || [],
@@ -1932,9 +1974,9 @@ function renderAiAnalysisScreen(email: string) {
 function renderStressLevelScreen(email: string) {
     const ctx = document.getElementById('stress-chart') as HTMLCanvasElement;
     const user = database.users.find(u => u.email === email);
-    if (ctx && user && window.Chart) {
+    if (ctx && user && Chart) {
         if (stressChart) stressChart.destroy();
-        stressChart = new window.Chart(ctx, {
+        stressChart = new Chart(ctx, {
             type: 'line',
             data: {
                 labels: user.stressData?.assessments?.map(a => new Date(a.date).toLocaleDateString()) || [],

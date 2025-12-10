@@ -496,21 +496,56 @@ button:active,
 
 /* === NOVOS ESTILOS PARA PERIODIZAÇÃO E CRONÔMETRO === */
 .timer-header-box {
-    background-color: #b91c1c; /* red-700 */
+    background-color: #000000; /* Black background */
     padding: 0.5rem 1.5rem;
-    border-radius: 0.5rem; /* rounded-lg */
-    border: 2px solid #dc2626; /* red-600 */
-    box-shadow: inset 0 2px 4px rgba(0,0,0,0.4), 0 4px 6px rgba(0,0,0,0.2);
+    border-radius: 30px; /* More rounded */
+    border: 3px solid #374151; /* Dark Grey Metal Rim */
+    box-shadow: 
+        inset 0 4px 8px rgba(0,0,0,0.8), 
+        0 4px 10px rgba(0,0,0,0.5),
+        0 0 15px rgba(220, 38, 38, 0.1); /* Slight red glow outer */
     flex-grow: 1;
     margin: 0 1rem;
+    display: flex;
+    flex-col: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Optional: Scanline effect for the timer */
+.timer-header-box::after {
+    content: " ";
+    display: block;
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+    z-index: 2;
+    background-size: 100% 2px, 3px 100%;
+    pointer-events: none;
 }
 
 .digital-timer {
     font-family: 'Chakra Petch', 'Courier New', monospace;
     font-weight: 700;
-    letter-spacing: 0.1em; /* Increased spacing for digital look */
-    color: #6ee7b7; /* emerald-300 */
-    text-shadow: 0 0 8px rgba(110, 231, 183, 0.8), 0 0 3px rgba(255, 255, 255, 0.5); /* Enhanced glow */
+    letter-spacing: 0.15em;
+    color: #ff0000; /* Pure Red */
+    text-shadow: 0 0 10px #ff0000, 0 0 20px #991b1b; /* Red Neon Glow */
+    z-index: 3;
+    position: relative;
+}
+
+#training-title {
+    color: #e5e7eb !important; /* light gray title */
+    font-size: 0.75rem;
+    letter-spacing: 0.1em;
+    margin-bottom: -5px;
+    z-index: 3;
+    position: relative;
 }
 
 #periodization-notification {
@@ -712,12 +747,13 @@ button:active,
     box-shadow: 5px 5px 10px #0b0b0b, -5px -5px 10px #333;
     border-radius: 12px;
     position: relative;
+    z-index: 10;
 }
 
 /* Timeline Container */
 .timeline-container {
     position: relative;
-    padding-left: 0.5rem;
+    padding-left: 0;
 }
 
 /* Toggle Switch */
