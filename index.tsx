@@ -14,7 +14,7 @@ let currentCalendarDate = new Date(); // Track calendar state
 // --- DATABASE ---
 const database = {
     users: [
-        { id: 1, name: 'André Brito', email: 'britodeandrade@gmail.com', photo: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/3Zy4n6ZmWp9DW98VtXpO.jpeg', weightHistory: [], nutritionistData: { consultation: { step: 0, answers: {} }, plans: [], status: 'idle' }, periodizationStartDate: new Date().toISOString().split('T')[0], stressData: { assessments: [] } }
+        { id: 1, name: 'André Brito', email: 'britodeandrade@gmail.com', photo: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/3Zy4n6ZmWp9DW98VtXpO.jpeg', weightHistory: [], nutritionistData: { consultation: { step: 0, answers: {} }, plans: [], status: 'idle' }, periodizationStartDate: '2025-01-15', stressData: { assessments: [] } }
     ],
     trainingPlans: { treinosA: {}, treinosB: {}, periodizacao: {} },
     userRunningWorkouts: {},
@@ -41,36 +41,136 @@ function saveDatabase(db: any) {
 function getCurrentUser() { return localStorage.getItem(STORAGE_KEYS.CURRENT_USER); }
 function setCurrentUser(email: string) { localStorage.setItem(STORAGE_KEYS.CURRENT_USER, email); }
 
+// Helper: Get Monday of the current week
+function getMonday(d: Date) {
+  d = new Date(d);
+  var day = d.getDay(),
+      diff = d.getDate() - day + (day == 0 ? -6 : 1); // adjust when day is sunday
+  return new Date(d.setDate(diff));
+}
+
+// Helper: Format date as DD/MM/YYYY
+function formatDate(d: Date) {
+    return d.toLocaleDateString('pt-BR');
+}
+
 // --- INITIALIZATION ---
 function initializeDatabase() {
     const db = getDatabase();
+    const email = 'britodeandrade@gmail.com';
     
     // Default Workout Data (André Brito)
     const treinosA = [
-        { name: 'Agachamento parcial no Smith (CONJUGADO 1)', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/qF4Qx4su0tiGLT3oTZqu.png', sets: '3', reps: '8-9', carga: '20', obs: 'Método Simples' },
-        { name: 'Agachamento Livre com HBC (CONJUGADO 1)', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/77Uth2fQUxtPXvqu1UCb.png', sets: '3', reps: '8-9', carga: '16', obs: 'Método Simples' },
-        { name: 'Agachamento Búlgaro com HBC no banco ou step', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/sGz9YqGUPf7lIqX8vULE.png', sets: '3', reps: '8-9', carga: '8', obs: 'Método Simples' },
-        { name: 'Cadeira extensora', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/ZEcYnpswJBmu24PWZXwq.jpg', sets: '3', reps: '8-9', carga: '7', obs: 'Método Simples' },
-        { name: 'Supino inclinado com HBC (CONJUGADO 2)', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/isKs5qzBPblirwR4IHPO.png', sets: '3', reps: '8-9', carga: '14', obs: 'Método Simples' },
-        { name: 'Desenvolvimento aberto com HBC (CONJUGADO 2)', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/TYYs8dYewPrOA5MB0LKt.png', sets: '3', reps: '8-9', carga: '9', obs: 'Método Simples' },
-        { name: 'Crucifixo aberto no banco inclinado com HBC (CONJUGADO 3)', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/77Uth2fQUxtPXvqu1UCb.png', sets: '3', reps: '8-9', carga: '6', obs: 'Método Simples' },
-        { name: 'Extensão de cotovelos no solo (CONJUGADO 3)', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/isKs5qzBPblirwR4IHPO.png', sets: '3', reps: '8-9', carga: '0', obs: 'Método Simples' },
-        { name: 'Tríceps fechado no solo de joelhos', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/qF4Qx4su0tiGLT3oTZqu.png', sets: '3', reps: '8-9', carga: '0', obs: 'Método Simples' },
-        { name: 'Abdominal supra no solo', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/sGz9YqGUPf7lIqX8vULE.png', sets: '3', reps: '9', carga: '0', obs: 'Método Simples' }
+        { name: 'Agachamento livre com HBC', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/77Uth2fQUxtPXvqu1UCb.png', sets: '3', reps: '10', carga: '12', obs: 'Método Simples' },
+        { name: 'Leg press horizontal', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/qF4Qx4su0tiGLT3oTZqu.png', sets: '3', reps: '10', carga: '40', obs: 'Método Simples' },
+        { name: 'Leg press horizontal unilateral', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/qF4Qx4su0tiGLT3oTZqu.png', sets: '3', reps: '10', carga: '20', obs: 'Método Simples' },
+        { name: 'Cadeira extensora', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/ZEcYnpswJBmu24PWZXwq.jpg', sets: '3', reps: '10', carga: '10', obs: 'Método Simples' },
+        { name: 'Cadeira extensora unilateral', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/ZEcYnpswJBmu24PWZXwq.jpg', sets: '3', reps: '10', carga: '5', obs: 'Método Simples' },
+        { name: 'Supino aberto com HBC no banco inclinado', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/isKs5qzBPblirwR4IHPO.png', sets: '3', reps: '10', carga: '12', obs: 'Método Simples' },
+        { name: 'Crucifixo aberto com HBC no banco inclinado', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/isKs5qzBPblirwR4IHPO.png', sets: '3', reps: '10', carga: '8', obs: 'Método Simples' },
+        { name: 'Desenvolvimento aberto com HBC no banco 75 graus', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/TYYs8dYewPrOA5MB0LKt.png', sets: '3', reps: '10', carga: '8', obs: 'Método Simples' },
+        { name: 'Extensão de cotovelos aberto no solo', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/qF4Qx4su0tiGLT3oTZqu.png', sets: '3', reps: '10', carga: '0', obs: 'Método Simples' },
+        { name: 'Extensão de cotovelos fechado no solo', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/qF4Qx4su0tiGLT3oTZqu.png', sets: '3', reps: '10', carga: '0', obs: 'Método Simples' },
+        { name: 'Abdominal remador no solo', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/sGz9YqGUPf7lIqX8vULE.png', sets: '3', reps: '15', carga: '0', obs: 'Método Simples' }
     ];
 
     const treinosB = [
-        { name: 'Agachamento sumô com HBC (CONJUGADO 1)', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/sGz9YqGUPf7lIqX8vULE.png', sets: '3', reps: '9', carga: '22', obs: 'Método Simples' },
-        { name: 'Agachamento no smith (CONJUGADO 1)', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/qF4Qx4su0tiGLT3oTZqu.png', sets: '3', reps: '9', carga: '14', obs: 'Método Simples' },
-        { name: 'Stiff em pé com HBM (CONJUGADO 2)', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/isKs5qzBPblirwR4IHPO.png', sets: '3', reps: '9', carga: '7', obs: 'Método Simples' },
-        { name: 'Flexão de joelho (CONJUGADO 2)', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/ZEcYnpswJBmu24PWZXwq.jpg', sets: '3', reps: '9', carga: '14', obs: 'Método Simples' }
+        { name: 'Agachamento sumô com HBC (CONJUGADO 1)', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/sGz9YqGUPf7lIqX8vULE.png', sets: '3', reps: '10', carga: '22', obs: 'Método Simples' },
+        { name: 'Agachamento no smith (CONJUGADO 1)', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/qF4Qx4su0tiGLT3oTZqu.png', sets: '3', reps: '10', carga: '14', obs: 'Método Simples' },
+        { name: 'Stiff em pé com HBM (CONJUGADO 2)', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/isKs5qzBPblirwR4IHPO.png', sets: '3', reps: '10', carga: '7', obs: 'Método Simples' },
+        { name: 'Flexão de joelho (CONJUGADO 2)', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/ZEcYnpswJBmu24PWZXwq.jpg', sets: '3', reps: '10', carga: '14', obs: 'Método Simples' }
+    ];
+
+    // Periodization History Data - DYNAMIC DATES
+    // Start from current week's Monday
+    const startDate = getMonday(new Date());
+    
+    // Function to add weeks to a date (NOW SET TO 2 WEEKS)
+    const addWeeks = (date: Date, weeks: number) => {
+        const result = new Date(date);
+        result.setDate(result.getDate() + (weeks * 7));
+        return result;
+    };
+
+    const p1Start = startDate;
+    const p1End = addWeeks(p1Start, 2); // 2 Weeks duration
+    
+    const p2Start = new Date(p1End);
+    p2Start.setDate(p2Start.getDate() + 1);
+    const p2End = addWeeks(p2Start, 2); // 2 Weeks duration
+
+    const p3Start = new Date(p2End);
+    p3Start.setDate(p3Start.getDate() + 1);
+    const p3End = addWeeks(p3Start, 2); // 2 Weeks duration
+
+    const p4Start = new Date(p3End);
+    p4Start.setDate(p4Start.getDate() + 1);
+    const p4End = addWeeks(p4Start, 2); // 2 Weeks duration
+
+    const periodizacaoTemplate = [
+        { 
+            id: 1, 
+            fase: 'Adaptação', 
+            inicio: formatDate(p1Start), 
+            fim: formatDate(p1End), 
+            objetivo: 'Resistência Muscular', 
+            status: 'Não Começou', 
+            series: '3',
+            repeticoes: '10',
+            detalhes: 'Fase de adaptação anatômica. Foco na execução correta e cadência controlada. Utilize cargas moderadas para preparar as articulações.' 
+        },
+        { 
+            id: 2, 
+            fase: 'Hipertrofia I', 
+            inicio: formatDate(p2Start), 
+            fim: formatDate(p2End), 
+            objetivo: 'Ganho de Massa', 
+            status: 'Não Começou', 
+            series: '3',
+            repeticoes: '10',
+            detalhes: 'Fase principal de construção muscular. Volume de treino moderado a alto. Carga desafiadora, buscando a falha próxima da décima repetição.' 
+        },
+        { 
+            id: 3, 
+            fase: 'Hipertrofia II', 
+            inicio: formatDate(p3Start), 
+            fim: formatDate(p3End), 
+            objetivo: 'Definição e Volume', 
+            status: 'Não Começou', 
+            series: '3',
+            repeticoes: '10',
+            detalhes: 'Intensificação do treino para refinar a musculatura. Uso de técnicas avançadas como dropsets na última série para aumentar o estresse metabólico.' 
+        },
+        { 
+            id: 4, 
+            fase: 'Força Pura', 
+            inicio: formatDate(p4Start), 
+            fim: formatDate(p4End), 
+            objetivo: 'Aumento de Carga', 
+            status: 'Não Começou', 
+            series: '4',
+            repeticoes: '4-6',
+            detalhes: 'Foco no aumento de força bruta e tensão mecânica. Cargas altas e descanso maior entre séries (2 a 3 minutos).' 
+        }
     ];
 
     // Ensure plans exist for user
-    const email = 'britodeandrade@gmail.com';
     if (!db.trainingPlans.treinosA[email]) db.trainingPlans.treinosA[email] = treinosA;
     if (!db.trainingPlans.treinosB[email]) db.trainingPlans.treinosB[email] = treinosB;
+    
+    // Merge existing status with new dates/template
+    const existingPeriodization = db.trainingPlans.periodizacao[email] || [];
+    
+    const mergedPeriodization = periodizacaoTemplate.map(newItem => {
+        const existingItem = existingPeriodization.find((oldItem: any) => oldItem.id === newItem.id);
+        if (existingItem) {
+            return { ...newItem, status: existingItem.status };
+        }
+        return newItem;
+    });
 
+    db.trainingPlans.periodizacao[email] = mergedPeriodization;
+    
     saveDatabase(db);
 }
 
@@ -282,6 +382,181 @@ function loadTrainingScreen(type: string, email?: string) {
     showScreen('trainingScreen');
 }
 
+// --- PERIODIZATION LOGIC ---
+function togglePeriodizationStatus(id: number) {
+    const userEmail = getCurrentUser();
+    if (!userEmail) return;
+    
+    const db = getDatabase();
+    const periodizacao = db.trainingPlans.periodizacao[userEmail];
+    
+    if (!periodizacao) return;
+
+    const item = periodizacao.find((p: any) => p.id === id);
+    if (item) {
+        // Cycle Status
+        if (item.status === 'Não Começou') item.status = 'Em Andamento';
+        else if (item.status === 'Em Andamento') item.status = 'Concluído';
+        else item.status = 'Não Começou';
+        
+        saveDatabase(db);
+        loadPeriodizationScreen(); // Refresh
+    }
+}
+
+function openPeriodizationModal(id: number) {
+    const userEmail = getCurrentUser();
+    if (!userEmail) return;
+    
+    const db = getDatabase();
+    const periodizacao = db.trainingPlans.periodizacao[userEmail];
+    const item = periodizacao.find((p: any) => p.id === id);
+    
+    if (item) {
+        const modal = document.getElementById('periodizationDetailModal');
+        const content = document.getElementById('periodization-modal-content');
+        
+        document.getElementById('modal-periodization-phase')!.textContent = item.fase;
+        document.getElementById('modal-periodization-dates')!.innerHTML = `<i data-feather="calendar" class="w-4 h-4 text-red-500"></i> ${item.inicio} - ${item.fim}`;
+        document.getElementById('modal-periodization-goal')!.innerHTML = `<i data-feather="target" class="w-4 h-4 text-red-500"></i> ${item.objetivo}`;
+        
+        // Construct the detailed HTML with the new series/reps cards
+        const detailsContainer = document.getElementById('modal-periodization-details');
+        if (detailsContainer) {
+            detailsContainer.innerHTML = `
+                <div class="grid grid-cols-2 gap-4 mb-4">
+                    <div class="bg-gray-800 p-3 rounded-lg text-center border border-gray-600">
+                        <p class="text-xs text-gray-400 uppercase font-bold tracking-wider mb-1">Séries</p>
+                        <p class="text-2xl font-black text-white">${item.series || '-'}</p>
+                    </div>
+                    <div class="bg-gray-800 p-3 rounded-lg text-center border border-gray-600">
+                        <p class="text-xs text-gray-400 uppercase font-bold tracking-wider mb-1">Repetições</p>
+                        <p class="text-2xl font-black text-white">${item.repeticoes || '-'}</p>
+                    </div>
+                </div>
+                <div class="text-gray-200 text-sm leading-relaxed border-t border-gray-600 pt-3 mt-2">
+                    ${item.detalhes || 'Sem detalhes disponíveis'}
+                </div>
+            `;
+        }
+        
+        if (typeof feather !== 'undefined') feather.replace();
+        
+        modal?.classList.remove('hidden');
+        content?.classList.remove('scale-95', 'opacity-0');
+        content?.classList.add('scale-100', 'opacity-100');
+    }
+}
+
+function loadPeriodizationScreen() {
+    const userEmail = getCurrentUser();
+    if (!userEmail) return;
+
+    const db = getDatabase();
+    const periodizacao = db.trainingPlans.periodizacao[userEmail] || [];
+    const container = document.getElementById('periodization-content-wrapper');
+
+    if (container) {
+        container.innerHTML = '';
+        
+        if (periodizacao.length === 0) {
+            container.innerHTML = '<p class="text-white text-center mt-10">Nenhum histórico de periodização encontrado.</p>';
+        } else {
+            // Sort by ID to ensure chronological order: Adaptacao -> Hipertrofia I -> Hipertrofia II -> Forca
+            const sortedPeriodization = [...periodizacao].sort((a, b) => a.id - b.id);
+
+            sortedPeriodization.forEach((p: any, index: number) => {
+                // LOCKING LOGIC: Locked if it's not the first one AND the previous one is not 'Concluído'
+                const isLocked = index > 0 && sortedPeriodization[index - 1].status !== 'Concluído';
+
+                let statusColor = 'text-gray-400';
+                let statusBg = 'bg-gray-700';
+                let borderColor = 'bg-gray-600';
+                let statusIcon = 'circle';
+                let cardOpacity = 'opacity-100';
+                let pointerEvents = 'cursor-pointer hover:border-gray-500 active:scale-[0.98]';
+
+                if (isLocked) {
+                    cardOpacity = 'opacity-60 grayscale';
+                    pointerEvents = 'cursor-not-allowed';
+                    borderColor = 'bg-gray-700';
+                } else {
+                    if (p.status === 'Concluído') {
+                        statusColor = 'text-green-400';
+                        statusBg = 'bg-green-900/30 border-green-600/50';
+                        borderColor = 'bg-green-500';
+                        statusIcon = 'check-circle';
+                    } else if (p.status === 'Em Andamento') {
+                        statusColor = 'text-yellow-400';
+                        statusBg = 'bg-yellow-900/30 border-yellow-600/50';
+                        borderColor = 'bg-yellow-500';
+                        statusIcon = 'clock';
+                    }
+                }
+
+                const card = document.createElement('div');
+                card.className = `bg-gray-800 rounded-xl p-4 border border-gray-700 shadow-lg relative overflow-hidden transition-all duration-300 ${pointerEvents} ${cardOpacity}`;
+                
+                if (!isLocked) {
+                    card.onclick = () => openPeriodizationModal(p.id);
+                }
+                
+                let actionButton = '';
+                if (isLocked) {
+                    actionButton = `
+                        <div class="text-xs font-bold px-3 py-1.5 rounded-full border bg-gray-800 text-gray-500 border-gray-600 flex items-center gap-1.5 shadow-md z-10">
+                            <i data-feather="lock" class="w-3.5 h-3.5"></i> Bloqueado
+                        </div>
+                    `;
+                } else {
+                    actionButton = `
+                        <button onclick="event.stopPropagation(); togglePeriodizationStatus(${p.id})" class="text-xs font-bold px-3 py-1.5 rounded-full border ${statusBg} ${statusColor} flex items-center gap-1.5 hover:brightness-110 active:scale-95 transition-all shadow-md z-10">
+                            <i data-feather="${statusIcon}" class="w-3.5 h-3.5"></i> ${p.status}
+                        </button>
+                    `;
+                }
+
+                card.innerHTML = `
+                    <div class="absolute top-0 left-0 w-1.5 h-full ${borderColor}"></div>
+                    <div class="flex justify-between items-start mb-2 pl-3">
+                        <h3 class="text-lg font-bold text-white">${p.fase}</h3>
+                        ${actionButton}
+                    </div>
+                    <div class="pl-3 space-y-2">
+                        <div class="flex items-center gap-2 text-sm text-gray-300">
+                            <i data-feather="calendar" class="w-4 h-4 text-gray-500"></i>
+                            <span>${p.inicio} - ${p.fim}</span>
+                        </div>
+                        <div class="flex items-center gap-2 text-sm text-gray-300">
+                            <i data-feather="target" class="w-4 h-4 text-red-500"></i>
+                            <span class="font-medium text-gray-200">Objetivo:</span> ${p.objetivo}
+                        </div>
+                         <div class="flex items-center gap-4 mt-2 pt-2 border-t border-gray-700/50">
+                            <div class="flex items-center gap-1.5">
+                                <span class="text-xs text-gray-500 uppercase font-bold">Séries</span>
+                                <span class="text-sm font-bold text-white">${p.series || '-'}</span>
+                            </div>
+                            <div class="flex items-center gap-1.5">
+                                <span class="text-xs text-gray-500 uppercase font-bold">Reps</span>
+                                <span class="text-sm font-bold text-white">${p.repeticoes || '-'}</span>
+                            </div>
+                        </div>
+                        ${!isLocked ? `
+                         <div class="flex items-center gap-2 text-xs text-blue-400 mt-2">
+                            <i data-feather="info" class="w-3 h-3"></i>
+                            <span>Toque para ver detalhes</span>
+                        </div>` : ''}
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+            if (typeof feather !== 'undefined') feather.replace();
+        }
+    }
+
+    showScreen('periodizationScreen');
+}
+
 // --- PROFILE & DASHBOARD ---
 function loadStudentProfile(email: string) {
     const db = getDatabase();
@@ -314,7 +589,7 @@ function loadStudentProfile(email: string) {
                 <i class="fas fa-fire text-2xl"></i>
                 <span>TREINO B</span>
             </button>
-            <button onclick="showScreen('periodizationScreen')" class="metal-btn p-3 flex flex-col items-center justify-center gap-1 active:scale-95 transition-transform h-24">
+            <button onclick="loadPeriodizationScreen()" class="metal-btn p-3 flex flex-col items-center justify-center gap-1 active:scale-95 transition-transform h-24">
                 <i class="fas fa-calendar-alt text-yellow-500 text-2xl"></i>
                 <span>PERIODIZAÇÃO</span>
             </button>
@@ -441,8 +716,22 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         setTimeout(() => modal?.classList.add('hidden'), 200);
     });
+
+    // Periodization Modal Logic
+    document.getElementById('closePeriodizationModalBtn')?.addEventListener('click', () => {
+        const modal = document.getElementById('periodizationDetailModal');
+        const content = document.getElementById('periodization-modal-content');
+        if (content) {
+            content.classList.remove('scale-100', 'opacity-100');
+            content.classList.add('scale-95', 'opacity-0');
+        }
+        setTimeout(() => modal?.classList.add('hidden'), 200);
+    });
 });
 
 // Expose globals for HTML clicks
 (window as any).loadTrainingScreen = loadTrainingScreen;
+(window as any).loadPeriodizationScreen = loadPeriodizationScreen;
+(window as any).togglePeriodizationStatus = togglePeriodizationStatus;
+(window as any).openPeriodizationModal = openPeriodizationModal;
 (window as any).showScreen = showScreen;
