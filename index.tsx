@@ -505,13 +505,16 @@ function transitionScreen(fromScreen, toScreen, direction = 'right') {
     if (!fromScreen || !toScreen || fromScreen === toScreen) return;
 
     const navBar = document.getElementById('bottom-nav');
-    // Hide nav bar on non-primary screens
-    if (toScreen.id !== 'studentProfileScreen' && toScreen.id !== 'evolutionScreen') {
-        navBar.classList.add('nav-hidden');
-    } else {
-        navBar.classList.remove('nav-hidden');
+    
+    // Safety check: only manipulate navBar if it exists
+    if (navBar) {
+        // Hide nav bar on non-primary screens
+        if (toScreen.id !== 'studentProfileScreen' && toScreen.id !== 'evolutionScreen') {
+            navBar.classList.add('nav-hidden');
+        } else {
+            navBar.classList.remove('nav-hidden');
+        }
     }
-
 
     const fromRight = direction === 'right' ? 'screen-exit-to-left' : 'screen-exit-to-right';
     const fromLeft = direction === 'right' ? 'screen-enter-from-right' : 'screen-enter-from-left';
@@ -658,6 +661,9 @@ window.addEventListener('load', () => {
             let lastScrollY = 0;
             document.querySelectorAll('.screen').forEach(screen => {
                 screen.addEventListener('scroll', () => {
+                    // Safety check if navBar doesn't exist
+                    if (!navBar) return;
+                    
                     if (screen.id !== 'studentProfileScreen' && screen.id !== 'evolutionScreen') return;
                     
                     const currentScrollY = screen.scrollTop;
