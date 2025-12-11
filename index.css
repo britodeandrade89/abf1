@@ -1,7 +1,8 @@
 /* Reset basics */
 html {
-    background-color: #000000; /* Prevents white background on overscroll */
+    background-color: #000000;
     height: 100%;
+    overflow: hidden; /* Prevent scroll on root */
 }
 
 body {
@@ -42,19 +43,30 @@ p, label, span, div { color: white; }
 
 /* --- NAVIGATION & SCREENS --- */
 #appContainer {
-    height: 100%;
+    height: 100%; /* Uses html/body height */
     display: flex;
     flex-direction: column;
+    overflow: hidden; /* Ensures screens don't expand the app container */
     transition: opacity 0.3s ease-in-out;
 }
 #appContainer.init-hidden { opacity: 0; }
 
+/* Wrapper for screens (the <main> element) */
+.screens-wrapper {
+    flex: 1;
+    overflow: hidden; /* Critical: Forces inner content to scroll, not expand parent */
+    position: relative;
+    display: flex;
+    flex-direction: column;
+}
+
 .screen {
     display: none;
+    flex: 1; /* Take all available space in wrapper */
     width: 100%;
     height: 100%;
-    overflow-y: auto;
-    padding-bottom: 6rem; /* Space for footer/bottom elements */
+    overflow-y: auto; /* Enable vertical scrolling */
+    padding-bottom: 8rem; /* Space for footer/bottom elements */
     animation: fadeIn 0.3s ease-out;
     -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
 }

@@ -88,11 +88,24 @@ function initializeDatabase() {
         { name: 'Abdominal remador no solo', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/sGz9YqGUPf7lIqX8vULE.png', sets: '3', reps: '15', carga: '0', obs: 'Método Simples' }
     ];
 
+    // RESTORED RUNNING WORKOUTS
+    const runningWorkouts = [
+        { title: 'Tiros de 400m', type: 'Intervalado', duration: '45 min', distance: '6-7 km', description: 'Aquecimento 10\' trote leve. <br> 10x 400m em ritmo forte (Z4/Z5) com intervalo de 1\'30" caminhando. <br> Desaquecimento 10\' trote regenerativo.' },
+        { title: 'Longo de Rodagem', type: 'Volume', duration: '1h 10min', distance: '12 km', description: 'Ritmo constante e confortável (Z2/Z3). Foco em manter a frequência cardíaca estável. Não exceder o pace alvo.' },
+        { title: 'Tempo Run', type: 'Ritmo', duration: '50 min', distance: '8 km', description: '15\' Aquecimento. <br> 20\' em ritmo de prova (Limiar de Lactato - Z4). <br> 15\' Desaquecimento.' },
+        { title: 'Regenerativo', type: 'Recuperação', duration: '30 min', distance: '4-5 km', description: 'Corrida muito leve, apenas para soltar a musculatura. Z1/Z2 estrito.' }
+    ];
+
+    // RESTORED RACE CALENDAR
+    const raceCalendar = [
+        { name: 'Corrida das Estações - Outono', date: '2025-03-16', location: 'Aterro do Flamengo', distance: '10km' },
+        { name: 'Maratona do Rio', date: '2025-06-02', location: 'Rio de Janeiro', distance: '21km / 42km' },
+        { name: 'Night Run SP', date: '2025-08-10', location: 'USP - São Paulo', distance: '5km / 10km' }
+    ];
+
     // Periodization History Data - DYNAMIC DATES
-    // Start from current week's Monday
     const startDate = getMonday(new Date());
     
-    // Function to add weeks to a date (NOW SET TO 2 WEEKS)
     const addWeeks = (date: Date, weeks: number) => {
         const result = new Date(date);
         result.setDate(result.getDate() + (weeks * 7));
@@ -100,19 +113,16 @@ function initializeDatabase() {
     };
 
     const p1Start = startDate;
-    const p1End = addWeeks(p1Start, 2); // 2 Weeks duration
-    
+    const p1End = addWeeks(p1Start, 2); 
     const p2Start = new Date(p1End);
     p2Start.setDate(p2Start.getDate() + 1);
-    const p2End = addWeeks(p2Start, 2); // 2 Weeks duration
-
+    const p2End = addWeeks(p2Start, 2); 
     const p3Start = new Date(p2End);
     p3Start.setDate(p3Start.getDate() + 1);
-    const p3End = addWeeks(p3Start, 2); // 2 Weeks duration
-
+    const p3End = addWeeks(p3Start, 2); 
     const p4Start = new Date(p3End);
     p4Start.setDate(p4Start.getDate() + 1);
-    const p4End = addWeeks(p4Start, 2); // 2 Weeks duration
+    const p4End = addWeeks(p4Start, 2);
 
     const periodizacaoTemplate = [
         { 
@@ -123,7 +133,7 @@ function initializeDatabase() {
             objetivo: 'Resistência Muscular', 
             status: 'Não Começou', 
             series: '3',
-            repeticoes: '10',
+            repeticoes: '10', 
             detalhes: 'Fase de adaptação anatômica. Foco na execução correta e cadência controlada. Utilize cargas moderadas para preparar as articulações.' 
         },
         { 
@@ -164,6 +174,8 @@ function initializeDatabase() {
     // Ensure plans exist for user
     if (!db.trainingPlans.treinosA[email]) db.trainingPlans.treinosA[email] = treinosA;
     if (!db.trainingPlans.treinosB[email]) db.trainingPlans.treinosB[email] = treinosB;
+    if (!db.userRunningWorkouts[email]) db.userRunningWorkouts[email] = runningWorkouts;
+    if (!db.raceCalendar || db.raceCalendar.length === 0) db.raceCalendar = raceCalendar;
     
     // Merge existing status with new dates/template
     const existingPeriodization = db.trainingPlans.periodizacao[email] || [];
@@ -389,6 +401,87 @@ function loadTrainingScreen(type: string, email?: string) {
     showScreen('trainingScreen');
 }
 
+// --- RUNNING WORKOUTS LOGIC ---
+function loadRunningScreen() {
+    const db = getDatabase();
+    const email = getCurrentUser();
+    const workouts = db.userRunningWorkouts[email] || [];
+    const container = document.getElementById('running-workouts-list');
+
+    if (container) {
+        container.innerHTML = '';
+        if (workouts.length === 0) {
+            container.innerHTML = '<p class="text-white text-center mt-4">Nenhum treino de corrida encontrado.</p>';
+        } else {
+            workouts.forEach((w: any) => {
+                const card = document.createElement('div');
+                card.className = 'bg-gray-800 p-4 rounded-xl border border-gray-700 shadow-md mb-3 relative overflow-hidden';
+                card.innerHTML = `
+                    <div class="absolute top-0 left-0 w-1 h-full bg-orange-500"></div>
+                    <div class="flex justify-between items-start mb-2 pl-2">
+                        <h3 class="font-bold text-white text-lg">${w.title}</h3>
+                        <span class="text-xs font-bold px-2 py-1 rounded bg-gray-700 text-orange-400 border border-orange-500/30">${w.type}</span>
+                    </div>
+                    <div class="text-gray-300 text-sm mb-3 pl-2">
+                        <div class="flex items-center gap-3 mb-1">
+                            <span class="flex items-center gap-1"><i class="fas fa-stopwatch w-4 text-gray-500"></i> ${w.duration}</span>
+                            <span class="flex items-center gap-1"><i class="fas fa-road w-4 text-gray-500"></i> ${w.distance}</span>
+                        </div>
+                    </div>
+                    <div class="bg-gray-900/50 p-3 rounded-lg border border-gray-700 text-sm text-gray-400 leading-relaxed ml-2">
+                        ${w.description}
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+    }
+    showScreen('runningScreen');
+}
+
+// --- RACE CALENDAR LOGIC ---
+function loadRaceCalendarScreen() {
+    const db = getDatabase();
+    const races = db.raceCalendar || [];
+    const container = document.getElementById('race-calendar-list');
+
+    if (container) {
+        container.innerHTML = '';
+        if (races.length === 0) {
+            container.innerHTML = '<p class="text-white text-center mt-4">Nenhuma prova agendada.</p>';
+        } else {
+            races.forEach((r: any) => {
+                 const dateObj = new Date(r.date);
+                 // Fix date display off-by-one error by handling timezone or just parsing strings directly if YYYY-MM-DD
+                 // Simple split fix for YYYY-MM-DD
+                 const parts = r.date.split('-');
+                 const day = parts[2];
+                 const monthNum = parseInt(parts[1], 10);
+                 const monthNamesShort = ["JAN", "FEV", "MAR", "ABR", "MAI", "JUN", "JUL", "AGO", "SET", "OUT", "NOV", "DEZ"];
+                 const month = monthNamesShort[monthNum - 1];
+
+                 const card = document.createElement('div');
+                 card.className = 'bg-gray-800 rounded-xl overflow-hidden border border-gray-700 shadow-lg flex';
+                 card.innerHTML = `
+                    <div class="bg-blue-900 w-20 flex flex-col items-center justify-center p-2 border-r border-gray-700">
+                        <span class="text-2xl font-black text-white">${day}</span>
+                        <span class="text-xs font-bold text-blue-300 uppercase">${month}</span>
+                    </div>
+                    <div class="p-4 flex-1">
+                        <h3 class="font-bold text-white text-base mb-1">${r.name}</h3>
+                        <div class="flex flex-col gap-1 text-xs text-gray-400 mt-2">
+                            <span class="flex items-center gap-2"><i class="fas fa-map-marker-alt w-4 text-center"></i> ${r.location}</span>
+                            <span class="flex items-center gap-2"><i class="fas fa-route w-4 text-center"></i> ${r.distance}</span>
+                        </div>
+                    </div>
+                 `;
+                 container.appendChild(card);
+            });
+        }
+    }
+    showScreen('raceCalendarScreen');
+}
+
 // --- PERIODIZATION LOGIC ---
 function togglePeriodizationStatus(id: number) {
     const userEmail = getCurrentUser();
@@ -600,7 +693,7 @@ function loadStudentProfile(email: string) {
                 <i class="fas fa-calendar-alt text-yellow-500 text-2xl"></i>
                 <span>PERIODIZAÇÃO</span>
             </button>
-            <button onclick="showScreen('runningScreen')" class="metal-btn p-3 flex flex-col items-center justify-center gap-1 active:scale-95 transition-transform h-24">
+            <button onclick="loadRunningScreen()" class="metal-btn p-3 flex flex-col items-center justify-center gap-1 active:scale-95 transition-transform h-24">
                 <i class="fas fa-running text-orange-500 text-2xl"></i>
                 <span>CORRIDA</span>
             </button>
@@ -608,7 +701,7 @@ function loadStudentProfile(email: string) {
                 <i class="fas fa-map-marked-alt text-green-500 text-2xl"></i>
                 <span>OUTDOOR</span>
             </button>
-            <button onclick="showScreen('raceCalendarScreen')" class="metal-btn p-3 flex flex-col items-center justify-center gap-1 active:scale-95 transition-transform h-24">
+            <button onclick="loadRaceCalendarScreen()" class="metal-btn p-3 flex flex-col items-center justify-center gap-1 active:scale-95 transition-transform h-24">
                 <i class="fas fa-flag-checkered text-blue-500 text-2xl"></i>
                 <span>PROVAS</span>
             </button>
@@ -742,3 +835,5 @@ document.addEventListener('DOMContentLoaded', () => {
 (window as any).togglePeriodizationStatus = togglePeriodizationStatus;
 (window as any).openPeriodizationModal = openPeriodizationModal;
 (window as any).showScreen = showScreen;
+(window as any).loadRunningScreen = loadRunningScreen;
+(window as any).loadRaceCalendarScreen = loadRaceCalendarScreen;
