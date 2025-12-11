@@ -6,9 +6,22 @@ declare var Chart: any;
 declare var marked: any;
 declare var L: any; // Leaflet global
 
-// Timer Variables
+// Timer Variables (Indoor)
 let workoutTimerInterval: number | null = null;
 let workoutStartTime: Date | null = null;
+
+// Outdoor Tracking Variables
+let map: any = null;
+let mapPolyline: any = null;
+let trackingPath: any[] = [];
+let trackingWatchId: number | null = null;
+let trackingTimerInterval: number | null = null;
+let trackingStartTime: number = 0;
+let trackingElapsedTime: number = 0; // ms
+let trackingDistance: number = 0; // meters
+let isTrackingPaused: boolean = false;
+let currentActivityType: string = "";
+
 let currentCalendarDate = new Date(); // Track calendar state
 
 // --- DATABASE ---
@@ -54,6 +67,26 @@ function formatDate(d: Date) {
     return d.toLocaleDateString('pt-BR');
 }
 
+// Helper: Format Duration (HH:MM:SS)
+function formatDuration(ms: number) {
+    const totalSeconds = Math.floor(ms / 1000);
+    const h = Math.floor(totalSeconds / 3600).toString().padStart(2, '0');
+    const m = Math.floor((totalSeconds % 3600) / 60).toString().padStart(2, '0');
+    const s = (totalSeconds % 60).toString().padStart(2, '0');
+    return `${h}:${m}:${s}`;
+}
+
+// Helper: Calculate Pace (min/km)
+function calculatePace(ms: number, meters: number) {
+    if (meters === 0) return "--:--";
+    const km = meters / 1000;
+    const minutes = ms / 1000 / 60;
+    const paceDec = minutes / km;
+    const paceMin = Math.floor(paceDec);
+    const paceSec = Math.floor((paceDec - paceMin) * 60).toString().padStart(2, '0');
+    return `${paceMin}:${paceSec}`;
+}
+
 // --- INITIALIZATION ---
 function initializeDatabase() {
     const db = getDatabase();
@@ -96,11 +129,18 @@ function initializeDatabase() {
         { title: 'Regenerativo', type: 'Recuperação', duration: '30 min', distance: '4-5 km', description: 'Corrida muito leve, apenas para soltar a musculatura. Z1/Z2 estrito.' }
     ];
 
-    // RESTORED RACE CALENDAR
+    // UPDATED RACE CALENDAR 2026 (RJ)
     const raceCalendar = [
-        { name: 'Corrida das Estações - Outono', date: '2025-03-16', location: 'Aterro do Flamengo', distance: '10km' },
-        { name: 'Maratona do Rio', date: '2025-06-02', location: 'Rio de Janeiro', distance: '21km / 42km' },
-        { name: 'Night Run SP', date: '2025-08-10', location: 'USP - São Paulo', distance: '5km / 10km' }
+        { name: 'Corrida de São Sebastião', date: '2026-01-20', location: 'Aterro do Flamengo', distance: '5km / 10km' },
+        { name: 'Circuito das Estações - Outono', date: '2026-03-15', location: 'Aterro do Flamengo', distance: '5km / 10km' },
+        { name: 'Corrida da Ponte', date: '2026-05-24', location: 'Niterói -> Rio', distance: '21km' },
+        { name: 'Maratona do Rio', date: '2026-06-14', location: 'Aterro do Flamengo', distance: '5km / 10km / 21km / 42km' },
+        { name: 'Circuito das Estações - Inverno', date: '2026-07-12', location: 'Aterro do Flamengo', distance: '5km / 10km' },
+        { name: 'Meia Maratona Internacional do Rio', date: '2026-08-16', location: 'Leblon -> Flamengo', distance: '21km' },
+        { name: 'Circuito das Estações - Primavera', date: '2026-09-13', location: 'Copacabana', distance: '5km / 10km' },
+        { name: 'Night Run - Etapa Rio', date: '2026-10-24', location: 'Aterro do Flamengo', distance: '5km / 10km' },
+        { name: 'Rio S-21K', date: '2026-11-22', location: 'Praia do Leblon', distance: '10km / 21km' },
+        { name: 'Circuito das Estações - Verão', date: '2026-12-06', location: 'Aterro do Flamengo', distance: '5km / 10km' }
     ];
 
     // Periodization History Data - DYNAMIC DATES
@@ -175,7 +215,9 @@ function initializeDatabase() {
     if (!db.trainingPlans.treinosA[email]) db.trainingPlans.treinosA[email] = treinosA;
     if (!db.trainingPlans.treinosB[email]) db.trainingPlans.treinosB[email] = treinosB;
     if (!db.userRunningWorkouts[email]) db.userRunningWorkouts[email] = runningWorkouts;
-    if (!db.raceCalendar || db.raceCalendar.length === 0) db.raceCalendar = raceCalendar;
+    
+    // FORCE UPDATE RACE CALENDAR FOR 2026
+    db.raceCalendar = raceCalendar;
     
     // Merge existing status with new dates/template
     const existingPeriodization = db.trainingPlans.periodizacao[email] || [];
@@ -480,6 +522,122 @@ function loadRaceCalendarScreen() {
         }
     }
     showScreen('raceCalendarScreen');
+}
+
+// --- OUTDOOR TRACKING LOGIC ---
+function loadOutdoorTrackingScreen(activity: string) {
+    currentActivityType = activity;
+    const titleEl = document.getElementById('tracking-activity-title');
+    if(titleEl) titleEl.textContent = activity;
+
+    // Reset State
+    trackingPath = [];
+    trackingElapsedTime = 0;
+    trackingDistance = 0;
+    isTrackingPaused = false;
+    if (trackingWatchId) navigator.geolocation.clearWatch(trackingWatchId);
+    if (trackingTimerInterval) clearInterval(trackingTimerInterval);
+    
+    // Reset UI
+    document.getElementById('tracking-distance')!.textContent = "0.00 km";
+    document.getElementById('tracking-time')!.textContent = "00:00:00";
+    document.getElementById('tracking-pace')!.textContent = "--:-- /km";
+    
+    // Buttons
+    document.getElementById('start-tracking-btn')!.classList.remove('hidden');
+    document.getElementById('pause-tracking-btn')!.classList.add('hidden');
+    document.getElementById('stop-tracking-btn')!.classList.add('hidden');
+
+    showScreen('outdoorTrackingScreen');
+
+    // Init Map (Leaflet)
+    // We need a slight delay or resize event because the div was hidden
+    setTimeout(() => {
+        if (!map) {
+            map = L.map('map').setView([-22.9068, -43.1729], 13); // Default Rio
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; OpenStreetMap contributors'
+            }).addTo(map);
+            mapPolyline = L.polyline([], { color: 'red', weight: 4 }).addTo(map);
+        } else {
+            map.invalidateSize();
+            mapPolyline.setLatLngs([]);
+        }
+        
+        // Locate user initially without tracking
+        map.locate({setView: true, maxZoom: 16});
+    }, 300);
+}
+
+function startOutdoorTracking() {
+    if (!isTrackingPaused) {
+        trackingStartTime = Date.now();
+    } else {
+        // Resuming: Adjust start time to account for pause
+        trackingStartTime = Date.now() - trackingElapsedTime;
+    }
+    isTrackingPaused = false;
+
+    // UI Buttons
+    document.getElementById('start-tracking-btn')!.classList.add('hidden');
+    document.getElementById('pause-tracking-btn')!.classList.remove('hidden');
+    document.getElementById('stop-tracking-btn')!.classList.remove('hidden');
+
+    // Timer
+    trackingTimerInterval = window.setInterval(() => {
+        trackingElapsedTime = Date.now() - trackingStartTime;
+        document.getElementById('tracking-time')!.textContent = formatDuration(trackingElapsedTime);
+        document.getElementById('tracking-pace')!.textContent = calculatePace(trackingElapsedTime, trackingDistance) + " /km";
+    }, 1000);
+
+    // Geo Location
+    trackingWatchId = navigator.geolocation.watchPosition((pos) => {
+        const { latitude, longitude } = pos.coords;
+        const latLng = [latitude, longitude];
+
+        // If we have previous points, calculate distance
+        if (trackingPath.length > 0) {
+            const lastPoint = trackingPath[trackingPath.length - 1];
+            // Leaflet map.distance returns meters
+            const dist = map.distance(lastPoint, latLng); 
+            // Filter noise: ignore very small movements (e.g. < 5 meters)
+            if (dist > 5) {
+                 trackingDistance += dist;
+                 trackingPath.push(latLng);
+                 mapPolyline.setLatLngs(trackingPath);
+                 map.setView(latLng);
+                 
+                 document.getElementById('tracking-distance')!.textContent = (trackingDistance / 1000).toFixed(2) + " km";
+            }
+        } else {
+            // First point
+            trackingPath.push(latLng);
+            map.setView(latLng, 16);
+        }
+    }, (err) => {
+        console.error("GPS Error", err);
+    }, {
+        enableHighAccuracy: true
+    });
+}
+
+function pauseOutdoorTracking() {
+    isTrackingPaused = true;
+    if (trackingTimerInterval) clearInterval(trackingTimerInterval);
+    if (trackingWatchId) navigator.geolocation.clearWatch(trackingWatchId);
+    
+    document.getElementById('pause-tracking-btn')!.classList.add('hidden');
+    document.getElementById('start-tracking-btn')!.classList.remove('hidden');
+}
+
+function stopOutdoorTracking() {
+    if (trackingTimerInterval) clearInterval(trackingTimerInterval);
+    if (trackingWatchId) navigator.geolocation.clearWatch(trackingWatchId);
+    
+    // Save workout to DB? (Simplified for now, just reset or alert)
+    alert(`Treino finalizado!\nAtividade: ${currentActivityType}\nDistância: ${(trackingDistance/1000).toFixed(2)} km\nTempo: ${formatDuration(trackingElapsedTime)}`);
+    
+    loadOutdoorTrackingScreen(currentActivityType); // Reset UI for next run
 }
 
 // --- PERIODIZATION LOGIC ---
@@ -792,6 +950,35 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     });
+
+    // Outdoor Specific Back Buttons (Since they use class selector and different logic in some apps, but here generalized)
+    document.querySelectorAll('.outdoor-back-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const target = btn.getAttribute('data-target');
+            if(target) {
+                // If leaving tracking, maybe stop tracking? For now just go back.
+                if(target === 'outdoorSelectionScreen') {
+                     if(trackingWatchId) {
+                         // Alert user or auto stop?
+                     }
+                }
+                showScreen(target);
+            }
+        });
+    });
+
+    // OUTDOOR ACTIVITY BUTTONS
+    document.querySelectorAll('.outdoor-activity-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const activity = btn.getAttribute('data-activity');
+            if(activity) loadOutdoorTrackingScreen(activity);
+        });
+    });
+
+    // OUTDOOR CONTROLS
+    document.getElementById('start-tracking-btn')?.addEventListener('click', startOutdoorTracking);
+    document.getElementById('pause-tracking-btn')?.addEventListener('click', pauseOutdoorTracking);
+    document.getElementById('stop-tracking-btn')?.addEventListener('click', stopOutdoorTracking);
     
     // Exercise Modal Logic
     (window as any).openExerciseModal = (idx: number, type: string) => {
