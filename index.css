@@ -343,12 +343,14 @@ p, label, h1, h2, h3, h4, h5, h6, div, button, option, select, input {
 
 /* === NOVOS ESTILOS === */
 .exercise-thumbnail {
-    width: 48px;
-    height: 48px;
+    width: 60px;
+    height: 60px;
     border-radius: 8px;
     object-fit: cover;
     flex-shrink: 0;
     background-color: #4b5563;
+    position: relative;
+    border: 1px solid #9ca3af;
 }
 
 .exercise-card h3,
@@ -539,23 +541,25 @@ button:active,
 }
 
 /* === NOVOS ESTILOS PARA PERIODIZAÇÃO E CRONÔMETRO === */
+/* Updated Header for Training Screen (HUD Style) */
 .timer-header-box {
-    background-color: #000000; /* Black background */
-    padding: 1.5rem 1rem; /* More vertical padding */
-    border-radius: 30px; /* More rounded */
-    border: 3px solid #374151; /* Dark Grey Metal Rim */
+    background: linear-gradient(180deg, #1f2937 0%, #000000 100%);
+    border: 2px solid #374151;
+    border-bottom: 4px solid #ef4444; /* Red accent */
+    border-radius: 24px;
+    padding: 0.5rem 1rem;
     box-shadow: 
-        inset 0 4px 8px rgba(0,0,0,0.8), 
-        0 4px 10px rgba(0,0,0,0.5),
-        0 0 15px rgba(220, 38, 38, 0.1); /* Slight red glow outer */
+        inset 0 2px 4px rgba(0,0,0,0.5),
+        0 0 15px rgba(220, 38, 38, 0.2);
     flex-grow: 1;
-    margin: 0 1rem;
+    margin: 0 0.5rem;
     display: flex;
-    flex-direction: column; /* Stack vertically */
+    flex-direction: column;
     align-items: center;
     justify-content: center;
     position: relative;
     overflow: hidden;
+    height: 60px;
 }
 
 /* Optional: Scanline effect for the timer */
@@ -577,37 +581,26 @@ button:active,
     font-family: 'Chakra Petch', 'Courier New', monospace;
     font-weight: 700;
     letter-spacing: 0.15em;
-    color: #ff0000; /* Pure Red */
-    text-shadow: 0 0 10px #ff0000, 0 0 20px #991b1b; /* Red Neon Glow */
+    color: #ef4444 !important; /* Pure Red */
+    text-shadow: 0 0 10px #ef4444, 0 0 20px #991b1b; /* Red Neon Glow */
     z-index: 3;
     position: relative;
-    font-size: 3rem; /* Larger timer */
+    font-size: 2.5rem; /* Larger timer */
     line-height: 1;
 }
 
 #training-title {
     color: #ef4444 !important; /* Red title */
-    font-size: 1.5rem; /* Larger title */
+    font-size: 0.8rem;
     font-weight: 900;
     letter-spacing: 0.1em;
-    margin-bottom: 0.5rem;
+    margin-bottom: 0px;
     z-index: 3;
-    position: relative;
+    position: absolute;
+    top: 4px;
     text-transform: uppercase;
-    text-shadow: 0 0 10px rgba(239, 68, 68, 0.5);
-}
-
-#periodization-notification {
-    background-color: #ca8a04; /* yellow-600 */
-    color: white !important;
-    padding: 1rem;
-    border-radius: 0.75rem; /* rounded-xl */
-    border: 1px solid #facc15; /* yellow-400 */
-    box-shadow: 0 4px 6px rgba(0,0,0,0.3);
-}
-
-#periodization-notification h4, #periodization-notification p {
-    color: white !important;
+    text-shadow: 0 0 5px rgba(239, 68, 68, 0.5);
+    display: none; /* Hide standard title in timer box to match layout */
 }
 
 /* === ESTILOS NÍVEL DE ESTRESSE === */
@@ -756,75 +749,13 @@ button:active,
 
 /* --- NEW METALLIC & LAYOUT STYLES --- */
 
-/* Metallic Button */
-.metal-btn {
-    background: linear-gradient(to bottom, #e2e2e2 0%, #dbdbdb 50%, #d1d1d1 51%, #fefefe 100%);
-    color: #333 !important;
-    text-shadow: 0 1px 0 rgba(255,255,255,0.9);
-    border: 1px solid #999;
-    box-shadow:
-        0 1px 0 rgba(255,255,255,0.5) inset,
-        0 -1px 0 rgba(0,0,0,0.1) inset,
-        0 4px 6px rgba(0,0,0,0.4);
-    border-radius: 12px;
-}
-.metal-btn:active {
-    background: linear-gradient(to bottom, #d1d1d1 0%, #fefefe 100%);
-    transform: translateY(2px);
-    box-shadow: 0 1px 2px rgba(0,0,0,0.4);
-}
-.metal-btn span {
-    color: #000 !important;
-}
-.metal-btn i {
-    filter: drop-shadow(0 1px 0 rgba(255,255,255,0.5));
-}
-
-/* Featured / Highlighted Metal Button (Treino A & B) */
-.metal-btn-highlight {
-    background: linear-gradient(145deg, #1a1a1a, #2a2a2a); /* Dark Carbon */
-    border: 2px solid #ef4444; /* Red Border */
-    box-shadow: 0 0 10px rgba(239, 68, 68, 0.4), inset 0 0 10px rgba(0,0,0,0.5);
-    color: #ef4444 !important; /* Red Text */
-    transform: scale(1.02); /* Slightly bigger */
-}
-.metal-btn-highlight:active {
-    transform: scale(0.98);
-}
-.metal-btn-highlight span {
-     color: #ef4444 !important;
-     font-size: 0.85rem;
-     text-transform: uppercase;
-     letter-spacing: 0.05em;
-     font-weight: 800;
-}
-.metal-btn-highlight i {
-     filter: drop-shadow(0 0 5px #ef4444);
-}
-
-/* Metallic Card (Dark) */
-.metal-card-dark {
-    background: linear-gradient(145deg, #2a2a2a, #1f1f1f);
-    border-top: 1px solid #444;
-    border-bottom: 1px solid #111;
-    box-shadow: 5px 5px 10px #0b0b0b, -5px -5px 10px #333;
-    border-radius: 12px;
-    position: relative;
-    z-index: 10;
-}
-
-/* Timeline Container */
-.timeline-container {
-    position: relative;
-    padding-left: 0;
-}
-
-/* Toggle Switch */
+/* Updated Toggle Switch */
 .toggle-switch {
     position: relative;
     display: inline-block;
     width: 50px;
     height: 28px;
+    flex-shrink: 0;
 }
 
 .toggle-switch input {
@@ -860,7 +791,8 @@ button:active,
 }
 
 input:checked + .slider {
-    background-color: #dc2626; /* red-600 */
+    background-color: #ef4444; /* Red */
+    box-shadow: 0 0 10px #ef4444;
 }
 
 input:focus + .slider {
@@ -869,4 +801,88 @@ input:focus + .slider {
 
 input:checked + .slider:before {
     transform: translateX(22px);
+}
+
+/* --- EXERCISE CARD UPDATES --- */
+
+/* Metal Card for Exercises */
+.metal-card-exercise {
+    background: linear-gradient(180deg, #f3f4f6 0%, #d1d5db 50%, #9ca3af 51%, #e5e7eb 100%); /* Silver metallic gradient */
+    border: 1px solid #6b7280;
+    border-radius: 12px;
+    box-shadow: 
+        0 4px 6px -1px rgba(0, 0, 0, 0.5), 
+        inset 0 1px 0 rgba(255, 255, 255, 0.8),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.2);
+    position: relative;
+    overflow: hidden;
+    margin-bottom: 0.75rem;
+}
+
+/* Overriding text colors inside metal card to be dark */
+.metal-card-exercise h3 {
+    color: #111827 !important; /* gray-900 */
+    text-shadow: 0 1px 0 rgba(255,255,255,0.5);
+}
+.metal-card-exercise p,
+.metal-card-exercise span, 
+.metal-card-exercise div,
+.metal-card-exercise i {
+    color: #1f2937 !important; /* gray-800 */
+}
+
+/* Exception: Play button overlay */
+.metal-card-exercise .play-icon-overlay {
+    color: white !important;
+}
+
+
+/* Red accent bar at bottom center */
+.metal-card-exercise::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 20%;
+    right: 20%;
+    height: 4px;
+    background: #ef4444;
+    border-radius: 4px 4px 0 0;
+    box-shadow: 0 0 8px #ef4444;
+}
+
+/* Superset Connectors Logic */
+.superset-wrapper {
+    position: relative;
+    padding-left: 12px;
+}
+
+.superset-line {
+    position: absolute;
+    left: 0;
+    width: 20px;
+    border-left: 2px solid #9ca3af; /* gray-400 */
+    z-index: 0;
+}
+
+/* Top part of bracket */
+.superset-line.start {
+    top: 50%;
+    bottom: -16px; /* Extend downwards to connect */
+    border-top: 2px solid #9ca3af;
+    border-top-left-radius: 8px;
+}
+
+/* Middle part of bracket */
+.superset-line.middle {
+    top: -16px;
+    bottom: -16px;
+    border-left: 2px solid #9ca3af;
+}
+
+/* Bottom part of bracket */
+.superset-line.end {
+    top: -16px;
+    bottom: 50%;
+    border-bottom: 2px solid #9ca3af;
+    border-bottom-left-radius: 8px;
 }
