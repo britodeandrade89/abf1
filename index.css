@@ -1,12 +1,21 @@
+/* Reset basics */
+html {
+    background-color: #000000; /* Prevents white background on overscroll */
+    height: 100%;
+}
+
 body {
     font-family: 'Inter', sans-serif;
     color: white;
     background-color: #000000;
-    /* Gradient: Black top -> Red bottom */
-    background-image: linear-gradient(180deg, #000000 0%, #000000 40%, #7f1d1d 100%);
+    /* Gradient: Black top -> Red bottom (Smooth) */
+    background-image: linear-gradient(to bottom, #000000 0%, #991b1b 100%);
     background-attachment: fixed;
     background-size: cover;
-    min-height: 100vh;
+    background-repeat: no-repeat;
+    height: 100%;
+    margin: 0;
+    overflow: hidden; /* App container handles scrolling */
 }
 
 /* Global resets for text color in dark mode context */
@@ -33,7 +42,7 @@ p, label, span, div { color: white; }
 
 /* --- NAVIGATION & SCREENS --- */
 #appContainer {
-    height: 100vh;
+    height: 100%;
     display: flex;
     flex-direction: column;
     transition: opacity 0.3s ease-in-out;
@@ -47,6 +56,7 @@ p, label, span, div { color: white; }
     overflow-y: auto;
     padding-bottom: 6rem; /* Space for footer/bottom elements */
     animation: fadeIn 0.3s ease-out;
+    -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
 }
 .screen.active { display: block; }
 
@@ -132,7 +142,7 @@ p, label, span, div { color: white; }
     color: #000000 !important;
     font-weight: 800;
     font-size: 0.95rem;
-    line-height: 1.1;
+    line-height: 1.2; /* Slightly increased for wrapping */
     text-shadow: 0 1px 0 rgba(255,255,255,0.5);
 }
 

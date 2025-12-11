@@ -330,7 +330,7 @@ function loadTrainingScreen(type: string, email?: string) {
 
                     <!-- Info -->
                     <div class="flex-grow min-w-0">
-                        <h3 class="font-bold text-sm leading-tight truncate pr-2">
+                        <h3 class="font-bold text-sm leading-tight pr-2 whitespace-normal">
                             ${i + 1}. ${cleanName}
                         </h3>
                         ${label ? `<p class="text-[10px] font-bold text-gray-700 mt-0.5">${label}</p>` : ''}
