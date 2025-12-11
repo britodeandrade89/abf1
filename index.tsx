@@ -905,26 +905,22 @@ function renderStudentProfile(user: any) {
     const buttonsContainer = document.getElementById('student-profile-buttons');
     if (!buttonsContainer) return;
 
-    // Definição dos botões com gradiente de cor nos ícones (Vermelho -> Preto)
-    // Total de botões: 12.
-    // Vamos calcular uma cor HSL ou RGB interpolada, ou simplesmente definir classes manuais se preferir.
-    // Como o usuário pediu "degrade do vermelho para preto", vamos usar style inline para cor do ícone.
+    // Definição dos botões com ícones FontAwesome (fas) para consistência total
     
     const menuItems = [
-        { label: 'Treino A', icon: 'clipboard', action: () => loadTrainingScreen('A', user.email) },
-        { label: 'Treino B', icon: 'clipboard', action: () => loadTrainingScreen('B', user.email) },
-        { label: 'Corrida', icon: 'wind', action: () => renderRunningScreen(user) },
-        { label: 'Periodização', icon: 'calendar', action: () => renderPeriodizationScreen(user) },
-        { label: 'Peso', icon: 'bar-chart-2', action: () => renderWeightControlScreen(user) },
-        { label: 'Nutri IA', icon: 'heart', action: () => renderNutritionistScreen(user) },
-        { label: 'Estresse', icon: 'activity', action: () => renderStressLevelScreen(user) },
-        { label: 'Provas de Corrida', icon: 'award', action: () => renderRaceCalendarScreen() },
-        { label: 'Análise IA', icon: 'cpu', action: () => renderAiAnalysisScreen(user) }, // Botão direto para a tela
-        { label: 'Avaliação', icon: 'users', action: () => transitionScreen('physioAssessmentScreen') },
-        { label: 'Outdoor', icon: 'sun', action: () => transitionScreen('outdoorSelectionScreen') },
-        { label: 'Biblioteca', icon: 'book-open', action: () => transitionScreen('exerciciosScreen') },
-        // ADDED: Evolução button since bottom nav was removed
-        { label: 'Evolução', icon: 'trending-up', action: () => transitionScreen('evolutionScreen') }
+        { label: 'Treino A', faIcon: 'fa-dumbbell', action: () => loadTrainingScreen('A', user.email) },
+        { label: 'Treino B', faIcon: 'fa-dumbbell', action: () => loadTrainingScreen('B', user.email) },
+        { label: 'Corrida', faIcon: 'fa-person-running', action: () => renderRunningScreen(user) },
+        { label: 'Periodização', faIcon: 'fa-calendar-days', action: () => renderPeriodizationScreen(user) }, // Ícone de Calendário
+        { label: 'Peso', faIcon: 'fa-weight-scale', action: () => renderWeightControlScreen(user) },
+        { label: 'Nutri IA', faIcon: 'fa-apple-whole', action: () => renderNutritionistScreen(user) },
+        { label: 'Estresse', faIcon: 'fa-heart-pulse', action: () => renderStressLevelScreen(user) },
+        { label: 'Provas de Corrida', faIcon: 'fa-medal', action: () => renderRaceCalendarScreen() }, // Ícone de Medalha/Prova
+        { label: 'Análise IA', faIcon: 'fa-microchip', action: () => renderAiAnalysisScreen(user) }, 
+        { label: 'Avaliação', faIcon: 'fa-clipboard-user', action: () => transitionScreen('physioAssessmentScreen') },
+        { label: 'Outdoor', faIcon: 'fa-sun', action: () => transitionScreen('outdoorSelectionScreen') },
+        { label: 'Biblioteca', faIcon: 'fa-book-open', action: () => transitionScreen('exerciciosScreen') },
+        { label: 'Evolução', faIcon: 'fa-chart-line', action: () => transitionScreen('evolutionScreen') }
     ];
 
     buttonsContainer.innerHTML = '';
@@ -947,9 +943,10 @@ function renderStudentProfile(user: any) {
         // If featured (Treino A/B), use red icon. Else use gradient.
         const iconColor = isFeatured ? '#ef4444' : `rgb(${r}, ${g}, ${b})`;
         
-        // Create Icon Element
+        // Create Icon Element using FontAwesome
         const iconEl = document.createElement('i');
-        iconEl.setAttribute('data-feather', item.icon);
+        iconEl.className = `fas ${item.faIcon}`;
+        iconEl.style.fontSize = '24px'; 
         iconEl.style.color = iconColor;
         
         // Text styling: If featured, use thicker black font ("leve destaque nas letras")
@@ -984,7 +981,10 @@ function renderStudentProfile(user: any) {
         buttonsContainer.appendChild(btn);
     });
     
-    feather.replace();
+    // Feather replace is mostly for other parts of the UI now, but kept for safety
+    if (typeof feather !== 'undefined') {
+        feather.replace();
+    }
 }
 
 function renderTrainingHistoryPreview(email: string) {
