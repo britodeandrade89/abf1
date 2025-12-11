@@ -1,9 +1,9 @@
 body {
     font-family: 'Inter', sans-serif;
     color: white !important; /* Forçar texto branco globalmente */
-    /* Updated Background: Smooth Red to Black Gradient */
+    /* Updated Background: Smooth Black to Red Gradient (Inverted) */
     background-color: #000;
-    background-image: linear-gradient(to bottom, #ef4444, #000000);
+    background-image: linear-gradient(to bottom, #000000, #991b1b);
     background-attachment: fixed;
     background-size: 100% 100%;
     min-height: 100vh;
@@ -34,11 +34,60 @@ p, label, h1, h2, h3, h4, h5, h6, div, button, option, select, input {
     opacity: 0;
 }
 
-
-.logo-text {
-    font-weight: 800;
-    letter-spacing: -0.05em;
+/* --- LOGO STYLES (RECREATING IMAGE) --- */
+.abfit-logo-style {
+    font-family: 'Inter', sans-serif;
+    font-weight: 900; /* Extra Bold / Black */
+    font-style: italic;
+    line-height: 0.85; /* Tighter line height */
+    text-transform: uppercase;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    
+    /* The Magic: Thick Black Stroke + Paint Order */
+    -webkit-text-stroke: 0.10em black; /* Relative stroke width */
+    paint-order: stroke fill; /* Ensures fill sits ON TOP of the thick stroke */
+    
+    /* The Outer White Glow/Border */
+    filter: 
+        drop-shadow(0px 0px 0px white) 
+        drop-shadow(1px 1px 0px white) 
+        drop-shadow(-1px -1px 0px white)
+        drop-shadow(1px -1px 0px white)
+        drop-shadow(-1px 1px 0px white);
 }
+
+.abfit-logo-style .part-ab {
+    color: #ef4444; /* Tailwind Red-500/600 approx */
+    letter-spacing: -0.08em; /* Tighten A and B */
+    z-index: 10;
+    position: relative;
+    margin-right: -0.02em; /* Pull FIT closer */
+}
+
+.abfit-logo-style .part-fit {
+    color: #ffffff;
+    letter-spacing: -0.05em;
+    z-index: 9;
+}
+
+/* Animation for Logo moving up */
+@keyframes slide-up-logo {
+    0% {
+        transform: translateY(30vh) scale(1.5);
+        opacity: 0;
+    }
+    100% {
+        transform: translateY(0) scale(1);
+        opacity: 1;
+    }
+}
+
+.animate-logo-entry {
+    animation: slide-up-logo 0.8s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
 
 .screens-wrapper {
     flex: 1;
@@ -57,7 +106,7 @@ p, label, h1, h2, h3, h4, h5, h6, div, button, option, select, input {
     background: transparent; /* Use body background */
     transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1);
     -webkit-overflow-scrolling: touch;
-    padding-bottom: 6rem; /* Added to prevent nav bar from hiding content */
+    padding-bottom: 2rem; /* Reduced from 6rem since bottom nav is gone */
 }
 
 .screen.active {
@@ -675,14 +724,6 @@ button:active,
     align-self: flex-start;
 }
 
-#bottom-nav {
-    transition: transform 0.3s ease-in-out;
-}
-
-#bottom-nav.nav-hidden {
-    transform: translateY(100%);
-}
-
 @keyframes pulse-bg {
     0% {
         box-shadow: 0 0 0 0 rgba(22, 163, 74, 0.7);
@@ -737,6 +778,28 @@ button:active,
 }
 .metal-btn i {
     filter: drop-shadow(0 1px 0 rgba(255,255,255,0.5));
+}
+
+/* Featured / Highlighted Metal Button (Treino A & B) */
+.metal-btn-highlight {
+    background: linear-gradient(145deg, #1a1a1a, #2a2a2a); /* Dark Carbon */
+    border: 2px solid #ef4444; /* Red Border */
+    box-shadow: 0 0 10px rgba(239, 68, 68, 0.4), inset 0 0 10px rgba(0,0,0,0.5);
+    color: #ef4444 !important; /* Red Text */
+    transform: scale(1.02); /* Slightly bigger */
+}
+.metal-btn-highlight:active {
+    transform: scale(0.98);
+}
+.metal-btn-highlight span {
+     color: #ef4444 !important;
+     font-size: 0.85rem;
+     text-transform: uppercase;
+     letter-spacing: 0.05em;
+     font-weight: 800;
+}
+.metal-btn-highlight i {
+     filter: drop-shadow(0 0 5px #ef4444);
 }
 
 /* Metallic Card (Dark) */

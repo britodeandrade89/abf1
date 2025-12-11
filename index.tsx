@@ -685,7 +685,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const loginForm = document.getElementById('login-form');
     const loginEmailInput = document.getElementById('login-email') as HTMLInputElement; // Type casting
     const loginError = document.getElementById('login-error');
-    const bottomNav = document.getElementById('bottom-nav');
+    // REMOVED: const bottomNav = document.getElementById('bottom-nav');
 
     // Inicializa Feather Icons
     feather.replace();
@@ -748,8 +748,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     loadStudentProfile(currentUserEmail);
                 } else {
                     transitionScreen('loginScreen', 'right');
-                    // Hide bottom nav on login screen
-                    if(bottomNav) bottomNav.classList.add('nav-hidden');
+                    // Hide bottom nav on login screen (Logic removed as nav is gone)
                 }
             }, 500);
         }
@@ -782,13 +781,15 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Botões de Navegação Inferior
+    // Botões de Navegação Inferior (REMOVIDOS)
+    /*
     document.querySelectorAll('.nav-btn').forEach(btn => {
         btn.addEventListener('click', (e) => {
             const targetId = (e.currentTarget as HTMLElement).getAttribute('data-target');
             if (targetId) transitionScreen(targetId, 'fade');
         });
     });
+    */
     
     // Inicialização da Navegação por Abas na Avaliação Física (Garante que os listeners sejam anexados)
     // Isso é redundante pois já está no assessment.js, mas garante caso o DOM recarregue ou algo assim.
@@ -798,47 +799,34 @@ document.addEventListener('DOMContentLoaded', () => {
 function transitionScreen(targetScreenId: string, direction = 'left') {
     const screens = document.querySelectorAll('.screen');
     const targetScreen = document.getElementById(targetScreenId);
-    const bottomNav = document.getElementById('bottom-nav');
+    // REMOVED: const bottomNav = document.getElementById('bottom-nav');
 
     if (!targetScreen) return;
 
-    // Toggle Bottom Nav Visibility
+    // 1. Force hide ALL screens immediately to prevent overlap
+    screens.forEach(s => {
+        (s as HTMLElement).style.display = 'none';
+        s.classList.remove('active');
+    });
+
+    // 2. Show Target Screen
+    (targetScreen as HTMLElement).style.display = 'block';
+    // Small delay to allow display:block to apply before adding active class (for opacity transition if we wanted it, but safe to just show)
+    requestAnimationFrame(() => {
+        targetScreen.classList.add('active');
+    });
+
+    // 3. Handle Bottom Nav (REMOVED)
+    /*
     if (bottomNav) {
-        if (targetScreenId === 'loginScreen') {
+        if (targetScreenId === 'loginScreen' || targetScreenId === 'splashScreen') {
             bottomNav.classList.add('nav-hidden');
         } else {
             bottomNav.classList.remove('nav-hidden');
         }
     }
 
-    // Encontra a tela ativa atual
-    let activeScreen: Element | null = null;
-    screens.forEach(s => {
-        if (s.classList.contains('active')) activeScreen = s;
-    });
-
-    if (activeScreen && activeScreen.id === targetScreenId) return;
-
-    // Prepara a tela de destino
-    screens.forEach(s => {
-        s.classList.remove('active', 'screen-enter-from-right', 'screen-enter-from-left', 'screen-exit-to-left', 'screen-exit-to-right');
-        if (s.id !== targetScreenId && s !== activeScreen) {
-            (s as HTMLElement).style.display = 'none';
-        }
-    });
-
-    (targetScreen as HTMLElement).style.display = 'block';
-    
-    // Animação simples (fade/slide simulado via classes CSS ou apenas display toggle para performance mobile)
-    // Para simplificar e garantir performance em todos os dispositivos, vamos usar apenas a classe active que já tem transição de opacidade/transform no CSS
-    
-    // Pequeno delay para permitir que o display:block seja processado antes da classe active
-    requestAnimationFrame(() => {
-        if (activeScreen) activeScreen.classList.remove('active');
-        targetScreen.classList.add('active');
-    });
-
-    // Atualiza estado dos botões da nav bar
+    // 4. Update Nav Buttons state
     document.querySelectorAll('.nav-btn').forEach(btn => {
         const btnTarget = (btn as HTMLElement).getAttribute('data-target');
         if (btnTarget === targetScreenId) {
@@ -849,6 +837,7 @@ function transitionScreen(targetScreenId: string, direction = 'left') {
             btn.classList.add('text-gray-400');
         }
     });
+    */
 }
 
 // Global back button handler
@@ -869,29 +858,32 @@ function loadStudentProfile(email: string) {
 
     transitionScreen('studentProfileScreen');
 
-    // Update Greeting
+    // Update Greeting (NOW HANDLED IN PROFILE INFO)
     const greetingEl = document.getElementById('user-greeting');
     if (greetingEl) {
-        const hour = new Date().getHours();
-        let greeting = 'Bom dia';
-        if (hour >= 12) greeting = 'Boa tarde';
-        if (hour >= 18) greeting = 'Boa noite';
-        greetingEl.innerHTML = `
-            <h1 class="text-3xl font-bold text-white leading-tight">${greeting},<br><span class="text-red-500">${user.name.split(' ')[0]}</span></h1>
-        `;
+        // Remove standalone greeting logic as it will be inside the profile info card
+        greetingEl.innerHTML = ''; 
     }
 
     // Update Weather
     updateWeather();
 
-    // Update Profile Info Card
+    // Update Profile Info Card - RESTORED
     const profileInfoEl = document.getElementById('student-profile-info');
     if (profileInfoEl) {
+        profileInfoEl.classList.remove('hidden'); // UNHIDE
+        profileInfoEl.style.display = ''; // Reset display property if inline styles were set
+        
+        const hour = new Date().getHours();
+        let greeting = 'Bom dia';
+        if (hour >= 12) greeting = 'Boa tarde';
+        if (hour >= 18) greeting = 'Boa noite';
+
         profileInfoEl.innerHTML = `
-            <img src="${user.photo}" alt="Foto Perfil" class="w-16 h-16 rounded-full border-2 border-red-500 object-cover mr-4">
+            <img src="${user.photo}" alt="${user.name}" class="w-16 h-16 rounded-full border-2 border-red-600 object-cover shadow-lg">
             <div>
-                <h2 class="font-bold text-lg text-white">${user.name}</h2>
-                <p class="text-sm text-gray-400">${user.email}</p>
+                <h2 class="text-xl font-bold text-white leading-tight">${greeting}, <span class="text-red-500">${user.name.split(' ')[0]}</span></h2>
+                <p class="text-xs text-gray-400 mt-1">${user.email}</p>
             </div>
         `;
     }
@@ -930,7 +922,9 @@ function renderStudentProfile(user: any) {
         { label: 'Análise IA', icon: 'cpu', action: () => renderAiAnalysisScreen(user) }, // Botão direto para a tela
         { label: 'Avaliação', icon: 'users', action: () => transitionScreen('physioAssessmentScreen') },
         { label: 'Outdoor', icon: 'sun', action: () => transitionScreen('outdoorSelectionScreen') },
-        { label: 'Biblioteca', icon: 'book-open', action: () => transitionScreen('exerciciosScreen') }
+        { label: 'Biblioteca', icon: 'book-open', action: () => transitionScreen('exerciciosScreen') },
+        // ADDED: Evolução button since bottom nav was removed
+        { label: 'Evolução', icon: 'trending-up', action: () => transitionScreen('evolutionScreen') }
     ];
 
     buttonsContainer.innerHTML = '';
@@ -939,6 +933,9 @@ function renderStudentProfile(user: any) {
 
     menuItems.forEach((item, index) => {
         const btn = document.createElement('button');
+        const isFeatured = item.label === 'Treino A' || item.label === 'Treino B';
+
+        // Use standard metal-btn for ALL buttons as requested ("voltem a ficar iguais aos outros")
         btn.className = 'metal-btn p-3 flex flex-col items-center justify-center space-y-2 h-24 active:scale-95 transition-transform';
         
         // Calculate color: Start Red (220, 38, 38) -> End Black (0, 0, 0)
@@ -946,19 +943,30 @@ function renderStudentProfile(user: any) {
         const r = Math.round(220 - (220 * index / (totalItems - 1)));
         const g = Math.round(38 - (38 * index / (totalItems - 1)));
         const b = Math.round(38 - (38 * index / (totalItems - 1)));
-        const iconColor = `rgb(${r}, ${g}, ${b})`;
+        
+        // If featured (Treino A/B), use red icon. Else use gradient.
+        const iconColor = isFeatured ? '#ef4444' : `rgb(${r}, ${g}, ${b})`;
         
         // Create Icon Element
         const iconEl = document.createElement('i');
         iconEl.setAttribute('data-feather', item.icon);
         iconEl.style.color = iconColor;
-        // Apply glow effect for the first few items to make them pop more "red"
-        if (index < 3) {
+        
+        // Text styling: If featured, use thicker black font ("leve destaque nas letras")
+        const labelClass = isFeatured ? 'text-xs font-black text-red-600' : 'text-xs font-bold text-gray-800';
+        
+        if (isFeatured) {
+            // Apply slight shadow to icon for emphasis
             iconEl.style.filter = `drop-shadow(0 0 2px ${iconColor})`;
+        } else {
+             // Apply glow effect for the first few items to make them pop more "red" if not fully black
+            if (index < 3) {
+                iconEl.style.filter = `drop-shadow(0 0 2px ${iconColor})`;
+            }
         }
 
         const labelEl = document.createElement('span');
-        labelEl.className = 'text-xs font-bold text-gray-800';
+        labelEl.className = labelClass;
         labelEl.textContent = item.label;
 
         btn.appendChild(iconEl);
