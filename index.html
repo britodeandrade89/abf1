@@ -50,12 +50,18 @@
 
     <!-- ======================= SPLASH SCREEN ======================= -->
     <div id="splashScreen" class="w-full h-screen flex flex-col items-center justify-center">
-        <div class="text-center p-6">
-            <!-- LOGO RECREATED WITH CSS -->
-            <h1 class="abfit-logo-style text-8xl mb-4">
-                <span class="part-ab">AB</span><span class="part-fit">FIT</span>
-            </h1>
-            <p class="text-white text-xl mt-4 tracking-wide font-medium">Assessoria em Treinamentos Físicos</p>
+        <div class="p-6 flex flex-col items-center">
+            <!-- Container inline-flex obriga a largura a ser definida pelo conteúdo (Logo) -->
+            <div class="inline-flex flex-col w-max">
+                <!-- LOGO RECREATED WITH CSS -->
+                <h1 class="abfit-logo-style text-8xl mb-1 leading-none">
+                    <span class="part-ab">AB</span><span class="part-fit">FIT</span>
+                </h1>
+                <!-- Subtitulo ajustado: Fonte pequena (10px), flex justify-between para alinhar as bordas -->
+                <p class="text-white text-[10px] font-bold uppercase w-full flex justify-between tracking-wider mt-1 opacity-90">
+                    <span>Assessoria</span><span>em</span><span>Treinamentos</span><span>Físicos</span>
+                </p>
+            </div>
         </div>
         <div class="absolute bottom-8 text-center">
             <p class="text-gray-400 text-sm">Desenvolvido por André Brito</p>
