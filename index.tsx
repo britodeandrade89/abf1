@@ -121,12 +121,44 @@ function initializeDatabase() {
         { name: 'Abdominal remador no solo', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/sGz9YqGUPf7lIqX8vULE.png', sets: '3', reps: '15', carga: '0', obs: 'Método Simples' }
     ];
 
-    // RESTORED RUNNING WORKOUTS
+    // UPDATED RUNNING WORKOUTS (Structured)
     const runningWorkouts = [
-        { title: 'Tiros de 400m', type: 'Intervalado', duration: '45 min', distance: '6-7 km', description: 'Aquecimento 10\' trote leve. <br> 10x 400m em ritmo forte (Z4/Z5) com intervalo de 1\'30" caminhando. <br> Desaquecimento 10\' trote regenerativo.' },
-        { title: 'Longo de Rodagem', type: 'Volume', duration: '1h 10min', distance: '12 km', description: 'Ritmo constante e confortável (Z2/Z3). Foco em manter a frequência cardíaca estável. Não exceder o pace alvo.' },
-        { title: 'Tempo Run', type: 'Ritmo', duration: '50 min', distance: '8 km', description: '15\' Aquecimento. <br> 20\' em ritmo de prova (Limiar de Lactato - Z4). <br> 15\' Desaquecimento.' },
-        { title: 'Regenerativo', type: 'Recuperação', duration: '30 min', distance: '4-5 km', description: 'Corrida muito leve, apenas para soltar a musculatura. Z1/Z2 estrito.' }
+        { 
+            title: 'Tiros de 400m', 
+            type: 'Intervalado', 
+            duration: '45 min', 
+            distance: '6-7 km', 
+            aquecimento: '10\' de trote leve (Z1/Z2) para elevar a FC.',
+            principal: '10x 400m em ritmo forte (Z4/Z5).<br>Intervalo de 1\'30" caminhando entre os tiros.',
+            desaquecimento: '10\' de trote regenerativo (Z1) para soltar.' 
+        },
+        { 
+            title: 'Longo de Rodagem', 
+            type: 'Volume', 
+            duration: '1h 10min', 
+            distance: '12 km', 
+            aquecimento: '5\' de caminhada rápida.',
+            principal: '12km em ritmo constante e confortável (Z2/Z3).<br>Foco na constância e respiração.',
+            desaquecimento: '5\' de caminhada leve.' 
+        },
+        { 
+            title: 'Tempo Run', 
+            type: 'Ritmo', 
+            duration: '50 min', 
+            distance: '8 km', 
+            aquecimento: '15\' de trote progressivo.',
+            principal: '20\' em ritmo de prova (Limiar de Lactato - Z4).<br>Sustentar o desconforto.',
+            desaquecimento: '15\' de trote leve.' 
+        },
+        { 
+            title: 'Regenerativo', 
+            type: 'Recuperação', 
+            duration: '30 min', 
+            distance: '4-5 km', 
+            aquecimento: 'N/A',
+            principal: '30\' de corrida muito leve (Z1/Z2).<br>Apenas para circular sangue.',
+            desaquecimento: 'Alongamento leve.' 
+        }
     ];
 
     // UPDATED RACE CALENDAR 2026 (RJ)
@@ -214,7 +246,9 @@ function initializeDatabase() {
     // Ensure plans exist for user
     if (!db.trainingPlans.treinosA[email]) db.trainingPlans.treinosA[email] = treinosA;
     if (!db.trainingPlans.treinosB[email]) db.trainingPlans.treinosB[email] = treinosB;
-    if (!db.userRunningWorkouts[email]) db.userRunningWorkouts[email] = runningWorkouts;
+    
+    // FORCE UPDATE RUNNING WORKOUTS (to fix structure issues)
+    db.userRunningWorkouts[email] = runningWorkouts;
     
     // FORCE UPDATE RACE CALENDAR FOR 2026
     db.raceCalendar = raceCalendar;
@@ -233,6 +267,126 @@ function initializeDatabase() {
     db.trainingPlans.periodizacao[email] = mergedPeriodization;
     
     saveDatabase(db);
+}
+
+// --- WEATHER FETCHING ---
+async function fetchWeather() {
+    const widget = document.getElementById('weather-widget');
+    if (!widget) return;
+
+    // Default to Rio
+    let lat = -22.9068;
+    let lon = -43.1729;
+    let city = "Rio de Janeiro";
+
+    try {
+        const position: any = await new Promise((resolve, reject) => {
+            navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 5000 });
+        });
+        lat = position.coords.latitude;
+        lon = position.coords.longitude;
+        
+        // Simple reverse geocode attempt
+        try {
+             const geoRes = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=pt`);
+             const geoData = await geoRes.json();
+             if(geoData.city) city = geoData.city;
+             else if (geoData.locality) city = geoData.locality;
+        } catch(e) {
+            console.log("Geo lookup failed, using coordinates or default");
+        }
+
+    } catch (e) {
+        console.log("Geolocation denied or error, using default Rio");
+    }
+
+    try {
+        const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weather_code&daily=temperature_2m_max,temperature_2m_min&timezone=auto`;
+        const res = await fetch(url);
+        const data = await res.json();
+
+        const currentTemp = Math.round(data.current.temperature_2m);
+        const minTemp = Math.round(data.daily.temperature_2m_min[0]);
+        const maxTemp = Math.round(data.daily.temperature_2m_max[0]);
+        const weatherCode = data.current.weather_code;
+
+        // Map WMO code to icon/color
+        let iconName = 'sun';
+        let iconColor = 'text-yellow-400';
+        
+        if (weatherCode >= 1 && weatherCode <= 3) { iconName = 'cloud'; iconColor = 'text-gray-300'; }
+        else if (weatherCode >= 45 && weatherCode <= 48) { iconName = 'align-justify'; iconColor = 'text-gray-400'; } // Fog approximation
+        else if (weatherCode >= 51 && weatherCode <= 67) { iconName = 'cloud-drizzle'; iconColor = 'text-blue-400'; }
+        else if (weatherCode >= 71) { iconName = 'cloud-rain'; iconColor = 'text-blue-500'; }
+        else if (weatherCode >= 95) { iconName = 'cloud-lightning'; iconColor = 'text-yellow-600'; }
+        
+        widget.innerHTML = `
+            <div class="flex items-center justify-end gap-2">
+                <i data-feather="${iconName}" class="${iconColor} w-6 h-6"></i>
+                <span class="text-xl font-bold text-white">${currentTemp}°C</span>
+            </div>
+            <p class="text-[10px] text-gray-400 font-medium">${city}</p>
+            <div class="flex items-center gap-2 text-[10px] text-gray-500 mt-0.5">
+                <span class="flex items-center"><i class="fas fa-arrow-down text-blue-400 text-[8px] mr-0.5"></i> ${minTemp}°</span>
+                <span class="flex items-center"><i class="fas fa-arrow-up text-red-400 text-[8px] mr-0.5"></i> ${maxTemp}°</span>
+            </div>
+        `;
+        if (typeof feather !== 'undefined') feather.replace();
+
+    } catch (err) {
+        console.error("Weather fetch error", err);
+        widget.innerHTML = '<span class="text-xs text-red-500">Erro ao carregar clima</span>';
+    }
+}
+
+// --- AI ANALYSIS LOGIC ---
+async function generateAIAnalysis() {
+    const btn = document.getElementById('generate-analysis-btn');
+    const spinner = document.getElementById('ai-analysis-spinner');
+    const resultDiv = document.getElementById('ai-analysis-result');
+    const db = getDatabase();
+    const email = getCurrentUser();
+
+    if (!btn || !spinner || !resultDiv) return;
+
+    btn.classList.add('hidden');
+    spinner.classList.remove('hidden');
+    resultDiv.classList.add('hidden');
+
+    try {
+        const userPlans = db.trainingPlans.periodizacao?.[email] || [];
+        // Construct a simple context
+        const context = {
+            periodization: userPlans.map((p: any) => `${p.fase}: ${p.status} (Obj: ${p.objetivo})`).join('\n')
+        };
+
+        const prompt = `
+            Analise o progresso deste aluno de musculação com base no seguinte histórico de periodização:
+            ${context.periodization}
+
+            Forneça 3 insights curtos e motivacionais sobre o que esperar das próximas fases e como otimizar os resultados.
+            Use formatação HTML simples (negrito, quebras de linha). Responda em português do Brasil, tom de treinador experiente.
+        `;
+
+        const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+        const response = await ai.models.generateContent({
+            model: 'gemini-2.5-flash',
+            contents: prompt,
+        });
+
+        resultDiv.innerHTML = response.text;
+        resultDiv.classList.remove('hidden');
+
+    } catch (error) {
+        console.error("AI Error:", error);
+        resultDiv.innerHTML = "<p class='text-red-400'>Erro ao gerar análise. Tente novamente.</p>";
+        resultDiv.classList.remove('hidden');
+    } finally {
+        spinner.classList.add('hidden');
+        btn.classList.remove('hidden');
+        btn.innerHTML = `<i data-feather="refresh-cw"></i> <span>Gerar Nova Análise</span>`;
+        if (typeof feather !== 'undefined') feather.replace();
+    }
 }
 
 // --- NAVIGATION ---
@@ -457,21 +611,47 @@ function loadRunningScreen() {
         } else {
             workouts.forEach((w: any) => {
                 const card = document.createElement('div');
-                card.className = 'bg-gray-800 p-4 rounded-xl border border-gray-700 shadow-md mb-3 relative overflow-hidden';
+                card.className = 'bg-gray-800 rounded-xl border border-gray-700 shadow-lg overflow-hidden mb-4 relative';
                 card.innerHTML = `
-                    <div class="absolute top-0 left-0 w-1 h-full bg-orange-500"></div>
-                    <div class="flex justify-between items-start mb-2 pl-2">
-                        <h3 class="font-bold text-white text-lg">${w.title}</h3>
-                        <span class="text-xs font-bold px-2 py-1 rounded bg-gray-700 text-orange-400 border border-orange-500/30">${w.type}</span>
-                    </div>
-                    <div class="text-gray-300 text-sm mb-3 pl-2">
-                        <div class="flex items-center gap-3 mb-1">
-                            <span class="flex items-center gap-1"><i class="fas fa-stopwatch w-4 text-gray-500"></i> ${w.duration}</span>
-                            <span class="flex items-center gap-1"><i class="fas fa-road w-4 text-gray-500"></i> ${w.distance}</span>
+                    <div class="absolute top-0 left-0 w-1.5 h-full bg-orange-500"></div>
+                    <div class="p-4 pl-5">
+                        <div class="flex justify-between items-start mb-3">
+                            <div>
+                                <h3 class="text-lg font-bold text-white leading-tight">${w.title}</h3>
+                                <div class="flex items-center gap-3 mt-1 text-xs text-gray-400">
+                                    <span class="flex items-center gap-1"><i class="fas fa-clock text-orange-500"></i> ${w.duration}</span>
+                                    <span class="flex items-center gap-1"><i class="fas fa-route text-orange-500"></i> ${w.distance}</span>
+                                </div>
+                            </div>
+                            <span class="text-[10px] font-black uppercase tracking-wider text-gray-900 bg-orange-500 px-2 py-1 rounded-md shadow-sm border border-orange-400">${w.type}</span>
                         </div>
-                    </div>
-                    <div class="bg-gray-900/50 p-3 rounded-lg border border-gray-700 text-sm text-gray-400 leading-relaxed ml-2">
-                        ${w.description}
+                        
+                        <div class="space-y-3 pt-2 border-t border-gray-700/50">
+                            <div class="flex items-start gap-3">
+                                <div class="w-6 flex justify-center mt-0.5"><i class="fas fa-fire-alt text-yellow-500 text-sm"></i></div>
+                                <div>
+                                    <p class="text-xs font-bold text-gray-300 uppercase tracking-wide">Aquecimento</p>
+                                    <p class="text-sm text-gray-200 leading-snug">${w.aquecimento || 'Consultar descrição'}</p>
+                                </div>
+                            </div>
+                            
+                            <div class="flex items-start gap-3 relative">
+                                <div class="absolute left-3 top-0 bottom-0 w-px bg-gray-700 -z-10"></div>
+                                <div class="w-6 flex justify-center mt-0.5"><i class="fas fa-running text-orange-500 text-lg animate-pulse"></i></div>
+                                <div class="bg-gray-700/50 p-2 rounded-lg border border-gray-600 w-full">
+                                    <p class="text-xs font-bold text-orange-400 uppercase tracking-wide mb-1">Principal</p>
+                                    <p class="text-sm font-medium text-white leading-snug">${w.principal || w.description}</p>
+                                </div>
+                            </div>
+
+                            <div class="flex items-start gap-3">
+                                <div class="w-6 flex justify-center mt-0.5"><i class="fas fa-snowflake text-blue-400 text-sm"></i></div>
+                                <div>
+                                    <p class="text-xs font-bold text-gray-300 uppercase tracking-wide">Desaquecimento</p>
+                                    <p class="text-sm text-gray-200 leading-snug">${w.desaquecimento || 'Consultar descrição'}</p>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 `;
                 container.appendChild(card);
@@ -481,7 +661,7 @@ function loadRunningScreen() {
     showScreen('runningScreen');
 }
 
-// --- RACE CALENDAR LOGIC ---
+// --- RACE CALENDAR LOGIC (REDESIGNED) ---
 function loadRaceCalendarScreen() {
     const db = getDatabase();
     const races = db.raceCalendar || [];
@@ -493,27 +673,47 @@ function loadRaceCalendarScreen() {
             container.innerHTML = '<p class="text-white text-center mt-4">Nenhuma prova agendada.</p>';
         } else {
             races.forEach((r: any) => {
-                 const dateObj = new Date(r.date);
-                 // Fix date display off-by-one error by handling timezone or just parsing strings directly if YYYY-MM-DD
-                 // Simple split fix for YYYY-MM-DD
                  const parts = r.date.split('-');
                  const day = parts[2];
                  const monthNum = parseInt(parts[1], 10);
                  const monthNamesShort = ["JAN", "FEV", "MAR", "ABR", "MAI", "JUN", "JUL", "AGO", "SET", "OUT", "NOV", "DEZ"];
                  const month = monthNamesShort[monthNum - 1];
+                 const year = parts[0];
 
+                 // "TICKET" STYLE CARD
                  const card = document.createElement('div');
-                 card.className = 'bg-gray-800 rounded-xl overflow-hidden border border-gray-700 shadow-lg flex';
+                 card.className = 'bg-gray-800 rounded-xl overflow-hidden border border-gray-700 shadow-xl relative';
                  card.innerHTML = `
-                    <div class="bg-blue-900 w-20 flex flex-col items-center justify-center p-2 border-r border-gray-700">
-                        <span class="text-2xl font-black text-white">${day}</span>
-                        <span class="text-xs font-bold text-blue-300 uppercase">${month}</span>
-                    </div>
-                    <div class="p-4 flex-1">
-                        <h3 class="font-bold text-white text-base mb-1">${r.name}</h3>
-                        <div class="flex flex-col gap-1 text-xs text-gray-400 mt-2">
-                            <span class="flex items-center gap-2"><i class="fas fa-map-marker-alt w-4 text-center"></i> ${r.location}</span>
-                            <span class="flex items-center gap-2"><i class="fas fa-route w-4 text-center"></i> ${r.distance}</span>
+                    <!-- Background Accent -->
+                    <div class="absolute top-0 right-0 w-32 h-32 bg-blue-600 rounded-full mix-blend-multiply filter blur-2xl opacity-10 animate-blob"></div>
+                    <div class="absolute -bottom-8 -left-8 w-32 h-32 bg-purple-600 rounded-full mix-blend-multiply filter blur-2xl opacity-10 animate-blob animation-delay-2000"></div>
+
+                    <div class="flex">
+                        <!-- Left Stub (Date) -->
+                        <div class="w-24 bg-gradient-to-b from-gray-900 to-gray-800 border-r-2 border-dashed border-gray-600 flex flex-col items-center justify-center p-2 relative">
+                             <!-- Punch holes -->
+                            <div class="absolute -top-3 -right-3 w-6 h-6 bg-[#000000] rounded-full z-10"></div>
+                            <div class="absolute -bottom-3 -right-3 w-6 h-6 bg-[#000000] rounded-full z-10"></div>
+                            
+                            <span class="text-xs text-gray-400 font-bold tracking-widest">${year}</span>
+                            <span class="text-3xl font-black text-white leading-none mt-1">${day}</span>
+                            <span class="text-sm font-bold text-blue-400 uppercase tracking-wider mt-1">${month}</span>
+                        </div>
+
+                        <!-- Main Content -->
+                        <div class="flex-1 p-4 relative z-10 flex flex-col justify-center">
+                            <h3 class="font-bold text-white text-lg leading-tight mb-2">${r.name}</h3>
+                            
+                            <div class="flex flex-col gap-1.5">
+                                <div class="flex items-center gap-2 text-xs text-gray-300">
+                                    <div class="w-5 flex justify-center"><i class="fas fa-map-marker-alt text-red-500"></i></div>
+                                    <span>${r.location}</span>
+                                </div>
+                                <div class="flex items-center gap-2 text-xs text-gray-300">
+                                    <div class="w-5 flex justify-center"><i class="fas fa-flag-checkered text-green-500"></i></div>
+                                    <span class="font-bold text-white">${r.distance}</span>
+                                </div>
+                            </div>
                         </div>
                     </div>
                  `;
@@ -835,51 +1035,56 @@ function loadStudentProfile(email: string) {
         profileInfo.classList.remove('hidden');
     }
 
-    // Render Buttons
+    // Render Buttons - UPDATED LAYOUT AND ORDER
     const btnContainer = document.getElementById('student-profile-buttons');
     if (btnContainer) {
+        // Change grid to 2 cols mobile, 4 cols desktop
+        btnContainer.className = "grid grid-cols-2 md:grid-cols-4 gap-3 mb-6 mt-4";
+        
         btnContainer.innerHTML = `
-            <button onclick="loadTrainingScreen('A')" class="metal-btn-highlight p-3 flex flex-col items-center justify-center gap-1 active:scale-95 transition-transform h-24">
+            <!-- ROW 1 -->
+            <button onclick="loadTrainingScreen('A')" class="metal-btn-highlight p-3 flex flex-col items-center justify-center gap-1 active:scale-95 transition-transform h-28">
                 <i class="fas fa-dumbbell text-2xl"></i>
-                <span>TREINO A</span>
+                <span class="text-sm font-bold">TREINO A</span>
             </button>
-            <button onclick="loadTrainingScreen('B')" class="metal-btn-highlight p-3 flex flex-col items-center justify-center gap-1 active:scale-95 transition-transform h-24">
-                <i class="fas fa-fire text-2xl"></i>
-                <span>TREINO B</span>
+            <button onclick="loadTrainingScreen('B')" class="metal-btn-highlight p-3 flex flex-col items-center justify-center gap-1 active:scale-95 transition-transform h-28">
+                <i class="fas fa-dumbbell text-2xl"></i>
+                <span class="text-sm font-bold">TREINO B</span>
             </button>
-            <button onclick="loadPeriodizationScreen()" class="metal-btn p-3 flex flex-col items-center justify-center gap-1 active:scale-95 transition-transform h-24">
-                <i class="fas fa-calendar-alt text-yellow-500 text-2xl"></i>
-                <span>PERIODIZAÇÃO</span>
-            </button>
-            <button onclick="loadRunningScreen()" class="metal-btn p-3 flex flex-col items-center justify-center gap-1 active:scale-95 transition-transform h-24">
+            <button onclick="loadRunningScreen()" class="metal-btn p-3 flex flex-col items-center justify-center gap-1 active:scale-95 transition-transform h-28">
                 <i class="fas fa-running text-orange-500 text-2xl"></i>
-                <span>CORRIDA</span>
+                <span class="text-sm font-bold">CORRIDA</span>
             </button>
-            <button onclick="showScreen('outdoorSelectionScreen')" class="metal-btn p-3 flex flex-col items-center justify-center gap-1 active:scale-95 transition-transform h-24">
+            <button onclick="loadPeriodizationScreen()" class="metal-btn p-3 flex flex-col items-center justify-center gap-1 active:scale-95 transition-transform h-28">
+                <i class="fas fa-calendar-alt text-yellow-500 text-2xl"></i>
+                <span class="text-sm font-bold">PERIODIZAÇÃO</span>
+            </button>
+
+            <!-- ROW 2 -->
+            <button onclick="showScreen('outdoorSelectionScreen')" class="metal-btn p-3 flex flex-col items-center justify-center gap-1 active:scale-95 transition-transform h-28">
                 <i class="fas fa-map-marked-alt text-green-500 text-2xl"></i>
-                <span>OUTDOOR</span>
+                <span class="text-sm font-bold">OUTDOOR</span>
             </button>
-            <button onclick="loadRaceCalendarScreen()" class="metal-btn p-3 flex flex-col items-center justify-center gap-1 active:scale-95 transition-transform h-24">
+            <button onclick="loadRaceCalendarScreen()" class="metal-btn p-3 flex flex-col items-center justify-center gap-1 active:scale-95 transition-transform h-28">
                 <i class="fas fa-flag-checkered text-blue-500 text-2xl"></i>
-                <span>PROVAS</span>
+                <span class="text-sm font-bold">PROVAS</span>
             </button>
-             <button onclick="showScreen('physioAssessmentScreen')" class="metal-btn p-3 flex flex-col items-center justify-center gap-1 active:scale-95 transition-transform h-24">
+             <button onclick="showScreen('physioAssessmentScreen')" class="metal-btn p-3 flex flex-col items-center justify-center gap-1 active:scale-95 transition-transform h-28">
                 <i class="fas fa-clipboard-user text-red-400 text-2xl"></i>
-                <span>AVALIAÇÃO</span>
+                <span class="text-sm font-bold">AVALIAÇÃO</span>
             </button>
-             <button onclick="showScreen('aiAnalysisScreen')" class="metal-btn p-3 flex flex-col items-center justify-center gap-1 active:scale-95 transition-transform h-24">
+             <button onclick="showScreen('aiAnalysisScreen')" class="metal-btn p-3 flex flex-col items-center justify-center gap-1 active:scale-95 transition-transform h-28">
                 <i class="fas fa-brain text-teal-400 text-2xl"></i>
-                <span>ANÁLISE IA</span>
-            </button>
-             <button onclick="showScreen('exerciciosScreen')" class="metal-btn p-3 flex flex-col items-center justify-center gap-1 active:scale-95 transition-transform h-24">
-                <i class="fas fa-book-open text-purple-400 text-2xl"></i>
-                <span>BIBLIOTECA</span>
+                <span class="text-sm font-bold">ANÁLISE IA</span>
             </button>
         `;
     }
 
     // Initialize Calendar for Student
     renderCalendar(currentCalendarDate);
+    
+    // Fetch and display weather
+    fetchWeather();
 
     showScreen('studentProfileScreen');
 }
@@ -1014,6 +1219,61 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         setTimeout(() => modal?.classList.add('hidden'), 200);
     });
+
+    // AI Analysis Listener
+    document.getElementById('generate-analysis-btn')?.addEventListener('click', generateAIAnalysis);
+
+    // --- ASSESSMENT FIX (Force listeners) ---
+    // Ensure tabs work even if loaded late or statically
+    const tabProfessor = document.getElementById('tab-professor');
+    const tabAluno = document.getElementById('tab-aluno');
+    const viewProfessor = document.getElementById('view-professor');
+    const viewAluno = document.getElementById('view-aluno');
+    const modalAddAluno = document.getElementById('modal-add-aluno');
+    const modalContentAluno = document.getElementById('modal-content');
+
+    if (tabProfessor && tabAluno && viewProfessor && viewAluno) {
+        tabProfessor.addEventListener('click', () => {
+            tabProfessor.classList.add('tab-active');
+            tabAluno.classList.remove('tab-active');
+            viewProfessor.classList.remove('hidden');
+            viewAluno.classList.add('hidden');
+        });
+
+        tabAluno.addEventListener('click', () => {
+            tabProfessor.classList.remove('tab-active');
+            tabAluno.classList.add('tab-active');
+            viewProfessor.classList.add('hidden');
+            viewAluno.classList.remove('hidden');
+        });
+    }
+
+    // Force Open Modal logic inside main app scope
+    const btnAddAluno = document.getElementById('btn-add-aluno');
+    if (btnAddAluno && modalAddAluno && modalContentAluno) {
+        // Remove existing to avoid dupes if any
+        const newBtn = btnAddAluno.cloneNode(true);
+        btnAddAluno.parentNode?.replaceChild(newBtn, btnAddAluno);
+        
+        newBtn.addEventListener('click', () => {
+            modalAddAluno.classList.remove('hidden');
+            setTimeout(() => {
+                modalContentAluno.classList.remove('scale-95', 'opacity-0');
+                modalContentAluno.classList.add('scale-100', 'opacity-100');
+            }, 10);
+        });
+    }
+
+    const btnCancelModal = document.getElementById('btn-cancel-modal');
+    if (btnCancelModal && modalAddAluno && modalContentAluno) {
+        btnCancelModal.addEventListener('click', () => {
+             modalContentAluno.classList.remove('scale-100', 'opacity-100');
+             modalContentAluno.classList.add('scale-95', 'opacity-0');
+             setTimeout(() => {
+                modalAddAluno.classList.add('hidden');
+             }, 200);
+        });
+    }
 });
 
 // Expose globals for HTML clicks
