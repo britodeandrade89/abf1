@@ -155,16 +155,16 @@ function generateCyclicRunningWorkouts(baseWorkouts) {
 function initializeDatabase() {
     // Definir os treinos do André Brito aqui para garantir que sejam aplicados tanto na inicialização limpa quanto na migração
     const treinosA_AndreBrito_Semana3e4 = [
-        { name: 'Agachamento parcial no Smith (CONJUGADO 1)', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/dMXSfHrCe2BQAKRvIvIg.png', sets: '3', reps: '8-9', carga: '20', obs: 'Método Simples (9 RM)', recovery: '30s' },
-        { name: 'Agachamento Livre com HBC (CONJUGADO 1)', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/77Uth2fQUxtPXvqu1UCb.png', sets: '3', reps: '8-9', carga: '16', obs: 'Método Simples (9 RM)', recovery: '30s' },
-        { name: 'Agachamento Búlgaro com HBC no banco ou step', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/jo9jsMXR96Q17m4pXn7B.jpg', sets: '3', reps: '8-9', carga: '8', obs: 'Método Simples (9 RM)', recovery: '30s' },
-        { name: 'Cadeira extensora', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/rQ8l64KvygQUAa8FZXyp.jpg', sets: '3', reps: '8-9', carga: '7', obs: 'Método Simples (9 RM)', recovery: '30s' },
-        { name: 'Supino inclinado com HBC (CONJUGADO 2)', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/fWBlaY5LXefUGcXHz2tO.jpg', sets: '3', reps: '8-9', carga: '14', obs: 'Método Simples (9 RM)', recovery: '30s' },
-        { name: 'Desenvolvimento aberto com HBC (CONJUGADO 2)', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/niXdGuQHlniNh7f6xh5i.png', sets: '3', reps: '8-9', carga: '9', obs: 'Método Simples (9 RM)', recovery: '30s' },
-        { name: 'Crucifixo aberto no banco inclinado com HBC (CONJUGADO 3)', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/6RBiU0w8EtT9enxOTM6Q.jpg', sets: '3', reps: '8-9', carga: '6', obs: 'Método Simples (9 RM)', recovery: '30s' },
-        { name: 'Extensão de cotovelos no solo (CONJUGADO 3)', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/eGNCCvzlv1jGWpSbs5nH.png', sets: '3', reps: '8-9', carga: '0', obs: 'Método Simples (9 RM)', recovery: '30s' },
-        { name: 'Tríceps fechado no solo de joelhos', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/cVidpH3PfsrBhLcAGKmI.jpg', sets: '3', reps: '8-9', carga: '0', obs: 'Método Simples (9 RM)', recovery: '30s' },
-        { name: 'Abdominal supra no solo', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/7M5vMfWh1Jb7DnLIUs4g.png', sets: '3', reps: '9', carga: '0', obs: 'Método Simples (15 RM)', recovery: '30s' }
+        { name: 'Agachamento Livre com HBC', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/77Uth2fQUxtPXvqu1UCb.png', sets: '3', reps: '12', carga: '0', obs: 'Método Simples', recovery: '30s' },
+        { name: 'Leg Press Horizontal', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/TYYs8dYewPrOA5MB0LKt.png', sets: '3', reps: '12', carga: '0', obs: 'Método Simples', recovery: '30s' },
+        { name: 'Leg Press Horizontal unilateral', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/7yRR2CeoHxGPlbi3mw89.png', sets: '3', reps: '12', carga: '0', obs: 'Método Simples', recovery: '30s' },
+        { name: 'Cadeira Extensora', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/rQ8l64KvygQUAa8FZXyp.jpg', sets: '3', reps: '12', carga: '0', obs: 'Método Simples', recovery: '30s' },
+        { name: 'Cadeira Extensora unilateral', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/BDBVsJS1WneT1BvLSW9S.png', sets: '3', reps: '12', carga: '0', obs: 'Método Simples', recovery: '30s' },
+        { name: 'Supino aberto com HBC no banco inclinado', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/fWBlaY5LXefUGcXHz2tO.jpg', sets: '3', reps: '12', carga: '0', obs: 'Método Simples', recovery: '30s' },
+        { name: 'Desenvolvimento aberto com HBC no banco 75 graus', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/niXdGuQHlniNh7f6xh5i.png', sets: '3', reps: '12', carga: '0', obs: 'Método Simples', recovery: '30s' },
+        { name: 'Extensão de cotovelos no solo de joelhos no chão', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/eGNCCvzlv1jGWpSbs5nH.png', sets: '3', reps: '12', carga: '0', obs: 'Método Simples', recovery: '30s' },
+        { name: 'Extensão de cotovelos fechados no solo de joelhos no chão', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/cVidpH3PfsrBhLcAGKmI.jpg', sets: '3', reps: '12', carga: '0', obs: 'Método Simples', recovery: '30s' },
+        { name: 'Abdominal supra remador no solo', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/7M5vMfWh1Jb7DnLIUs4g.png', sets: '3', reps: '15', carga: '0', obs: 'Método Simples', recovery: '30s' }
     ];
 
     const treinosB_AndreBrito_Semana3e4 = [
@@ -211,9 +211,9 @@ function initializeDatabase() {
             }
         });
 
-        // Force update workouts for André Brito to ensure 3 sets
+        // Force update workouts for André Brito to ensure 3 sets and new list
         if (database.trainingPlans) {
-            if (database.trainingPlans.treinosA) database.trainingPlans.treinosA['britodeandrade@gmail.com'] = treinosA_AndreBrito_Semana3e4;
+            database.trainingPlans.treinosA['britodeandrade@gmail.com'] = treinosA_AndreBrito_Semana3e4;
             if (database.trainingPlans.treinosB) database.trainingPlans.treinosB['britodeandrade@gmail.com'] = treinosB_AndreBrito_Semana3e4;
         }
 
@@ -578,6 +578,46 @@ window.addEventListener('load', () => {
                     .catch(err => {
                         console.log('ServiceWorker registration failed: ', err);
                     });
+            }
+
+            // --- PWA INSTALL BANNER LOGIC ---
+            let deferredPrompt: any;
+            const pwaBanner = document.getElementById('pwa-install-banner');
+            const installBtn = document.getElementById('pwa-install-btn');
+            const closeBtn = document.getElementById('pwa-close-btn');
+
+            window.addEventListener('beforeinstallprompt', (e) => {
+                // Prevent Chrome 67 and earlier from automatically showing the prompt
+                e.preventDefault();
+                // Stash the event so it can be triggered later.
+                deferredPrompt = e;
+                // Update UI to notify the user they can add to home screen
+                if (pwaBanner) {
+                    pwaBanner.classList.remove('hidden');
+                    // Small delay to allow display:block to apply before transform transition
+                    setTimeout(() => {
+                        pwaBanner.classList.remove('translate-y-full'); 
+                        pwaBanner.classList.add('translate-y-0');
+                    }, 100);
+                }
+            });
+
+            if (installBtn) {
+                installBtn.addEventListener('click', async () => {
+                    if (deferredPrompt) {
+                        deferredPrompt.prompt();
+                        const { outcome } = await deferredPrompt.userChoice;
+                        console.log(`User response to the install prompt: ${outcome}`);
+                        deferredPrompt = null;
+                    }
+                    if (pwaBanner) pwaBanner.classList.add('hidden');
+                });
+            }
+
+            if (closeBtn) {
+                closeBtn.addEventListener('click', () => {
+                    if (pwaBanner) pwaBanner.classList.add('hidden');
+                });
             }
 
             initializeDatabase();
@@ -1906,7 +1946,8 @@ function openRunningLogModal(email: string, date: string) {
 }
 
 function renderPeriodizationScreen(email: string) {
-    const container = document.getElementById('periodization-content');
+    // FIX: Select correct HTML element ID
+    const container = document.getElementById('periodization-content-wrapper');
     if (!container) return;
     
     const user = database.users.find(u => u.email === email);
@@ -1961,9 +2002,11 @@ function renderWeightControlScreen(email: string) {
 }
 
 function renderNutritionistScreen(email: string) {
-    const container = document.getElementById('nutritionist-chat');
+    // FIX: Select correct HTML element ID
+    const container = document.getElementById('nutrition-content-wrapper');
     if (container) {
-        container.innerHTML = '<p class="text-center text-gray-500 mt-10">Converse com sua Nutricionista IA aqui.</p>';
+        container.innerHTML = '<div class="flex flex-col items-center justify-center h-full p-6"><i data-feather="message-circle" class="w-16 h-16 text-gray-500 mb-4"></i><p class="text-center text-gray-300 font-bold mb-2">Consulta Nutricional IA</p><p class="text-center text-gray-500 text-sm">Esta funcionalidade estará disponível em breve para auxiliar na sua dieta.</p></div>';
+        feather.replace();
     }
 }
 
