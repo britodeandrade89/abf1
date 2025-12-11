@@ -50,11 +50,12 @@
 
     <!-- ======================= SPLASH SCREEN ======================= -->
     <div id="splashScreen" class="w-full h-screen flex flex-col items-center justify-center">
-        <div class="text-center">
-            <h1 class="font-black text-8xl tracking-tighter">
-                <span class="text-red-600">AB</span><span class="text-white">FIT</span>
+        <div class="text-center p-6 bg-black rounded-3xl border-2 border-red-900 shadow-2xl">
+            <h1 class="font-black text-8xl tracking-tighter flex items-center justify-center gap-1">
+                <span class="bg-gray-900 text-red-600 px-4 py-1 rounded-xl shadow-2xl border border-red-800">AB</span>
+                <span class="text-white">FIT</span>
             </h1>
-            <p class="text-white text-xl mt-2 tracking-wide">Assessoria em Treinamentos Físicos</p>
+            <p class="text-white text-xl mt-4 tracking-wide font-medium">Assessoria em Treinamentos Físicos</p>
         </div>
         <div class="absolute bottom-8 text-center">
             <p class="text-gray-400 text-sm">Desenvolvido por André Brito</p>
@@ -88,12 +89,15 @@
         <main class="flex-grow screens-wrapper">
              <!-- ======================= TELA DE LOGIN ======================= -->
             <div id="loginScreen" class="screen p-6 flex flex-col justify-center">
-                <div class="text-center mb-8">
-                    <h1 class="font-black text-6xl tracking-tighter">
-                        <span class="text-red-600">AB</span><span class="text-white">FIT</span>
-                    </h1>
+                <div class="text-center mb-8 flex justify-center">
+                    <div class="bg-black p-6 rounded-3xl border border-gray-800 shadow-2xl inline-block">
+                        <h1 class="font-black text-6xl tracking-tighter flex items-center justify-center gap-2">
+                            <span class="bg-gray-900 text-red-600 px-3 py-1 rounded-xl shadow-lg border border-red-900">AB</span>
+                            <span class="text-white drop-shadow-md">FIT</span>
+                        </h1>
+                    </div>
                 </div>
-                <div class="bg-gray-800 p-6 rounded-xl border border-gray-700">
+                <div class="bg-gray-800 p-6 rounded-xl border border-gray-700 shadow-xl">
                     <h3 class="text-white font-bold text-xl mb-4 text-center">Acesse seu Perfil</h3>
                     <form id="login-form">
                         <div class="mb-4">
@@ -117,21 +121,21 @@
                         <!-- Populated by JS -->
                     </div>
                      <div class="flex items-center gap-4">
-                        <div id="weather-widget" class="text-right">
+                        <div id="weather-widget" class="text-right flex flex-col items-end">
                             <!-- Populated by JS -->
                         </div>
-                        <button id="logout-btn" class="p-2 rounded-full hover:bg-gray-700 text-white hover:text-white">
+                        <button id="logout-btn" class="p-2 rounded-full hover:bg-gray-700 text-white hover:text-white border border-transparent hover:border-gray-600">
                             <i data-feather="log-out"></i>
                         </button>
                     </div>
                 </header>
 
                 <div id="student-profile-info"
-                    class="flex items-center p-4 bg-gray-800 border border-gray-700 rounded-xl mb-6"></div>
+                    class="flex items-center p-4 bg-gray-800 border border-gray-700 rounded-xl mb-6 shadow-lg"></div>
 
                 <div id="student-profile-buttons" class="grid grid-cols-3 gap-4 mb-6"></div>
 
-                <div class="bg-gray-800 p-4 rounded-xl border border-gray-700">
+                <div class="bg-gray-800 p-4 rounded-xl border border-gray-700 shadow-lg">
                     <div id="calendar-header" class="flex justify-between items-center mb-4">
                         <button id="prev-month-btn" class="p-2 rounded-full hover:bg-gray-700"><i
                                 data-feather="chevron-left" class="text-white"></i></button>
@@ -156,8 +160,8 @@
                 </div>
                 
                 <div class="text-center pt-8 pb-24">
-                    <p class="text-xs">Versão 1.2</p>
-                    <p class="text-xs">Desenvolvido por André Brito</p>
+                    <p class="text-xs text-gray-400">Versão 1.2</p>
+                    <p class="text-xs text-gray-500">Desenvolvido por André Brito</p>
                 </div>
             </div>
 
@@ -170,7 +174,7 @@
                         <h1 id="training-title" class="text-xl font-bold text-white uppercase tracking-wider">Treino</h1>
                         <div id="workout-timer" class="digital-timer text-4xl">00:00:00</div>
                     </div>
-                    <button id="save-training-btn" class="hidden bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg text-sm flex items-center gap-2">
+                    <button id="save-training-btn" class="hidden bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg text-sm flex items-center gap-2 shadow-lg">
                         <i data-feather="check-circle" class="w-4 h-4"></i>
                         <span>Concluir</span>
                     </button>
@@ -202,7 +206,7 @@
                     <div class="w-10"></div>
                 </header>
                 <div class="space-y-4 pb-24 text-center">
-                    <div class="bg-gray-800 p-6 rounded-xl border border-gray-700">
+                    <div class="bg-gray-800 p-6 rounded-xl border border-gray-700 shadow-lg">
                         <i data-feather="cpu" class="w-16 h-16 mx-auto mb-4 text-teal-400"></i>
                         <h2 class="text-xl font-bold text-white mb-2">Análise com IA</h2>
                         <p class="text-sm mb-6">Receba insights sobre sua evolução de cargas e descubra pontos de melhoria.</p>
@@ -289,13 +293,13 @@
                     <div class="w-10"></div>
                 </header>
                 <div class="space-y-6 pb-24">
-                    <div class="bg-gray-800 p-4 rounded-xl border border-gray-700">
+                    <div class="bg-gray-800 p-4 rounded-xl border border-gray-700 shadow-lg">
                         <h2 class="text-xl font-bold text-white mb-2">Treino A</h2>
                         <label for="select-treino-a" class="text-sm text-white mb-2 block">Selecione o Exercício</label>
                         <select id="select-treino-a" class="w-full p-3 border border-gray-600 bg-gray-700 text-white rounded-lg mb-4"></select>
                         <canvas id="treinoAChart" class="w-full"></canvas>
                     </div>
-                    <div class="bg-gray-800 p-4 rounded-xl border border-gray-700">
+                    <div class="bg-gray-800 p-4 rounded-xl border border-gray-700 shadow-lg">
                         <h2 class="text-xl font-bold text-white mb-2">Treino B</h2>
                          <label for="select-treino-b" class="text-sm text-white mb-2 block">Selecione o Exercício</label>
                         <select id="select-treino-b" class="w-full p-3 border border-gray-600 bg-gray-700 text-white rounded-lg mb-4"></select>
@@ -313,21 +317,21 @@
                     <div class="w-10"></div>
                 </header>
                 <div class="space-y-4 pb-24">
-                    <div class="bg-gray-800 p-4 rounded-xl border border-gray-700">
+                    <div class="bg-gray-800 p-4 rounded-xl border border-gray-700 shadow-lg">
                         <h2 class="text-xl font-bold text-white mb-4">Adicionar Novo Registro</h2>
                         <div class="flex items-center gap-2">
                             <input type="number" step="0.1" id="weight-input" inputmode="decimal" placeholder="Ex: 85.5"
                                 class="w-full p-3 border border-gray-600 bg-gray-700 text-white rounded-lg">
                             <span class="font-semibold text-white">kg</span>
                             <button id="save-weight-btn"
-                                class="bg-red-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-red-700 transition-colors">Salvar</button>
+                                class="bg-red-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-red-700 transition-colors shadow-lg">Salvar</button>
                         </div>
                     </div>
-                    <div class="bg-gray-800 p-4 rounded-xl border border-gray-700">
+                    <div class="bg-gray-800 p-4 rounded-xl border border-gray-700 shadow-lg">
                         <h2 class="text-xl font-bold text-white mb-4">Evolução do Peso</h2>
                         <canvas id="weightChart" class="w-full"></canvas>
                     </div>
-                    <div class="bg-gray-800 p-4 rounded-xl border border-gray-700">
+                    <div class="bg-gray-800 p-4 rounded-xl border border-gray-700 shadow-lg">
                         <h2 class="text-xl font-bold text-white mb-4">Histórico de Peso</h2>
                         <div id="weight-history-list" class="space-y-2"></div>
                     </div>
@@ -390,7 +394,7 @@
                                 <h2 class="text-2xl font-semibold text-white">Nova Avaliação para <span id="form-aluno-nome" class="text-blue-400"></span></h2>
                             </div>
 
-                            <form id="avaliacao-form" class="space-y-8 bg-gray-800 p-8 rounded-2xl shadow-xl">
+                            <form id="avaliacao-form" class="space-y-8 bg-gray-800 p-8 rounded-2xl shadow-xl border border-gray-700">
                                 <!-- Seção Dados Básicos -->
                                 <fieldset class="grid grid-cols-1 md:grid-cols-3 gap-6 border-l-4 border-blue-500 pl-4">
                                     <legend class="text-xl font-bold mb-4 text-white">Dados Básicos</legend>
@@ -486,31 +490,31 @@
                     <h1 class="text-2xl font-bold text-white">Treino Outdoor</h1>
                     <div class="w-10"></div>
                 </header>
-                <div class="p-4 bg-gray-800 text-center rounded-xl border border-gray-700 mb-6">
+                <div class="p-4 bg-gray-800 text-center rounded-xl border border-gray-700 mb-6 shadow-lg">
                     <h2 class="text-xl font-bold text-white">ABFIT Outdoor</h2>
                     <p class="text-white">Sua jornada começa aqui. Escolha sua atividade.</p>
                 </div>
                 <div class="grid grid-cols-2 gap-4">
                     <button
-                        class="outdoor-activity-btn bg-gray-800 hover:bg-gray-700 border border-gray-700 text-white rounded-xl p-4 flex flex-col items-center justify-center space-y-2 h-32 transition"
+                        class="outdoor-activity-btn bg-gray-800 hover:bg-gray-700 border border-gray-700 text-white rounded-xl p-4 flex flex-col items-center justify-center space-y-2 h-32 transition shadow-md"
                         data-activity="Caminhada outdoor">
                         <i class="fas fa-walking text-3xl text-blue-400"></i>
                         <span class="font-semibold">Caminhada</span>
                     </button>
                     <button
-                        class="outdoor-activity-btn bg-gray-800 hover:bg-gray-700 border border-gray-700 text-white rounded-xl p-4 flex flex-col items-center justify-center space-y-2 h-32 transition"
+                        class="outdoor-activity-btn bg-gray-800 hover:bg-gray-700 border border-gray-700 text-white rounded-xl p-4 flex flex-col items-center justify-center space-y-2 h-32 transition shadow-md"
                         data-activity="Corrida outdoor">
                         <i class="fas fa-running text-3xl text-orange-400"></i>
                         <span class="font-semibold">Corrida</span>
                     </button>
                     <button
-                        class="outdoor-activity-btn bg-gray-800 hover:bg-gray-700 border border-gray-700 text-white rounded-xl p-4 flex flex-col items-center justify-center space-y-2 h-32 transition"
+                        class="outdoor-activity-btn bg-gray-800 hover:bg-gray-700 border border-gray-700 text-white rounded-xl p-4 flex flex-col items-center justify-center space-y-2 h-32 transition shadow-md"
                         data-activity="Ciclismo outdoor">
                         <i class="fas fa-biking text-3xl text-green-400"></i>
                         <span class="font-semibold">Ciclismo</span>
                     </button>
                     <button
-                        class="outdoor-activity-btn bg-gray-800 hover:bg-gray-700 border border-gray-700 text-white rounded-xl p-4 flex flex-col items-center justify-center space-y-2 h-32 transition"
+                        class="outdoor-activity-btn bg-gray-800 hover:bg-gray-700 border border-gray-700 text-white rounded-xl p-4 flex flex-col items-center justify-center space-y-2 h-32 transition shadow-md"
                         data-activity="Natação outdoor">
                         <i class="fas fa-swimmer text-3xl text-cyan-400"></i>
                         <span class="font-semibold">Natação</span>
@@ -527,32 +531,32 @@
                     <h1 id="tracking-activity-title" class="text-2xl font-bold text-white">Atividade</h1>
                     <div class="w-10"></div>
                 </header>
-                <div class="map-container mb-4" id="map"></div>
+                <div class="map-container mb-4 shadow-lg border border-gray-600" id="map"></div>
                 <div class="grid grid-cols-3 gap-4 mb-6 text-center">
-                    <div class="bg-gray-800 p-4 rounded-xl">
+                    <div class="bg-gray-800 p-4 rounded-xl shadow-md border border-gray-700">
                         <div class="text-sm">Distância</div>
                         <div id="tracking-distance" class="text-2xl font-bold">0.00 km</div>
                     </div>
-                    <div class="bg-gray-800 p-4 rounded-xl">
+                    <div class="bg-gray-800 p-4 rounded-xl shadow-md border border-gray-700">
                         <div class="text-sm">Tempo</div>
                         <div id="tracking-time" class="text-2xl font-bold">00:00:00</div>
                     </div>
-                    <div class="bg-gray-800 p-4 rounded-xl">
+                    <div class="bg-gray-800 p-4 rounded-xl shadow-md border border-gray-700">
                         <div class="text-sm">Ritmo</div>
                         <div id="tracking-pace" class="text-2xl font-bold">--:-- /km</div>
                     </div>
                 </div>
                 <div class="mt-auto flex items-center justify-center space-x-4 pb-24">
                     <button id="start-tracking-btn"
-                        class="w-20 h-20 bg-green-600 hover:bg-green-700 text-white rounded-full flex items-center justify-center text-lg font-bold">
+                        class="w-20 h-20 bg-green-600 hover:bg-green-700 text-white rounded-full flex items-center justify-center text-lg font-bold shadow-lg shadow-green-600/30 transform hover:scale-105 transition">
                         <i data-feather="play" class="w-8 h-8"></i>
                     </button>
                     <button id="pause-tracking-btn"
-                        class="hidden w-20 h-20 bg-yellow-500 hover:bg-yellow-600 text-white rounded-full items-center justify-center text-lg font-bold">
+                        class="hidden w-20 h-20 bg-yellow-500 hover:bg-yellow-600 text-white rounded-full items-center justify-center text-lg font-bold shadow-lg shadow-yellow-500/30 transform hover:scale-105 transition">
                         <i data-feather="pause" class="w-8 h-8"></i>
                     </button>
                     <button id="stop-tracking-btn"
-                        class="hidden w-20 h-20 bg-red-600 hover:bg-red-700 text-white rounded-full items-center justify-center text-lg font-bold">
+                        class="hidden w-20 h-20 bg-red-600 hover:bg-red-700 text-white rounded-full items-center justify-center text-lg font-bold shadow-lg shadow-red-600/30 transform hover:scale-105 transition">
                         <i data-feather="square" class="w-8 h-8"></i>
                     </button>
                 </div>
@@ -568,7 +572,7 @@
                     <div class="w-10"></div>
                 </header>
                 <div class="space-y-6 pb-24">
-                     <div class="bg-gray-800 p-4 rounded-xl border border-gray-700">
+                     <div class="bg-gray-800 p-4 rounded-xl border border-gray-700 shadow-lg">
                         <h2 class="text-xl font-bold text-white mb-4">Seu Nível de Estresse</h2>
                         <canvas id="stress-chart" class="w-full h-64"></canvas>
                     </div>
@@ -596,7 +600,7 @@
 
     <!-- Modals -->
     <div id="exerciseDetailModal" class="hidden fixed inset-0 bg-black bg-opacity-80 z-50 flex items-center justify-center p-4 modal">
-        <div id="exercise-modal-content" class="bg-gray-800 rounded-xl w-full max-w-md max-h-[90vh] overflow-y-auto transform scale-95 opacity-0 modal-content border border-gray-700">
+        <div id="exercise-modal-content" class="bg-gray-800 rounded-xl w-full max-w-md max-h-[90vh] overflow-y-auto transform scale-95 opacity-0 modal-content border border-gray-700 shadow-2xl">
             <div class="p-6">
                 <div class="flex justify-between items-start mb-4">
                     <h2 id="modal-exercise-name" class="text-xl font-bold text-white pr-4">Nome do Exercício</h2>
@@ -618,7 +622,7 @@
                         <h3 class="font-bold text-gray-300 mb-2">Carga Atual (kg)</h3>
                         <form id="edit-carga-form" class="flex gap-2">
                             <input type="number" id="carga-input" class="w-full p-2 bg-gray-700 border border-gray-600 rounded text-white" placeholder="0">
-                            <button type="submit" class="bg-red-600 text-white px-4 py-2 rounded font-bold">Salvar</button>
+                            <button type="submit" class="bg-red-600 text-white px-4 py-2 rounded font-bold hover:bg-red-700 transition">Salvar</button>
                         </form>
                     </div>
 

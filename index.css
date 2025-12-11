@@ -1,20 +1,12 @@
 body {
     font-family: 'Inter', sans-serif;
     color: white !important; /* Forçar texto branco globalmente */
-    /* Carbon Fiber Background with Red Gradient */
+    /* Updated Background: Smooth Red to Black Gradient */
     background-color: #000;
-    background-image: 
-        linear-gradient(27deg, #151515 5px, transparent 5px),
-        linear-gradient(207deg, #151515 5px, transparent 5px),
-        linear-gradient(27deg, #222 5px, transparent 5px),
-        linear-gradient(207deg, #222 5px, transparent 5px),
-        linear-gradient(90deg, #1b1b1b 10px, transparent 10px),
-        linear-gradient(#1d1d1d 25%, #1a1a1a 25%, #1a1a1a 50%, transparent 50%, transparent 75%, #242424 75%, #242424),
-        linear-gradient(to bottom, #7f1d1d, #000000);
-    background-position: 0 5px, 10px 0px, 0px 10px, 10px 5px, 0 0, 0 0, 0 0;
-    background-size: 20px 20px, 20px 20px, 20px 20px, 20px 20px, 20px 20px, 20px 20px, 100% 100%;
+    background-image: linear-gradient(to bottom, #ef4444, #000000);
     background-attachment: fixed;
-    background-blend-mode: overlay;
+    background-size: 100% 100%;
+    min-height: 100vh;
 }
 
 /* Forçar todos os elementos de texto comuns a serem brancos */
@@ -500,7 +492,7 @@ button:active,
 /* === NOVOS ESTILOS PARA PERIODIZAÇÃO E CRONÔMETRO === */
 .timer-header-box {
     background-color: #000000; /* Black background */
-    padding: 0.5rem 1.5rem;
+    padding: 1.5rem 1rem; /* More vertical padding */
     border-radius: 30px; /* More rounded */
     border: 3px solid #374151; /* Dark Grey Metal Rim */
     box-shadow: 
@@ -510,7 +502,7 @@ button:active,
     flex-grow: 1;
     margin: 0 1rem;
     display: flex;
-    flex-col: column;
+    flex-direction: column; /* Stack vertically */
     align-items: center;
     justify-content: center;
     position: relative;
@@ -540,15 +532,20 @@ button:active,
     text-shadow: 0 0 10px #ff0000, 0 0 20px #991b1b; /* Red Neon Glow */
     z-index: 3;
     position: relative;
+    font-size: 3rem; /* Larger timer */
+    line-height: 1;
 }
 
 #training-title {
-    color: #e5e7eb !important; /* light gray title */
-    font-size: 0.75rem;
+    color: #ef4444 !important; /* Red title */
+    font-size: 1.5rem; /* Larger title */
+    font-weight: 900;
     letter-spacing: 0.1em;
-    margin-bottom: -5px;
+    margin-bottom: 0.5rem;
     z-index: 3;
     position: relative;
+    text-transform: uppercase;
+    text-shadow: 0 0 10px rgba(239, 68, 68, 0.5);
 }
 
 #periodization-notification {
