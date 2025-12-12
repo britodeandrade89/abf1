@@ -28,7 +28,7 @@ let currentCalendarDate = new Date(); // Track calendar state
 const database = {
     users: [
         { id: 1, name: 'André Brito', email: 'britodeandrade@gmail.com', photo: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/3Zy4n6ZmWp9DW98VtXpO.jpeg', weightHistory: [], nutritionistData: { consultation: { step: 0, answers: {} }, plans: [], status: 'idle' }, periodizationStartDate: '2025-01-15', stressData: { assessments: [] } },
-        { id: 2, name: 'Marcelly Bispo', email: 'Marcellybispo92@gmail.com', photo: 'https://ui-avatars.com/api/?name=Marcelly+Bispo&background=db2777&color=fff', weightHistory: [], nutritionistData: { consultation: { step: 0, answers: {} }, plans: [], status: 'idle' }, periodizationStartDate: '2025-01-15', stressData: { assessments: [] } }
+        { id: 2, name: 'Marcelly Bispo', email: 'Marcellybispo92@gmail.com', photo: 'marcelly.jpg', weightHistory: [], nutritionistData: { consultation: { step: 0, answers: {} }, plans: [], status: 'idle' }, periodizationStartDate: '2025-01-15', stressData: { assessments: [] } }
     ],
     trainingPlans: { treinosA: {}, treinosB: {}, periodizacao: {} },
     userRunningWorkouts: {},
@@ -39,7 +39,7 @@ const database = {
 
 // --- STORAGE ---
 const STORAGE_KEYS = {
-    DATABASE: 'abfit_database_v6', // Incremented to force update for Marcelly's workout modification
+    DATABASE: 'abfit_database_v7', // Incremented to force update for Marcelly's photo
     CURRENT_USER: 'abfit_current_user'
 };
 
@@ -95,8 +95,12 @@ function initializeDatabase() {
     const usersToInit = ['britodeandrade@gmail.com', 'Marcellybispo92@gmail.com'];
     
     // Ensure Marcelly is in the user list if loaded from old DB
-    if (!db.users.find((u: any) => u.email === 'Marcellybispo92@gmail.com')) {
-        db.users.push({ id: 2, name: 'Marcelly Bispo', email: 'Marcellybispo92@gmail.com', photo: 'https://ui-avatars.com/api/?name=Marcelly+Bispo&background=db2777&color=fff', weightHistory: [], nutritionistData: { consultation: { step: 0, answers: {} }, plans: [], status: 'idle' }, periodizationStartDate: '2025-01-15', stressData: { assessments: [] } });
+    const marcelly = db.users.find((u: any) => u.email === 'Marcellybispo92@gmail.com');
+    if (!marcelly) {
+        db.users.push({ id: 2, name: 'Marcelly Bispo', email: 'Marcellybispo92@gmail.com', photo: 'marcelly.jpg', weightHistory: [], nutritionistData: { consultation: { step: 0, answers: {} }, plans: [], status: 'idle' }, periodizationStartDate: '2025-01-15', stressData: { assessments: [] } });
+    } else {
+        // Update photo if existing user but old photo
+        marcelly.photo = 'marcelly.jpg';
     }
 
     // Default Workout Data (André Brito's Template)
@@ -1259,45 +1263,165 @@ function loadStudentProfile(email: string) {
 document.addEventListener('DOMContentLoaded', () => {
     initializeDatabase();
     
-    // Feather Icons
-    if (typeof feather !== 'undefined') feather.replace();
-
-    // Login Check
-    setTimeout(() => {
-        const splash = document.getElementById('splashScreen');
-        if (splash) splash.classList.add('fade-out');
-        
-        const container = document.getElementById('appContainer');
-        if (container) container.classList.remove('init-hidden', 'hidden');
-
-        const user = getCurrentUser();
-        if (user) {
-            loadStudentProfile(user);
-        } else {
-            showScreen('loginScreen');
+    // --- 1. SPLASH SCREEN & NAVIGATION LOGIC ---
+    const splashScreen = document.getElementById('splashScreen');
+    const appContainer = document.getElementById('appContainer');
+    
+    // Função auxiliar para trocar de telas
+    function navigateTo(screenId: string) {
+        // Esconde todas as telas
+        document.querySelectorAll('.screen').forEach(el => el.classList.remove('active'));
+        // Mostra a tela alvo
+        const target = document.getElementById(screenId);
+        if (target) {
+            target.classList.add('active');
+            window.scrollTo(0, 0);
         }
-        
-        if (splash) setTimeout(() => splash.style.display = 'none', 500);
+    }
+
+    // Inicialização: Aguarda 2 segundos e vai para o Login
+    setTimeout(() => {
+        if (splashScreen && appContainer) {
+            // Animação de saída do Splash
+            splashScreen.classList.add('fade-out');
+            
+            // Aguarda a animação CSS terminar (0.5s)
+            setTimeout(() => {
+                splashScreen.classList.add('hidden'); // Remove o splash
+                appContainer.classList.remove('hidden'); // Mostra o container do app
+                
+                // Pequeno delay para a opacidade (fade-in do app)
+                requestAnimationFrame(() => {
+                    appContainer.classList.remove('init-hidden');
+                });
+
+                // Verifica se já existe usuário logado
+                const user = getCurrentUser();
+                if (user) {
+                    loadStudentProfile(user);
+                } else {
+                    navigateTo('loginScreen');
+                }
+            }, 500);
+        }
     }, 2000);
 
-    // Event Listeners
-    document.getElementById('login-form')?.addEventListener('submit', (e) => {
-        e.preventDefault();
-        const email = (document.getElementById('login-email') as HTMLInputElement).value;
-        const db = getDatabase();
-        if (db.users.find((u: any) => u.email === email)) {
-            setCurrentUser(email);
-            loadStudentProfile(email);
-        } else {
-            const err = document.getElementById('login-error');
-            if (err) err.textContent = 'Email não encontrado';
+    // --- 2. LOGIN LOGIC ---
+    const loginForm = document.getElementById('login-form');
+    const loginEmailInput = document.getElementById('login-email') as HTMLInputElement;
+    const loginBtn = document.getElementById('login-btn');
+    const loginError = document.getElementById('login-error');
+
+    if (loginForm) {
+        loginForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const email = loginEmailInput.value.trim().toLowerCase();
+
+            if (!email) {
+                if (loginError) loginError.textContent = "Por favor, digite seu e-mail.";
+                return;
+            }
+
+            // Verifica se o email existe no banco
+            const db = getDatabase();
+            if (!db.users.find((u: any) => u.email === email)) {
+                 if (loginError) loginError.textContent = "Email não encontrado.";
+                 return;
+            }
+
+            // Feedback visual de carregamento
+            if (loginBtn) {
+                const originalText = loginBtn.innerText;
+                loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Entrando...';
+                
+                // Simula processamento de login (1s) e entra no perfil
+                setTimeout(() => {
+                    // Salva e-mail na sessão
+                    setCurrentUser(email);
+                    
+                    // Carrega dados e redireciona
+                    loadStudentProfile(email);
+                    
+                    // Restaura botão
+                    loginBtn.innerText = originalText;
+                }, 1000);
+            }
+        });
+    }
+
+    // --- 4. GLOBAL CLICK HANDLERS FOR NAVIGATION ---
+    // Gerencia botões de "Voltar" e navegação interna
+    document.body.addEventListener('click', (e) => {
+        const target = e.target as HTMLElement;
+        const btn = target.closest('button');
+        
+        if (btn && btn.getAttribute('data-target')) {
+            const targetScreen = btn.getAttribute('data-target');
+            if (targetScreen) {
+                // If returning to profile, refresh calendar
+                if (targetScreen === 'studentProfileScreen') renderCalendar(currentCalendarDate);
+                showScreen(targetScreen);
+            }
+        }
+        
+        // Logout Button
+        if (btn && btn.id === 'logout-btn') {
+            localStorage.removeItem(STORAGE_KEYS.CURRENT_USER);
+            location.reload();
         }
     });
 
-    document.getElementById('logout-btn')?.addEventListener('click', () => {
-        localStorage.removeItem(STORAGE_KEYS.CURRENT_USER);
-        location.reload();
-    });
+    // --- 5. PWA INSTALLATION LOGIC ---
+    function setupPwa() {
+        const banner = document.getElementById('pwa-install-banner');
+        const installBtn = document.getElementById('pwa-install-btn');
+        const closeBtn = document.getElementById('pwa-close-btn');
+        let deferredPrompt: any = null;
+
+        if (!banner || !installBtn || !closeBtn) return;
+
+        const isStandalone = window.matchMedia('(display-mode: standalone)').matches || (window.navigator as any).standalone;
+        if (isStandalone) return;
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            // Mostra o banner APÓS o splash screen sair (ex: 4.5s)
+            setTimeout(() => {
+                 banner.classList.remove('hidden');
+                 banner.classList.remove('translate-y-0');
+            }, 4500);
+        });
+
+        const isIos = /iphone|ipad|ipod/.test(window.navigator.userAgent.toLowerCase());
+        if (isIos && !isStandalone) {
+             setTimeout(() => {
+                 banner.classList.remove('hidden');
+             }, 4500);
+        }
+
+        installBtn.addEventListener('click', async () => {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                deferredPrompt = null;
+                banner.classList.add('hidden');
+            } else if (isIos) {
+                alert("Para instalar no iOS/iPhone:\n\n1. Toque no botão de Compartilhar.\n2. Selecione 'Adicionar à Tela de Início'.");
+            } else {
+                 alert("Para instalar, procure a opção 'Adicionar à Tela de Início' no menu do seu navegador.");
+            }
+        });
+
+        closeBtn.addEventListener('click', () => {
+            banner.classList.add('hidden');
+        });
+    }
+
+    setupPwa();
+
+    // Feather Icons
+    if (typeof feather !== 'undefined') feather.replace();
 
     // Calendar Navigation Listeners
     document.getElementById('prev-month-btn')?.addEventListener('click', () => {
@@ -1310,28 +1434,13 @@ document.addEventListener('DOMContentLoaded', () => {
         renderCalendar(currentCalendarDate);
     });
 
-    // Global Back Button
-    document.querySelectorAll('.back-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            const target = btn.getAttribute('data-target');
-            if (target) {
-                // If returning to profile, refresh calendar to ensure checkmarks are up to date
-                if (target === 'studentProfileScreen') renderCalendar(currentCalendarDate);
-                showScreen(target);
-            }
-        });
-    });
-
-    // Outdoor Specific Back Buttons (Since they use class selector and different logic in some apps, but here generalized)
+    // Outdoor Specific Back Buttons
     document.querySelectorAll('.outdoor-back-btn').forEach(btn => {
         btn.addEventListener('click', () => {
             const target = btn.getAttribute('data-target');
             if(target) {
-                // If leaving tracking, maybe stop tracking? For now just go back.
                 if(target === 'outdoorSelectionScreen') {
-                     if(trackingWatchId) {
-                         // Alert user or auto stop?
-                     }
+                     // Handle tracking stop logic if needed
                 }
                 showScreen(target);
             }
@@ -1390,7 +1499,6 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('generate-analysis-btn')?.addEventListener('click', generateAIAnalysis);
 
     // --- ASSESSMENT FIX (Force listeners) ---
-    // Ensure tabs work even if loaded late or statically
     const tabProfessor = document.getElementById('tab-professor');
     const tabAluno = document.getElementById('tab-aluno');
     const viewProfessor = document.getElementById('view-professor');
