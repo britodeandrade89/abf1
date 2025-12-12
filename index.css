@@ -7,7 +7,7 @@ html {
 
 body {
     font-family: 'Inter', sans-serif;
-    color: white;
+    color: #f3f4f6; /* Lighter base text (gray-100) */
     background-color: #000000;
     /* Gradient: Black top -> Red bottom (Smooth) */
     background-image: linear-gradient(to bottom, #000000 0%, #991b1b 100%);
@@ -20,8 +20,8 @@ body {
 }
 
 /* Global resets for text color in dark mode context */
-h1, h2, h3, h4, h5, h6 { color: white; }
-p, label, span, div { color: white; }
+h1, h2, h3, h4, h5, h6 { color: #ffffff; }
+p, label, span, div { color: #e5e7eb; /* gray-200 */ }
 
 /* --- MAP CONTAINER --- */
 .map-container {
@@ -124,7 +124,7 @@ p, label, span, div { color: white; }
     font-size: 0.85rem;
     letter-spacing: 0.1em;
     text-transform: uppercase;
-    color: #e5e7eb !important;
+    color: #f3f4f6 !important;
     margin-bottom: -5px;
     z-index: 2;
     text-shadow: 0 1px 2px black;
@@ -290,7 +290,7 @@ input:checked + .slider:before {
     background: linear-gradient(145deg, #1f2937, #111827);
     border: 1px solid #374151;
     border-radius: 12px;
-    color: white !important;
+    color: #f3f4f6 !important;
 }
 
 .metal-btn-highlight {
@@ -307,9 +307,10 @@ input:checked + .slider:before {
     align-items: center;
     justify-content: center;
     border-radius: 6px;
-    color: white !important;
+    color: #ffffff !important;
     background: rgba(255,255,255,0.05);
     aspect-ratio: 1;
+    font-weight: 500;
 }
 .calendar-day.today { border: 2px solid #ef4444; }
 .calendar-day.treino-A-completed { background: #2563eb; }

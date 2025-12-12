@@ -27,18 +27,19 @@ let currentCalendarDate = new Date(); // Track calendar state
 // --- DATABASE ---
 const database = {
     users: [
-        { id: 1, name: 'André Brito', email: 'britodeandrade@gmail.com', photo: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/3Zy4n6ZmWp9DW98VtXpO.jpeg', weightHistory: [], nutritionistData: { consultation: { step: 0, answers: {} }, plans: [], status: 'idle' }, periodizationStartDate: '2025-01-15', stressData: { assessments: [] } }
+        { id: 1, name: 'André Brito', email: 'britodeandrade@gmail.com', photo: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/3Zy4n6ZmWp9DW98VtXpO.jpeg', weightHistory: [], nutritionistData: { consultation: { step: 0, answers: {} }, plans: [], status: 'idle' }, periodizationStartDate: '2025-01-15', stressData: { assessments: [] } },
+        { id: 2, name: 'Marcelly Bispo', email: 'marcelly@gmail.com', photo: 'https://ui-avatars.com/api/?name=Marcelly+Bispo&background=db2777&color=fff', weightHistory: [], nutritionistData: { consultation: { step: 0, answers: {} }, plans: [], status: 'idle' }, periodizationStartDate: '2025-01-15', stressData: { assessments: [] } }
     ],
     trainingPlans: { treinosA: {}, treinosB: {}, periodizacao: {} },
     userRunningWorkouts: {},
-    completedWorkouts: {},
+    completedWorkouts: {}, // Stores detailed history { date: 'YYYY-MM-DD', type: 'Treino A', duration: '50 min' }
     activeSessions: {},
     raceCalendar: []
 };
 
 // --- STORAGE ---
 const STORAGE_KEYS = {
-    DATABASE: 'abfit_database_v2',
+    DATABASE: 'abfit_database_v3', // Incremented for new data structure
     CURRENT_USER: 'abfit_current_user'
 };
 
@@ -90,9 +91,15 @@ function calculatePace(ms: number, meters: number) {
 // --- INITIALIZATION ---
 function initializeDatabase() {
     const db = getDatabase();
-    const email = 'britodeandrade@gmail.com';
     
-    // Default Workout Data (André Brito)
+    const usersToInit = ['britodeandrade@gmail.com', 'marcelly@gmail.com'];
+    
+    // Ensure Marcelly is in the user list if loaded from old DB
+    if (!db.users.find((u: any) => u.email === 'marcelly@gmail.com')) {
+        db.users.push({ id: 2, name: 'Marcelly Bispo', email: 'marcelly@gmail.com', photo: 'https://ui-avatars.com/api/?name=Marcelly+Bispo&background=db2777&color=fff', weightHistory: [], nutritionistData: { consultation: { step: 0, answers: {} }, plans: [], status: 'idle' }, periodizationStartDate: '2025-01-15', stressData: { assessments: [] } });
+    }
+
+    // Default Workout Data
     const treinosA = [
         { name: 'Agachamento livre com HBC', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/77Uth2fQUxtPXvqu1UCb.png', sets: '3', reps: '10', carga: '12', obs: 'Método Simples' },
         { name: 'Leg press horizontal', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/qF4Qx4su0tiGLT3oTZqu.png', sets: '3', reps: '10', carga: '40', obs: 'Método Simples' },
@@ -121,7 +128,6 @@ function initializeDatabase() {
         { name: 'Abdominal remador no solo', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/sGz9YqGUPf7lIqX8vULE.png', sets: '3', reps: '15', carga: '0', obs: 'Método Simples' }
     ];
 
-    // UPDATED RUNNING WORKOUTS (Structured)
     const runningWorkouts = [
         { 
             title: 'Tiros de 400m', 
@@ -161,29 +167,52 @@ function initializeDatabase() {
         }
     ];
 
-    // UPDATED RACE CALENDAR 2026 (RJ)
-    const raceCalendar = [
-        { name: 'Corrida de São Sebastião', date: '2026-01-20', location: 'Aterro do Flamengo', distance: '5km / 10km' },
-        { name: 'Circuito das Estações - Outono', date: '2026-03-15', location: 'Aterro do Flamengo', distance: '5km / 10km' },
-        { name: 'Corrida da Ponte', date: '2026-05-24', location: 'Niterói -> Rio', distance: '21km' },
-        { name: 'Maratona do Rio', date: '2026-06-14', location: 'Aterro do Flamengo', distance: '5km / 10km / 21km / 42km' },
-        { name: 'Circuito das Estações - Inverno', date: '2026-07-12', location: 'Aterro do Flamengo', distance: '5km / 10km' },
-        { name: 'Meia Maratona Internacional do Rio', date: '2026-08-16', location: 'Leblon -> Flamengo', distance: '21km' },
-        { name: 'Circuito das Estações - Primavera', date: '2026-09-13', location: 'Copacabana', distance: '5km / 10km' },
-        { name: 'Night Run - Etapa Rio', date: '2026-10-24', location: 'Aterro do Flamengo', distance: '5km / 10km' },
-        { name: 'Rio S-21K', date: '2026-11-22', location: 'Praia do Leblon', distance: '10km / 21km' },
-        { name: 'Circuito das Estações - Verão', date: '2026-12-06', location: 'Aterro do Flamengo', distance: '5km / 10km' }
-    ];
+    // Initialize data for both users
+    usersToInit.forEach(email => {
+        if (!db.trainingPlans.treinosA[email]) db.trainingPlans.treinosA[email] = treinosA;
+        if (!db.trainingPlans.treinosB[email]) db.trainingPlans.treinosB[email] = treinosB;
+        db.userRunningWorkouts[email] = runningWorkouts;
 
-    // Periodization History Data - DYNAMIC DATES
+        // --- HISTORY INJECTION (Specific Request) ---
+        // Inject history for the current month days 8, 9, 10
+        const now = new Date();
+        const y = now.getFullYear();
+        const m = String(now.getMonth() + 1).padStart(2, '0');
+        
+        // Define specific history items
+        const historyData = [
+            { date: `${y}-${m}-08`, type: 'Treino A', duration: '50 min' },
+            { date: `${y}-${m}-09`, type: 'Treino B', duration: '50 min' },
+            { date: `${y}-${m}-10`, type: 'Treino A', duration: '37 min' }
+        ];
+
+        // Ensure array exists
+        if (!db.completedWorkouts[email]) db.completedWorkouts[email] = [];
+
+        // Add if not present (simple check to avoid dupes on re-init)
+        historyData.forEach(item => {
+            if (!db.completedWorkouts[email].some((w:any) => w.date === item.date)) {
+                db.completedWorkouts[email].push(item);
+                
+                // Sync with Check-ins (Visual dots on calendar)
+                const planKey = item.type === 'Treino A' ? 'treinosA' : 'treinosB';
+                const plan = db.trainingPlans[planKey][email];
+                if(plan) {
+                    // Mark the first exercise as checked-in for that day to trigger the visual indicator
+                    if(!plan[0].checkIns) plan[0].checkIns = [];
+                    if(!plan[0].checkIns.includes(item.date)) plan[0].checkIns.push(item.date);
+                }
+            }
+        });
+    });
+
+    // Periodization Logic (Shared)
     const startDate = getMonday(new Date());
-    
     const addWeeks = (date: Date, weeks: number) => {
         const result = new Date(date);
         result.setDate(result.getDate() + (weeks * 7));
         return result;
     };
-
     const p1Start = startDate;
     const p1End = addWeeks(p1Start, 2); 
     const p2Start = new Date(p1End);
@@ -197,74 +226,20 @@ function initializeDatabase() {
     const p4End = addWeeks(p4Start, 2);
 
     const periodizacaoTemplate = [
-        { 
-            id: 1, 
-            fase: 'Adaptação', 
-            inicio: formatDate(p1Start), 
-            fim: formatDate(p1End), 
-            objetivo: 'Resistência Muscular', 
-            status: 'Não Começou', 
-            series: '3',
-            repeticoes: '10', 
-            detalhes: 'Fase de adaptação anatômica. Foco na execução correta e cadência controlada. Utilize cargas moderadas para preparar as articulações.' 
-        },
-        { 
-            id: 2, 
-            fase: 'Hipertrofia I', 
-            inicio: formatDate(p2Start), 
-            fim: formatDate(p2End), 
-            objetivo: 'Ganho de Massa', 
-            status: 'Não Começou', 
-            series: '3',
-            repeticoes: '10',
-            detalhes: 'Fase principal de construção muscular. Volume de treino moderado a alto. Carga desafiadora, buscando a falha próxima da décima repetição.' 
-        },
-        { 
-            id: 3, 
-            fase: 'Hipertrofia II', 
-            inicio: formatDate(p3Start), 
-            fim: formatDate(p3End), 
-            objetivo: 'Definição e Volume', 
-            status: 'Não Começou', 
-            series: '3',
-            repeticoes: '10',
-            detalhes: 'Intensificação do treino para refinar a musculatura. Uso de técnicas avançadas como dropsets na última série para aumentar o estresse metabólico.' 
-        },
-        { 
-            id: 4, 
-            fase: 'Força Pura', 
-            inicio: formatDate(p4Start), 
-            fim: formatDate(p4End), 
-            objetivo: 'Aumento de Carga', 
-            status: 'Não Começou', 
-            series: '4',
-            repeticoes: '4-6',
-            detalhes: 'Foco no aumento de força bruta e tensão mecânica. Cargas altas e descanso maior entre séries (2 a 3 minutos).' 
-        }
+        { id: 1, fase: 'Adaptação', inicio: formatDate(p1Start), fim: formatDate(p1End), objetivo: 'Resistência Muscular', status: 'Não Começou', series: '3', repeticoes: '10', detalhes: 'Fase de adaptação anatômica.' },
+        { id: 2, fase: 'Hipertrofia I', inicio: formatDate(p2Start), fim: formatDate(p2End), objetivo: 'Ganho de Massa', status: 'Não Começou', series: '3', repeticoes: '10', detalhes: 'Fase principal de construção muscular.' },
+        { id: 3, fase: 'Hipertrofia II', inicio: formatDate(p3Start), fim: formatDate(p3End), objetivo: 'Definição e Volume', status: 'Não Começou', series: '3', repeticoes: '10', detalhes: 'Intensificação do treino.' },
+        { id: 4, fase: 'Força Pura', inicio: formatDate(p4Start), fim: formatDate(p4End), objetivo: 'Aumento de Carga', status: 'Não Começou', series: '4', repeticoes: '4-6', detalhes: 'Foco no aumento de força bruta.' }
     ];
 
-    // Ensure plans exist for user
-    if (!db.trainingPlans.treinosA[email]) db.trainingPlans.treinosA[email] = treinosA;
-    if (!db.trainingPlans.treinosB[email]) db.trainingPlans.treinosB[email] = treinosB;
-    
-    // FORCE UPDATE RUNNING WORKOUTS (to fix structure issues)
-    db.userRunningWorkouts[email] = runningWorkouts;
-    
-    // FORCE UPDATE RACE CALENDAR FOR 2026
-    db.raceCalendar = raceCalendar;
-    
-    // Merge existing status with new dates/template
-    const existingPeriodization = db.trainingPlans.periodizacao[email] || [];
-    
-    const mergedPeriodization = periodizacaoTemplate.map(newItem => {
-        const existingItem = existingPeriodization.find((oldItem: any) => oldItem.id === newItem.id);
-        if (existingItem) {
-            return { ...newItem, status: existingItem.status };
-        }
-        return newItem;
+    usersToInit.forEach(email => {
+        const existing = db.trainingPlans.periodizacao[email] || [];
+        const merged = periodizacaoTemplate.map(newItem => {
+            const old = existing.find((o: any) => o.id === newItem.id);
+            return old ? { ...newItem, status: old.status } : newItem;
+        });
+        db.trainingPlans.periodizacao[email] = merged;
     });
-
-    db.trainingPlans.periodizacao[email] = mergedPeriodization;
     
     saveDatabase(db);
 }
@@ -408,6 +383,65 @@ function showScreen(screenId: string) {
 // Alias for compatibility if needed
 const transitionScreen = showScreen;
 
+// --- RENDER HISTORY LIST ---
+function renderTrainingHistory(email: string) {
+    const historyContainer = document.getElementById('training-history-container');
+    if (!historyContainer) return;
+
+    const db = getDatabase();
+    // Get history for this user
+    let history = db.completedWorkouts?.[email] || [];
+    
+    // Filter for current displayed month/year in calendar
+    const year = currentCalendarDate.getFullYear();
+    const month = currentCalendarDate.getMonth(); // 0-indexed
+
+    // Format YYYY-MM prefix string
+    const monthPrefix = `${year}-${String(month + 1).padStart(2, '0')}`;
+
+    // Filter and Sort by date descending
+    const monthlyHistory = history.filter((h: any) => h.date.startsWith(monthPrefix))
+                                  .sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+    if (monthlyHistory.length === 0) {
+        historyContainer.innerHTML = '<p class="text-gray-400 text-center text-sm mt-4">Nenhum histórico neste mês.</p>';
+        return;
+    }
+
+    let html = '<h3 class="text-lg font-bold text-white mb-3 px-1">Histórico Recente</h3><div class="space-y-2">';
+    
+    monthlyHistory.forEach((item: any) => {
+        const dateObj = new Date(item.date + 'T00:00:00'); // Fix TZ
+        const day = String(dateObj.getDate()).padStart(2, '0');
+        
+        html += `
+            <div class="flex items-center justify-between bg-gray-800/80 p-3 rounded-xl border border-gray-700">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-gray-700 rounded-lg flex flex-col items-center justify-center border border-gray-600">
+                        <span class="text-xs text-gray-400 uppercase font-bold">DIA</span>
+                        <span class="text-lg font-bold text-white leading-none">${day}</span>
+                    </div>
+                    <div>
+                        <p class="text-white font-bold text-sm">${item.type}</p>
+                        <div class="flex items-center gap-1">
+                            <i data-feather="check-circle" class="w-3 h-3 text-green-500"></i>
+                            <span class="text-xs text-green-400 font-medium">Concluído</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="text-right">
+                    <p class="text-xs text-gray-400 font-bold uppercase mb-0.5">Tempo</p>
+                    <p class="text-white font-bold font-mono bg-gray-900/50 px-2 py-1 rounded text-xs border border-gray-600">${item.duration}</p>
+                </div>
+            </div>
+        `;
+    });
+    
+    html += '</div>';
+    historyContainer.innerHTML = html;
+    if (typeof feather !== 'undefined') feather.replace();
+}
+
 // --- CALENDAR LOGIC ---
 function renderCalendar(date: Date) {
     const grid = document.getElementById('calendar-grid');
@@ -461,6 +495,11 @@ function renderCalendar(date: Date) {
         }
 
         grid.appendChild(cell);
+    }
+
+    // Update History List below calendar
+    if (email) {
+        renderTrainingHistory(email);
     }
 }
 
