@@ -534,34 +534,51 @@ function loadTrainingScreen(type: string, email?: string) {
 
             wrapper.innerHTML = `
                 ${lineHTML}
-                <div class="metal-card-exercise" onclick="openExerciseModal(${i}, '${type}')">
-                    <!-- Image -->
-                    <div class="relative">
-                        <img src="${ex.img}" class="exercise-thumbnail">
-                        <div class="absolute inset-0 flex items-center justify-center">
-                            <i data-feather="play-circle" class="text-white w-6 h-6 drop-shadow-md"></i>
+                <div class="metal-card-exercise flex-col !items-stretch !gap-3 h-auto" onclick="openExerciseModal(${i}, '${type}')">
+                    <!-- Row 1: Image, Title, Toggle -->
+                    <div class="flex items-start gap-3 relative">
+                        <!-- Image -->
+                        <div class="relative shrink-0">
+                            <img src="${ex.img}" class="exercise-thumbnail w-16 h-16 object-cover rounded-lg shadow-sm border border-gray-400">
+                            <div class="absolute inset-0 flex items-center justify-center">
+                                <i data-feather="play-circle" class="text-white w-6 h-6 drop-shadow-md opacity-80"></i>
+                            </div>
+                        </div>
+
+                        <!-- Title -->
+                        <div class="flex-grow min-w-0 pt-0.5">
+                            <h3 class="font-black text-gray-900 text-sm leading-tight pr-10 uppercase tracking-tight">
+                                ${i + 1}. ${cleanName}
+                            </h3>
+                            ${label ? `<p class="text-[10px] font-bold text-red-600 mt-0.5 tracking-wider">${label}</p>` : ''}
+                        </div>
+
+                        <!-- Toggle Switch (Absolute top right of container) -->
+                        <div class="toggle-switch absolute top-0 right-0" onclick="event.stopPropagation()">
+                            <label>
+                                <input type="checkbox" class="exercise-check" data-idx="${i}" ${isChecked ? 'checked' : ''}>
+                                <span class="slider"></span>
+                            </label>
                         </div>
                     </div>
 
-                    <!-- Info -->
-                    <div class="flex-grow min-w-0">
-                        <h3 class="font-bold text-sm leading-tight pr-2 whitespace-normal">
-                            ${i + 1}. ${cleanName}
-                        </h3>
-                        ${label ? `<p class="text-[10px] font-bold text-gray-700 mt-0.5">${label}</p>` : ''}
-                        <div class="flex items-center gap-3 mt-1 text-[11px] font-bold text-gray-800">
-                             <span class="flex items-center gap-1"><i class="fas fa-layer-group text-xs text-gray-600"></i> ${ex.sets}</span>
-                             <span class="flex items-center gap-1"><i class="fas fa-dumbbell text-xs text-gray-600"></i> ${ex.reps}</span>
-                             <span class="flex items-center gap-1"><i class="fas fa-weight-hanging text-xs text-gray-600"></i> ${ex.carga}kg</span>
-                        </div>
-                    </div>
-
-                    <!-- Toggle Switch -->
-                    <div class="toggle-switch" onclick="event.stopPropagation()">
-                        <label>
-                            <input type="checkbox" class="exercise-check" data-idx="${i}" ${isChecked ? 'checked' : ''}>
-                            <span class="slider"></span>
-                        </label>
+                    <!-- Row 2: Data Grid (The Big Change) -->
+                    <div class="grid grid-cols-3 gap-2">
+                         <!-- Sets -->
+                         <div class="bg-gray-300/60 rounded-lg p-1.5 border border-gray-400 flex flex-col items-center justify-center shadow-inner">
+                            <span class="text-[9px] font-bold text-gray-600 uppercase tracking-wider mb-0.5">Séries</span>
+                            <span class="text-xl font-black text-blue-800 leading-none">${ex.sets}</span>
+                         </div>
+                         <!-- Reps -->
+                         <div class="bg-gray-300/60 rounded-lg p-1.5 border border-gray-400 flex flex-col items-center justify-center shadow-inner">
+                            <span class="text-[9px] font-bold text-gray-600 uppercase tracking-wider mb-0.5">Reps</span>
+                            <span class="text-xl font-black text-orange-700 leading-none">${ex.reps}</span>
+                         </div>
+                         <!-- Load -->
+                         <div class="bg-gray-300/60 rounded-lg p-1.5 border border-gray-400 flex flex-col items-center justify-center shadow-inner">
+                            <span class="text-[9px] font-bold text-gray-600 uppercase tracking-wider mb-0.5">Carga</span>
+                            <span class="text-xl font-black text-red-700 leading-none">${ex.carga}<span class="text-xs ml-0.5 font-bold">kg</span></span>
+                         </div>
                     </div>
                 </div>
             `;
