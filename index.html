@@ -34,6 +34,14 @@
     <!-- Marked.js for Markdown parsing -->
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 
+    <!-- CRITICAL: Process Polyfill for GenAI SDK -->
+    <script>
+        window.process = {
+            env: {
+                NODE_ENV: 'production'
+            }
+        };
+    </script>
 
     <link rel="stylesheet" href="index.css">
 <script type="importmap">
@@ -49,7 +57,7 @@
 <body class="overscroll-none">
 
     <!-- ======================= SPLASH SCREEN ======================= -->
-    <div id="splashScreen" class="w-full h-screen flex flex-col items-center justify-center bg-black z-50 fixed inset-0">
+    <div id="splashScreen" class="w-full h-screen flex flex-col items-center justify-center bg-black z-50 fixed inset-0 transition-opacity duration-500">
         <div class="p-6 flex flex-col items-center">
             <div class="inline-flex flex-col items-center">
                 <h1 class="abfit-logo-style text-8xl mb-0 leading-none">
@@ -722,7 +730,22 @@
     </div>
 
     <!-- Scripts -->
-    <script src="index.js"></script>
+    <script type="module" src="index.js"></script>
     <script src="assessment.js"></script>
+    
+    <!-- Failsafe: Hide splash if JS errors out -->
+    <script>
+        setTimeout(() => {
+            const splash = document.getElementById('splashScreen');
+            const app = document.getElementById('appContainer');
+            if(splash && !splash.classList.contains('hidden') && app.classList.contains('init-hidden')) {
+                console.warn("Failsafe triggered: Hiding splash screen due to timeout.");
+                splash.classList.add('hidden');
+                app.classList.remove('hidden');
+                app.classList.remove('init-hidden');
+                document.getElementById('loginScreen').style.display = 'block';
+            }
+        }, 5000);
+    </script>
 </body>
 </html>
