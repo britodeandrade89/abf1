@@ -464,6 +464,48 @@ function renderCalendar(date: Date) {
     }
 }
 
+// Global function to toggle individual sets
+(window as any).toggleSet = (idx: number, type: string, setNum: number) => {
+    const db = getDatabase();
+    const email = getCurrentUser();
+    if (!email) return;
+
+    const exercise = db.trainingPlans[`treinos${type}`][email][idx];
+    const todayStr = new Date().toISOString().split('T')[0];
+
+    // Initialize doneSets if not present
+    if (!exercise.doneSets) exercise.doneSets = [];
+
+    // Toggle logic
+    if (exercise.doneSets.includes(setNum)) {
+        exercise.doneSets = exercise.doneSets.filter((s: number) => s !== setNum);
+    } else {
+        exercise.doneSets.push(setNum);
+    }
+
+    // Auto-complete logic
+    const totalSets = parseInt(exercise.sets) || 3;
+    if (exercise.doneSets.length >= totalSets) {
+        // If not already checked in for today, check it in
+        if (!exercise.checkIns) exercise.checkIns = [];
+        if (!exercise.checkIns.includes(todayStr)) {
+            exercise.checkIns.push(todayStr);
+        }
+    }
+
+    // Save and re-render
+    saveDatabase(db);
+    
+    // We need to re-render the screen to show updated bubbles and switch
+    // Accessing the function globally since it's defined in the module scope
+    (window as any).loadTrainingScreen(type);
+    
+    // Stop propagation to prevent opening the modal when clicking the set button
+    if (window.event) {
+        window.event.stopPropagation();
+    }
+};
+
 // --- TRAINING SCREEN LOGIC (METALLIC LAYOUT) ---
 function loadTrainingScreen(type: string, email?: string) {
     const userEmail = email || getCurrentUser();
@@ -522,6 +564,24 @@ function loadTrainingScreen(type: string, email?: string) {
             const label = conjugadoId ? `(CONJUGADO ${conjugadoId})` : '';
             const isChecked = ex.checkIns && ex.checkIns.includes(todayStr);
 
+            // Set Logic
+            const totalSets = parseInt(ex.sets) || 3; // Default to 3 if parse fails
+            const doneSets = ex.doneSets || [];
+            let setsHtml = '';
+            
+            for (let s = 1; s <= totalSets; s++) {
+                const isDone = doneSets.includes(s);
+                const bgClass = isDone ? 'bg-green-500 border-green-600 text-white' : 'bg-gray-400/50 border-gray-400 text-gray-700 hover:bg-gray-400';
+                
+                setsHtml += `
+                    <div onclick="toggleSet(${i}, '${type}', ${s})" 
+                         class="w-6 h-6 rounded-full border ${bgClass} flex items-center justify-center font-bold text-xs cursor-pointer shadow-sm transition-all active:scale-95">
+                        ${s}
+                    </div>
+                `;
+            }
+
+
             // Container Wrapper (Handles line positioning)
             const wrapper = document.createElement('div');
             // If it's a superset, add wrapper class for indentation
@@ -564,20 +624,28 @@ function loadTrainingScreen(type: string, email?: string) {
 
                     <!-- Row 2: Data Grid (The Big Change) -->
                     <div class="grid grid-cols-3 gap-2">
-                         <!-- Sets -->
-                         <div class="bg-gray-300/60 rounded-lg p-1.5 border border-gray-400 flex flex-col items-center justify-center shadow-inner">
-                            <span class="text-[9px] font-bold text-gray-600 uppercase tracking-wider mb-0.5">Séries</span>
-                            <span class="text-xl font-black text-blue-800 leading-none">${ex.sets}</span>
+                         <!-- Sets (DIVIDED) -->
+                         <div class="bg-gray-300/60 rounded-lg p-1.5 border border-gray-400 flex flex-col justify-between shadow-inner h-20" onclick="event.stopPropagation()">
+                             <!-- Top: Total -->
+                             <div class="flex flex-col items-center justify-center border-b border-gray-400/30 pb-1">
+                                <span class="text-[9px] font-bold text-gray-600 uppercase tracking-wider mb-0.5">Séries</span>
+                                <span class="text-xl font-black text-blue-800 leading-none">${ex.sets}</span>
+                             </div>
+                             <!-- Bottom: Tracker -->
+                             <div class="flex justify-center items-center gap-1 h-full pt-1 px-1">
+                                ${setsHtml}
+                             </div>
                          </div>
+
                          <!-- Reps -->
-                         <div class="bg-gray-300/60 rounded-lg p-1.5 border border-gray-400 flex flex-col items-center justify-center shadow-inner">
+                         <div class="bg-gray-300/60 rounded-lg p-1.5 border border-gray-400 flex flex-col items-center justify-center shadow-inner h-20">
                             <span class="text-[9px] font-bold text-gray-600 uppercase tracking-wider mb-0.5">Reps</span>
-                            <span class="text-xl font-black text-orange-700 leading-none">${ex.reps}</span>
+                            <span class="text-2xl font-black text-orange-700 leading-none">${ex.reps}</span>
                          </div>
                          <!-- Load -->
-                         <div class="bg-gray-300/60 rounded-lg p-1.5 border border-gray-400 flex flex-col items-center justify-center shadow-inner">
+                         <div class="bg-gray-300/60 rounded-lg p-1.5 border border-gray-400 flex flex-col items-center justify-center shadow-inner h-20">
                             <span class="text-[9px] font-bold text-gray-600 uppercase tracking-wider mb-0.5">Carga</span>
-                            <span class="text-xl font-black text-red-700 leading-none">${ex.carga}<span class="text-xs ml-0.5 font-bold">kg</span></span>
+                            <span class="text-2xl font-black text-red-700 leading-none">${ex.carga}<span class="text-xs ml-0.5 font-bold">kg</span></span>
                          </div>
                     </div>
                 </div>
@@ -597,14 +665,20 @@ function loadTrainingScreen(type: string, email?: string) {
                 if (!exercise.checkIns) exercise.checkIns = [];
                 if (target.checked) {
                     if (!exercise.checkIns.includes(todayStr)) exercise.checkIns.push(todayStr);
+                    // Optional: If manual check, mark all sets as done? 
+                    // For now, let's keep them independent or user can fill them manually.
                 } else {
                     exercise.checkIns = exercise.checkIns.filter((d: string) => d !== todayStr);
+                    // Optional: Clear sets if unchecked?
+                    // exercise.doneSets = [];
                 }
                 saveDatabase(db);
                 // Refresh calendar if visible
                 if (document.getElementById('studentProfileScreen')?.style.display === 'block') {
                     renderCalendar(currentCalendarDate);
                 }
+                // Re-render to update UI consistency if needed
+                loadTrainingScreen(type); 
             });
         });
 
