@@ -249,24 +249,41 @@ async function fetchWeather() {
     const widget = document.getElementById('weather-widget');
     if (!widget) return;
 
-    // Default to Rio
+    // Default to Rio (Fallback)
     let lat = -22.9068;
     let lon = -43.1729;
     let city = "Rio de Janeiro";
 
     try {
+        // High Accuracy Request - Crucial for specific cities like Maricá
         const position: any = await new Promise((resolve, reject) => {
-            navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 5000 });
+            navigator.geolocation.getCurrentPosition(resolve, reject, {
+                enableHighAccuracy: true, 
+                timeout: 10000, // 10s wait to lock GPS
+                maximumAge: 0   // Force new reading
+            });
         });
         lat = position.coords.latitude;
         lon = position.coords.longitude;
         
-        // Simple reverse geocode attempt
+        // Use Nominatim (OpenStreetMap) for better local precision
+        // This discriminates correctly between municipalities
         try {
-             const geoRes = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=pt`);
+             const geoRes = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=10`);
              const geoData = await geoRes.json();
-             if(geoData.city) city = geoData.city;
-             else if (geoData.locality) city = geoData.locality;
+             
+             if (geoData && geoData.address) {
+                 // Hierarchy to find the most relevant city name
+                 city = geoData.address.city || 
+                        geoData.address.town || 
+                        geoData.address.municipality || 
+                        geoData.address.village || 
+                        geoData.address.suburb || 
+                        city;
+                 
+                 // Cleanup common prefixes if present
+                 if (city.includes("Município de")) city = city.replace("Município de ", "");
+             }
         } catch(e) {
             console.log("Geo lookup failed, using coordinates or default");
         }
