@@ -39,7 +39,7 @@ const database = {
 
 // --- STORAGE ---
 const STORAGE_KEYS = {
-    DATABASE: 'abfit_database_v5', // Incremented to force update for new email
+    DATABASE: 'abfit_database_v6', // Incremented to force update for Marcelly's workout modification
     CURRENT_USER: 'abfit_current_user'
 };
 
@@ -169,10 +169,18 @@ function initializeDatabase() {
 
     // Initialize data for both users
     usersToInit.forEach(email => {
-        // Force update Marcelly to match André's template exactly
+        // Force update Marcelly: Match André's template but REMOVE exercise #10 from both A and B
         if (email === 'Marcellybispo92@gmail.com') {
-             db.trainingPlans.treinosA[email] = JSON.parse(JSON.stringify(treinosA));
-             db.trainingPlans.treinosB[email] = JSON.parse(JSON.stringify(treinosB));
+             // Deep copy
+             let tA = JSON.parse(JSON.stringify(treinosA));
+             let tB = JSON.parse(JSON.stringify(treinosB));
+             
+             // Remove 10th item (index 9) from both if they exist
+             if(tA.length >= 10) tA.splice(9, 1);
+             if(tB.length >= 10) tB.splice(9, 1);
+
+             db.trainingPlans.treinosA[email] = tA;
+             db.trainingPlans.treinosB[email] = tB;
         } else {
             // Normal init for others (Andre)
             if (!db.trainingPlans.treinosA[email]) db.trainingPlans.treinosA[email] = treinosA;
@@ -207,8 +215,11 @@ function initializeDatabase() {
                 const plan = db.trainingPlans[planKey][email];
                 if(plan) {
                     // Mark the first exercise as checked-in for that day to trigger the visual indicator
-                    if(!plan[0].checkIns) plan[0].checkIns = [];
-                    if(!plan[0].checkIns.includes(item.date)) plan[0].checkIns.push(item.date);
+                    // Note: If the plan array is empty (deleted), this won't crash
+                    if(plan.length > 0) {
+                        if(!plan[0].checkIns) plan[0].checkIns = [];
+                        if(!plan[0].checkIns.includes(item.date)) plan[0].checkIns.push(item.date);
+                    }
                 }
             }
         });
