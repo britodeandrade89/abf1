@@ -28,7 +28,7 @@ let currentCalendarDate = new Date(); // Track calendar state
 const database = {
     users: [
         { id: 1, name: 'André Brito', email: 'britodeandrade@gmail.com', photo: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/3Zy4n6ZmWp9DW98VtXpO.jpeg', weightHistory: [], nutritionistData: { consultation: { step: 0, answers: {} }, plans: [], status: 'idle' }, periodizationStartDate: '2025-01-15', stressData: { assessments: [] } },
-        { id: 2, name: 'Marcelly Bispo', email: 'marcelly@gmail.com', photo: 'https://ui-avatars.com/api/?name=Marcelly+Bispo&background=db2777&color=fff', weightHistory: [], nutritionistData: { consultation: { step: 0, answers: {} }, plans: [], status: 'idle' }, periodizationStartDate: '2025-01-15', stressData: { assessments: [] } }
+        { id: 2, name: 'Marcelly Bispo', email: 'Marcellybispo92@gmail.com', photo: 'https://ui-avatars.com/api/?name=Marcelly+Bispo&background=db2777&color=fff', weightHistory: [], nutritionistData: { consultation: { step: 0, answers: {} }, plans: [], status: 'idle' }, periodizationStartDate: '2025-01-15', stressData: { assessments: [] } }
     ],
     trainingPlans: { treinosA: {}, treinosB: {}, periodizacao: {} },
     userRunningWorkouts: {},
@@ -39,7 +39,7 @@ const database = {
 
 // --- STORAGE ---
 const STORAGE_KEYS = {
-    DATABASE: 'abfit_database_v3', // Incremented for new data structure
+    DATABASE: 'abfit_database_v5', // Incremented to force update for new email
     CURRENT_USER: 'abfit_current_user'
 };
 
@@ -92,14 +92,14 @@ function calculatePace(ms: number, meters: number) {
 function initializeDatabase() {
     const db = getDatabase();
     
-    const usersToInit = ['britodeandrade@gmail.com', 'marcelly@gmail.com'];
+    const usersToInit = ['britodeandrade@gmail.com', 'Marcellybispo92@gmail.com'];
     
     // Ensure Marcelly is in the user list if loaded from old DB
-    if (!db.users.find((u: any) => u.email === 'marcelly@gmail.com')) {
-        db.users.push({ id: 2, name: 'Marcelly Bispo', email: 'marcelly@gmail.com', photo: 'https://ui-avatars.com/api/?name=Marcelly+Bispo&background=db2777&color=fff', weightHistory: [], nutritionistData: { consultation: { step: 0, answers: {} }, plans: [], status: 'idle' }, periodizationStartDate: '2025-01-15', stressData: { assessments: [] } });
+    if (!db.users.find((u: any) => u.email === 'Marcellybispo92@gmail.com')) {
+        db.users.push({ id: 2, name: 'Marcelly Bispo', email: 'Marcellybispo92@gmail.com', photo: 'https://ui-avatars.com/api/?name=Marcelly+Bispo&background=db2777&color=fff', weightHistory: [], nutritionistData: { consultation: { step: 0, answers: {} }, plans: [], status: 'idle' }, periodizationStartDate: '2025-01-15', stressData: { assessments: [] } });
     }
 
-    // Default Workout Data
+    // Default Workout Data (André Brito's Template)
     const treinosA = [
         { name: 'Agachamento livre com HBC', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/77Uth2fQUxtPXvqu1UCb.png', sets: '3', reps: '10', carga: '12', obs: 'Método Simples' },
         { name: 'Leg press horizontal', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/qF4Qx4su0tiGLT3oTZqu.png', sets: '3', reps: '10', carga: '40', obs: 'Método Simples' },
@@ -169,8 +169,16 @@ function initializeDatabase() {
 
     // Initialize data for both users
     usersToInit.forEach(email => {
-        if (!db.trainingPlans.treinosA[email]) db.trainingPlans.treinosA[email] = treinosA;
-        if (!db.trainingPlans.treinosB[email]) db.trainingPlans.treinosB[email] = treinosB;
+        // Force update Marcelly to match André's template exactly
+        if (email === 'Marcellybispo92@gmail.com') {
+             db.trainingPlans.treinosA[email] = JSON.parse(JSON.stringify(treinosA));
+             db.trainingPlans.treinosB[email] = JSON.parse(JSON.stringify(treinosB));
+        } else {
+            // Normal init for others (Andre)
+            if (!db.trainingPlans.treinosA[email]) db.trainingPlans.treinosA[email] = treinosA;
+            if (!db.trainingPlans.treinosB[email]) db.trainingPlans.treinosB[email] = treinosB;
+        }
+        
         db.userRunningWorkouts[email] = runningWorkouts;
 
         // --- HISTORY INJECTION (Specific Request) ---
