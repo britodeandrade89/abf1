@@ -38,7 +38,7 @@ p, label, span, div { color: #e5e7eb; /* gray-200 */ }
     font-family: 'Inter', sans-serif;
     font-weight: 900;
     font-style: italic;
-    line-height: 0.85;
+    line-height: 0.8; /* Tighter leading to bring subtitle closer */
     text-transform: uppercase;
     display: inline-flex;
     align-items: center;
@@ -60,6 +60,13 @@ p, label, span, div { color: #e5e7eb; /* gray-200 */ }
     transition: opacity 0.3s ease-in-out;
 }
 #appContainer.init-hidden { opacity: 0; }
+
+/* SPLASH SCREEN TRANSITION */
+.fade-out {
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.5s ease-in-out;
+}
 
 /* Wrapper for screens (the <main> element) */
 .screens-wrapper {
