@@ -70,7 +70,7 @@
         </div>
         <div class="absolute bottom-8 text-center">
             <p class="text-gray-400 text-sm">Desenvolvido por André Brito</p>
-            <p class="text-gray-500 text-xs mt-1">Versão 1.6</p>
+            <p class="text-gray-500 text-xs mt-1">Versão 1.3</p>
         </div>
     </div>
 
@@ -182,32 +182,49 @@
 
                 <div id="training-history-container" class="mt-6"></div>
                 
-                <!-- FOOTER DETALHADO -->
-                <footer class="mt-10 pb-24 pt-6 border-t border-gray-800 bg-transparent rounded-t-3xl -mx-6 px-6">
-                    <div class="grid grid-cols-2 gap-y-6 gap-x-4 mb-6">
+                <!-- FOOTER DETALHADO E FUNCIONAL -->
+                <footer class="mt-10 pb-24 pt-8 border-t border-gray-800 bg-transparent rounded-t-3xl -mx-6 px-6">
+                    <div class="grid grid-cols-2 gap-y-8 gap-x-4 mb-8">
+                        <!-- COLUNA ABFIT -->
                         <div>
-                            <h4 class="text-white font-bold text-xs mb-3 uppercase tracking-wider text-red-500">ABFIT</h4>
-                            <ul class="space-y-2">
-                                <li><a href="#" class="text-gray-500 text-[10px] hover:text-white transition-colors">Sobre nós</a></li>
-                                <li><a href="#" class="text-gray-500 text-[10px] hover:text-white transition-colors">Carreiras</a></li>
+                            <h4 class="text-white font-bold text-xs mb-4 uppercase tracking-wider text-red-500">ABFIT</h4>
+                            <ul class="space-y-3">
+                                <li><button onclick="openInfoModal('sobre')" class="text-gray-400 text-xs hover:text-white transition-colors text-left">Sobre nós</button></li>
+                                <li><button onclick="openInfoModal('carreiras')" class="text-gray-400 text-xs hover:text-white transition-colors text-left">Carreiras</button></li>
+                                <li><button onclick="openInfoModal('imprensa')" class="text-gray-400 text-xs hover:text-white transition-colors text-left">Imprensa</button></li>
                             </ul>
                         </div>
+                        
+                        <!-- COLUNA AJUDA -->
                         <div>
-                            <h4 class="text-white font-bold text-xs mb-3 uppercase tracking-wider text-red-500">Ajuda</h4>
-                            <ul class="space-y-2">
-                                <li><a href="#" class="text-gray-500 text-[10px] hover:text-white transition-colors">Fale Conosco</a></li>
-                                <li><a href="#" class="text-gray-500 text-[10px] hover:text-white transition-colors">Suporte</a></li>
+                            <h4 class="text-white font-bold text-xs mb-4 uppercase tracking-wider text-red-500">Ajuda</h4>
+                            <ul class="space-y-3">
+                                <li><button onclick="openInfoModal('fale')" class="text-gray-400 text-xs hover:text-white transition-colors text-left">Fale Conosco</button></li>
+                                <li><button onclick="openInfoModal('suporte')" class="text-gray-400 text-xs hover:text-white transition-colors text-left">Suporte</button></li>
+                            </ul>
+                        </div>
+
+                        <!-- COLUNA TERMOS (Ocupa largura total na grade se necessário, ou ajustado) -->
+                        <div class="col-span-2">
+                            <h4 class="text-white font-bold text-xs mb-4 uppercase tracking-wider text-red-500">Termos</h4>
+                            <ul class="space-y-3">
+                                <li><button onclick="openInfoModal('privacidade')" class="text-gray-400 text-xs hover:text-white transition-colors text-left">Política de Privacidade</button></li>
+                                <li><button onclick="openInfoModal('termos')" class="text-gray-400 text-xs hover:text-white transition-colors text-left">Termos e Condições</button></li>
                             </ul>
                         </div>
                     </div>
                     
                     <div class="border-t border-gray-800 pt-6">
                         <div class="flex flex-col text-center space-y-4">
-                            <div class="text-[10px] text-gray-500 space-y-1">
+                            <div class="text-xs text-gray-500 space-y-1">
                                 <p class="text-gray-300 font-medium">Desenvolvido por: <span class="text-white font-bold">André Brito</span></p>
-                                <p class="text-gray-600">Versão: 1.6</p>
+                                <p class="text-gray-600">Versão: 1.3</p>
                             </div>
-                            <p class="text-[10px] text-gray-700 mt-2">© 2025 ABFIT Inc.</p>
+                            <div class="text-[10px] text-gray-600 pt-2 border-t border-gray-800/50">
+                                <p>Contato: britodeandrade@gmail.com</p>
+                                <p>+55 21 994 527 694</p>
+                                <p class="mt-2 text-gray-700">© 2025 ABFIT Inc.</p>
+                            </div>
                         </div>
                     </div>
                 </footer>
@@ -646,7 +663,7 @@
         </div>
     </div>
 
-    <!-- ======================= NEW: MODAL FINALIZAR TREINO (SELFIE) ======================= -->
+    <!-- Modal Finalizar Treino -->
     <div id="finishWorkoutModal" class="fixed inset-0 z-[60] hidden flex flex-col items-center justify-center bg-black/95 backdrop-blur-md p-6">
         <div class="w-full max-w-md bg-gray-900 rounded-2xl border border-gray-700 shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
             <!-- Header -->
@@ -696,7 +713,7 @@
         </div>
     </div>
 
-    <!-- ======================= NEW: MODAL DETALHES DO HISTÓRICO (VER FOTO) ======================= -->
+    <!-- Modal Detalhes do Histórico -->
     <div id="workoutResultModal" class="fixed inset-0 z-[60] hidden flex items-center justify-center bg-black/90 backdrop-blur-sm p-4">
         <div class="bg-gray-800 rounded-2xl w-full max-w-sm overflow-hidden shadow-2xl border border-gray-700">
             <div class="relative">
@@ -725,6 +742,26 @@
                         <p id="history-modal-distance" class="text-lg font-bold text-white font-mono">0.00 km</p>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- NEW: Modal Genérico de Informações (Footer) -->
+    <div id="infoModal" class="fixed inset-0 z-[70] hidden flex items-center justify-center bg-black/95 backdrop-blur-md p-6">
+        <div class="w-full max-w-md bg-gray-800 rounded-2xl border border-gray-700 shadow-2xl flex flex-col max-h-[85vh]">
+            <div class="p-5 border-b border-gray-700 flex justify-between items-center bg-gray-900/50 rounded-t-2xl">
+                <h3 id="info-modal-title" class="text-xl font-bold text-white uppercase tracking-wider text-red-500">Título</h3>
+                <button onclick="document.getElementById('infoModal').classList.add('hidden')" class="text-gray-400 hover:text-white p-1">
+                    <i data-feather="x" class="w-6 h-6"></i>
+                </button>
+            </div>
+            <div id="info-modal-body" class="p-6 overflow-y-auto text-gray-300 text-sm leading-relaxed space-y-4">
+                <!-- Conteúdo injetado via JS -->
+            </div>
+            <div class="p-4 border-t border-gray-700 bg-gray-900/50 rounded-b-2xl">
+                <button onclick="document.getElementById('infoModal').classList.add('hidden')" class="w-full py-3 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl shadow-lg transition">
+                    Fechar
+                </button>
             </div>
         </div>
     </div>

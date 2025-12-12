@@ -28,6 +28,98 @@ let currentCalendarDate = new Date(); // Track calendar state
 let tempWorkoutData: any = {};
 let tempWorkoutImage: string | null = null;
 
+// --- FOOTER CONTENT (AI Generated Responses) ---
+const footerContent: any = {
+    'sobre': {
+        title: 'Sobre a ABFIT',
+        body: `
+            <p><strong>Missão:</strong> Transformar vidas através do movimento consciente e da ciência do treinamento físico.</p>
+            <p>A ABFIT, fundada pelo treinador André Brito, não é apenas uma assessoria esportiva, é uma filosofia de vida. Acreditamos que o corpo humano é uma máquina perfeita que precisa de manutenção adequada, desafio constante e respeito aos seus limites.</p>
+            <p>Nossa metodologia combina periodização baseada em evidências científicas com um acompanhamento humano e personalizado. Seja para alta performance, estética ou saúde, nosso compromisso é entregar resultados reais e duradouros, longe de promessas milagrosas.</p>
+            <p>Junte-se à nossa comunidade e descubra sua melhor versão.</p>
+        `
+    },
+    'carreiras': {
+        title: 'Carreiras',
+        body: `
+            <p>Estamos sempre em busca de profissionais apaixonados por saúde e performance.</p>
+            <p>Se você é Personal Trainer, Nutricionista ou Fisioterapeuta e se identifica com uma metodologia séria e baseada em dados, queremos conhecer você.</p>
+            <p class="mt-4"><strong>Vagas Abertas:</strong></p>
+            <ul class="list-disc pl-5 mt-2 space-y-1">
+                <li>Estagiário em Educação Física (Remoto/Híbrido)</li>
+                <li>Treinador Assistente (Foco em Correção de Movimento)</li>
+                <li>Desenvolvedor Full Stack (Foco em React/PWA)</li>
+            </ul>
+            <p class="mt-4">Envie seu currículo e portfólio para: <strong>carreiras@abfit.com.br</strong></p>
+        `
+    },
+    'imprensa': {
+        title: 'Imprensa',
+        body: `
+            <p>Bem-vindo à sala de imprensa da ABFIT.</p>
+            <p>Aqui você encontra nossos releases oficiais, kit de mídia e contatos para solicitações de entrevistas com André Brito.</p>
+            <p class="mt-2">André Brito está disponível para comentar sobre:</p>
+            <ul class="list-disc pl-5 mt-2 space-y-1">
+                <li>Tendências do Fitness em 2025</li>
+                <li>Periodização e Hipertrofia</li>
+                <li>Tecnologia aplicada ao esporte</li>
+            </ul>
+            <p class="mt-4">Contato para jornalistas: <strong>imprensa@abfit.com.br</strong></p>
+        `
+    },
+    'fale': {
+        title: 'Fale Conosco',
+        body: `
+            <p>Tem alguma dúvida, sugestão ou feedback? Nossa equipe está pronta para te ouvir.</p>
+            <p class="mt-4"><strong>Canais de Atendimento:</strong></p>
+            <div class="mt-2 space-y-2">
+                <div class="flex items-center gap-2"><i data-feather="mail" class="text-red-500"></i> britodeandrade@gmail.com</div>
+                <div class="flex items-center gap-2"><i data-feather="phone" class="text-red-500"></i> +55 21 994 527 694</div>
+                <div class="flex items-center gap-2"><i data-feather="instagram" class="text-red-500"></i> @andrebrito.personal</div>
+            </div>
+            <p class="mt-4 text-xs text-gray-500">Horário de atendimento: Seg a Sex, das 08h às 20h.</p>
+        `
+    },
+    'suporte': {
+        title: 'Suporte Técnico',
+        body: `
+            <p>Encontrou algum problema no app? Não se preocupe, vamos resolver.</p>
+            <p class="mt-2">Antes de abrir um chamado, verifique:</p>
+            <ul class="list-disc pl-5 mt-2 space-y-1 text-gray-400">
+                <li>Sua conexão com a internet está ativa?</li>
+                <li>Você está usando a versão mais recente do app (v1.3)?</li>
+                <li>Tente limpar o cache do navegador.</li>
+            </ul>
+            <p class="mt-4">Se o problema persistir, envie um print do erro para o nosso WhatsApp de suporte.</p>
+            <button class="mt-4 w-full bg-green-600 text-white py-2 rounded font-bold">Abrir Chat no WhatsApp</button>
+        `
+    },
+    'privacidade': {
+        title: 'Política de Privacidade',
+        body: `
+            <p><strong>Última atualização: Janeiro de 2025</strong></p>
+            <p class="mt-2">A ABFIT leva sua privacidade a sério. Esta política descreve como coletamos e usamos seus dados.</p>
+            <p class="mt-2"><strong>1. Coleta de Dados:</strong> Coletamos informações como nome, e-mail, dados de saúde (peso, medidas) e localização (apenas durante o uso do rastreamento outdoor) para fornecer nossos serviços.</p>
+            <p class="mt-2"><strong>2. Uso das Informações:</strong> Seus dados são usados exclusivamente para personalizar seus treinos e gerar relatórios de progresso. Não vendemos seus dados para terceiros.</p>
+            <p class="mt-2"><strong>3. Segurança:</strong> Utilizamos criptografia de ponta a ponta e servidores seguros para proteger suas informações.</p>
+            <p class="mt-2"><strong>4. LGPD:</strong> Você tem o direito de solicitar a exclusão ou cópia dos seus dados a qualquer momento através do canal de suporte.</p>
+        `
+    },
+    'termos': {
+        title: 'Termos e Condições',
+        body: `
+            <p>Ao utilizar o aplicativo ABFIT, você concorda com os seguintes termos:</p>
+            <ol class="list-decimal pl-5 mt-2 space-y-2">
+                <li><strong>Responsabilidade Médica:</strong> O usuário declara estar apto fisicamente para a prática de exercícios. A ABFIT recomenda consultar um médico antes de iniciar qualquer programa.</li>
+                <li><strong>Uso Pessoal:</strong> O plano de treino é individual e intransferível. O compartilhamento de conta pode resultar em bloqueio.</li>
+                <li><strong>Propriedade Intelectual:</strong> Todo o conteúdo (vídeos, textos, métodos) é propriedade exclusiva da ABFIT.</li>
+                <li><strong>Cancelamento:</strong> O serviço pode ser cancelado a qualquer momento, respeitando as regras do plano contratado.</li>
+            </ol>
+            <p class="mt-4 text-xs text-gray-500">Ao clicar em "Aceitar" no cadastro, você confirmou a leitura destes termos.</p>
+        `
+    }
+};
+
 // --- DATABASE ---
 const database = {
     users: [
@@ -500,6 +592,18 @@ function renderTrainingHistory(email: string) {
         }
 
         document.getElementById('workoutResultModal')?.classList.remove('hidden');
+        if (typeof feather !== 'undefined') feather.replace();
+    }
+};
+
+// Global open info modal (Footer)
+(window as any).openInfoModal = (key: string) => {
+    const data = footerContent[key];
+    if(data) {
+        document.getElementById('info-modal-title')!.textContent = data.title;
+        document.getElementById('info-modal-body')!.innerHTML = data.body;
+        const modal = document.getElementById('infoModal');
+        modal?.classList.remove('hidden');
         if (typeof feather !== 'undefined') feather.replace();
     }
 };
