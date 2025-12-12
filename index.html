@@ -20,7 +20,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@700&display=swap" rel="stylesheet">
     <!-- Feather Icons -->
     <script src="https://unpkg.com/feather-icons"></script>
     <!-- Chart.js for graphs -->
@@ -49,17 +49,17 @@
 <body class="overscroll-none">
 
     <!-- ======================= SPLASH SCREEN ======================= -->
-    <div id="splashScreen" class="w-full h-screen flex flex-col items-center justify-center bg-black/50 z-50 fixed inset-0">
+    <div id="splashScreen" class="w-full h-screen flex flex-col items-center justify-center">
         <div class="p-6 flex flex-col items-center">
             <!-- Container inline-flex obriga a largura a ser definida pelo conteúdo (Logo) -->
-            <div class="inline-flex flex-col items-center">
+            <div class="inline-flex flex-col w-max">
                 <!-- LOGO RECREATED WITH CSS -->
-                <h1 class="abfit-logo-style text-8xl mb-0 leading-[0.8]">
+                <h1 class="abfit-logo-style text-8xl mb-1 leading-none">
                     <span class="part-ab">AB</span><span class="part-fit">FIT</span>
                 </h1>
-                <!-- Subtitulo ajustado: Fonte Chakra Petch, espaçamento normal, mais próximo do logo -->
-                <p class="text-gray-300 text-[10px] uppercase mt-1 opacity-90 font-['Chakra_Petch'] font-medium tracking-normal text-center">
-                    Assessoria em Treinamentos Físicos
+                <!-- Subtitulo ajustado: Fonte pequena (10px), flex justify-between para alinhar as bordas -->
+                <p class="text-white text-[10px] font-bold uppercase w-full flex justify-between tracking-wider mt-1 opacity-90">
+                    <span>Assessoria</span><span>em</span><span>Treinamentos</span><span>Físicos</span>
                 </p>
             </div>
         </div>
@@ -96,14 +96,11 @@
              <!-- ======================= TELA DE LOGIN ======================= -->
             <div id="loginScreen" class="screen p-6 flex flex-col justify-center">
                 <div class="text-center mb-8 flex justify-center">
-                    <div class="inline-block flex flex-col items-center">
+                    <div class="inline-block">
                         <!-- LOGO RECREATED WITH CSS -->
-                        <h1 class="abfit-logo-style text-7xl mb-0 leading-[0.8]">
+                        <h1 class="abfit-logo-style text-7xl mb-2">
                             <span class="part-ab">AB</span><span class="part-fit">FIT</span>
                         </h1>
-                        <p class="text-gray-400 text-[9px] uppercase mt-1 font-['Chakra_Petch'] font-medium tracking-normal">
-                             Assessoria em Treinamentos Físicos
-                        </p>
                     </div>
                 </div>
                 <div class="bg-gray-800 p-6 rounded-xl border border-gray-700 shadow-xl">
@@ -132,9 +129,9 @@
                     <div class="flex items-start justify-between mb-4">
                         <div class="flex-1"></div> <!-- Espaçador para centralizar o logo -->
                         
-                        <div class="flex-none animate-logo-entry flex flex-col items-center">
+                        <div class="flex-none animate-logo-entry">
                              <!-- LOGO RECREATED WITH CSS -->
-                            <h1 class="abfit-logo-style text-6xl leading-[0.8]">
+                            <h1 class="abfit-logo-style text-6xl">
                                 <span class="part-ab">AB</span><span class="part-fit">FIT</span>
                             </h1>
                         </div>
