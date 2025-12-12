@@ -24,6 +24,10 @@ let currentActivityType: string = "";
 
 let currentCalendarDate = new Date(); // Track calendar state
 
+// --- FINISH WORKOUT STATE ---
+let tempWorkoutData: any = {};
+let tempWorkoutImage: string | null = null;
+
 // --- DATABASE ---
 const database = {
     users: [
@@ -32,14 +36,14 @@ const database = {
     ],
     trainingPlans: { treinosA: {}, treinosB: {}, periodizacao: {} },
     userRunningWorkouts: {},
-    completedWorkouts: {}, // Stores detailed history { date: 'YYYY-MM-DD', type: 'Treino A', duration: '50 min' }
+    completedWorkouts: {}, // Stores detailed history { date: 'YYYY-MM-DD', type: 'Treino A', duration: '50 min', photo: 'base64...' }
     activeSessions: {},
     raceCalendar: []
 };
 
 // --- STORAGE ---
 const STORAGE_KEYS = {
-    DATABASE: 'abfit_database_v7', // Incremented to force update for Marcelly's photo
+    DATABASE: 'abfit_database_v7', 
     CURRENT_USER: 'abfit_current_user'
 };
 
@@ -99,7 +103,6 @@ function initializeDatabase() {
     if (!marcelly) {
         db.users.push({ id: 2, name: 'Marcelly Bispo', email: 'Marcellybispo92@gmail.com', photo: 'marcelly.jpg', weightHistory: [], nutritionistData: { consultation: { step: 0, answers: {} }, plans: [], status: 'idle' }, periodizationStartDate: '2025-01-15', stressData: { assessments: [] } });
     } else {
-        // Update photo if existing user but old photo
         marcelly.photo = 'marcelly.jpg';
     }
 
@@ -171,65 +174,44 @@ function initializeDatabase() {
         }
     ];
 
-    // Initialize data for both users
     usersToInit.forEach(email => {
-        // Force update Marcelly: Match André's template but REMOVE exercise #10 from both A and B
         if (email === 'Marcellybispo92@gmail.com') {
-             // Deep copy
              let tA = JSON.parse(JSON.stringify(treinosA));
              let tB = JSON.parse(JSON.stringify(treinosB));
-             
-             // Remove 10th item (index 9) from both if they exist
              if(tA.length >= 10) tA.splice(9, 1);
              if(tB.length >= 10) tB.splice(9, 1);
-
              db.trainingPlans.treinosA[email] = tA;
              db.trainingPlans.treinosB[email] = tB;
         } else {
-            // Normal init for others (Andre)
             if (!db.trainingPlans.treinosA[email]) db.trainingPlans.treinosA[email] = treinosA;
             if (!db.trainingPlans.treinosB[email]) db.trainingPlans.treinosB[email] = treinosB;
         }
-        
         db.userRunningWorkouts[email] = runningWorkouts;
 
-        // --- HISTORY INJECTION (Specific Request) ---
-        // Inject history for the current month days 8, 9, 10
+        // History injection (keep requested history)
         const now = new Date();
         const y = now.getFullYear();
         const m = String(now.getMonth() + 1).padStart(2, '0');
-        
-        // Define specific history items
         const historyData = [
             { date: `${y}-${m}-08`, type: 'Treino A', duration: '50 min' },
             { date: `${y}-${m}-09`, type: 'Treino B', duration: '50 min' },
             { date: `${y}-${m}-10`, type: 'Treino A', duration: '37 min' }
         ];
-
-        // Ensure array exists
         if (!db.completedWorkouts[email]) db.completedWorkouts[email] = [];
-
-        // Add if not present (simple check to avoid dupes on re-init)
         historyData.forEach(item => {
             if (!db.completedWorkouts[email].some((w:any) => w.date === item.date)) {
                 db.completedWorkouts[email].push(item);
-                
-                // Sync with Check-ins (Visual dots on calendar)
                 const planKey = item.type === 'Treino A' ? 'treinosA' : 'treinosB';
                 const plan = db.trainingPlans[planKey][email];
-                if(plan) {
-                    // Mark the first exercise as checked-in for that day to trigger the visual indicator
-                    // Note: If the plan array is empty (deleted), this won't crash
-                    if(plan.length > 0) {
-                        if(!plan[0].checkIns) plan[0].checkIns = [];
-                        if(!plan[0].checkIns.includes(item.date)) plan[0].checkIns.push(item.date);
-                    }
+                if(plan && plan.length > 0) {
+                    if(!plan[0].checkIns) plan[0].checkIns = [];
+                    if(!plan[0].checkIns.includes(item.date)) plan[0].checkIns.push(item.date);
                 }
             }
         });
     });
 
-    // Periodization Logic (Shared)
+    // Periodization
     const startDate = getMonday(new Date());
     const addWeeks = (date: Date, weeks: number) => {
         const result = new Date(date);
@@ -271,66 +253,41 @@ function initializeDatabase() {
 async function fetchWeather() {
     const widget = document.getElementById('weather-widget');
     if (!widget) return;
-
-    // Default to Rio (Fallback)
     let lat = -22.9068;
     let lon = -43.1729;
     let city = "Rio de Janeiro";
-
     try {
-        // High Accuracy Request - Crucial for specific cities like Maricá
         const position: any = await new Promise((resolve, reject) => {
             navigator.geolocation.getCurrentPosition(resolve, reject, {
                 enableHighAccuracy: true, 
-                timeout: 10000, // 10s wait to lock GPS
-                maximumAge: 0   // Force new reading
+                timeout: 10000, 
+                maximumAge: 0   
             });
         });
         lat = position.coords.latitude;
         lon = position.coords.longitude;
-        
-        // Use Nominatim (OpenStreetMap) for better local precision
-        // This discriminates correctly between municipalities
         try {
              const geoRes = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=10`);
              const geoData = await geoRes.json();
-             
              if (geoData && geoData.address) {
-                 // Hierarchy to find the most relevant city name
-                 city = geoData.address.city || 
-                        geoData.address.town || 
-                        geoData.address.municipality || 
-                        geoData.address.village || 
-                        geoData.address.suburb || 
-                        city;
-                 
-                 // Cleanup common prefixes if present
+                 city = geoData.address.city || geoData.address.town || geoData.address.municipality || geoData.address.village || geoData.address.suburb || city;
                  if (city.includes("Município de")) city = city.replace("Município de ", "");
              }
-        } catch(e) {
-            console.log("Geo lookup failed, using coordinates or default");
-        }
-
-    } catch (e) {
-        console.log("Geolocation denied or error, using default Rio");
-    }
+        } catch(e) {}
+    } catch (e) {}
 
     try {
         const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weather_code&daily=temperature_2m_max,temperature_2m_min&timezone=auto`;
         const res = await fetch(url);
         const data = await res.json();
-
         const currentTemp = Math.round(data.current.temperature_2m);
         const minTemp = Math.round(data.daily.temperature_2m_min[0]);
         const maxTemp = Math.round(data.daily.temperature_2m_max[0]);
         const weatherCode = data.current.weather_code;
-
-        // Map WMO code to icon/color
         let iconName = 'sun';
         let iconColor = 'text-yellow-400';
-        
         if (weatherCode >= 1 && weatherCode <= 3) { iconName = 'cloud'; iconColor = 'text-gray-300'; }
-        else if (weatherCode >= 45 && weatherCode <= 48) { iconName = 'align-justify'; iconColor = 'text-gray-400'; } // Fog approximation
+        else if (weatherCode >= 45 && weatherCode <= 48) { iconName = 'align-justify'; iconColor = 'text-gray-400'; }
         else if (weatherCode >= 51 && weatherCode <= 67) { iconName = 'cloud-drizzle'; iconColor = 'text-blue-400'; }
         else if (weatherCode >= 71) { iconName = 'cloud-rain'; iconColor = 'text-blue-500'; }
         else if (weatherCode >= 95) { iconName = 'cloud-lightning'; iconColor = 'text-yellow-600'; }
@@ -347,9 +304,7 @@ async function fetchWeather() {
             </div>
         `;
         if (typeof feather !== 'undefined') feather.replace();
-
     } catch (err) {
-        console.error("Weather fetch error", err);
         widget.innerHTML = '<span class="text-xs text-red-500">Erro ao carregar clima</span>';
     }
 }
@@ -370,30 +325,23 @@ async function generateAIAnalysis() {
 
     try {
         const userPlans = db.trainingPlans.periodizacao?.[email] || [];
-        // Construct a simple context
         const context = {
             periodization: userPlans.map((p: any) => `${p.fase}: ${p.status} (Obj: ${p.objetivo})`).join('\n')
         };
-
         const prompt = `
             Analise o progresso deste aluno de musculação com base no seguinte histórico de periodização:
             ${context.periodization}
-
             Forneça 3 insights curtos e motivacionais sobre o que esperar das próximas fases e como otimizar os resultados.
             Use formatação HTML simples (negrito, quebras de linha). Responda em português do Brasil, tom de treinador experiente.
         `;
-
         const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
         const response = await ai.models.generateContent({
             model: 'gemini-2.5-flash',
             contents: prompt,
         });
-
         resultDiv.innerHTML = response.text;
         resultDiv.classList.remove('hidden');
-
     } catch (error) {
-        console.error("AI Error:", error);
         resultDiv.innerHTML = "<p class='text-red-400'>Erro ao gerar análise. Tente novamente.</p>";
         resultDiv.classList.remove('hidden');
     } finally {
@@ -411,7 +359,6 @@ function showScreen(screenId: string) {
         s.classList.remove('active');
         (s as HTMLElement).style.display = 'none';
     });
-
     const target = document.getElementById(screenId);
     if (target) {
         target.style.display = 'block';
@@ -420,28 +367,20 @@ function showScreen(screenId: string) {
     window.scrollTo(0, 0);
 }
 
-// Alias for compatibility if needed
-const transitionScreen = showScreen;
-
 // --- RENDER HISTORY LIST ---
 function renderTrainingHistory(email: string) {
     const historyContainer = document.getElementById('training-history-container');
     if (!historyContainer) return;
 
     const db = getDatabase();
-    // Get history for this user
     let history = db.completedWorkouts?.[email] || [];
     
-    // Filter for current displayed month/year in calendar
     const year = currentCalendarDate.getFullYear();
-    const month = currentCalendarDate.getMonth(); // 0-indexed
-
-    // Format YYYY-MM prefix string
+    const month = currentCalendarDate.getMonth();
     const monthPrefix = `${year}-${String(month + 1).padStart(2, '0')}`;
 
-    // Filter and Sort by date descending
     const monthlyHistory = history.filter((h: any) => h.date.startsWith(monthPrefix))
-                                  .sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime());
+                                  .sort((a: any, b: any) => new Date(b.timestamp || b.date).getTime() - new Date(a.timestamp || a.date).getTime());
 
     if (monthlyHistory.length === 0) {
         historyContainer.innerHTML = '<p class="text-gray-400 text-center text-sm mt-4">Nenhum histórico neste mês.</p>';
@@ -450,19 +389,28 @@ function renderTrainingHistory(email: string) {
 
     let html = '<h3 class="text-lg font-bold text-white mb-3 px-1">Histórico Recente</h3><div class="space-y-2">';
     
-    monthlyHistory.forEach((item: any) => {
-        const dateObj = new Date(item.date + 'T00:00:00'); // Fix TZ
+    monthlyHistory.forEach((item: any, idx: number) => {
+        const dateObj = new Date(item.date + 'T00:00:00');
         const day = String(dateObj.getDate()).padStart(2, '0');
+        const hasPhoto = item.photo ? true : false;
+        
+        // Pass index to global function to open details
+        // Note: Using a global lookup by finding the item again is safer than index if filtering changes, but for now simple index relative to this array is okay for display?
+        // Better: Store timestamp as ID.
         
         html += `
-            <div class="flex items-center justify-between bg-gray-800/80 p-3 rounded-xl border border-gray-700">
+            <div onclick="openHistoryDetail('${item.timestamp}')" class="flex items-center justify-between bg-gray-800/80 p-3 rounded-xl border border-gray-700 cursor-pointer hover:bg-gray-700 transition">
                 <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 bg-gray-700 rounded-lg flex flex-col items-center justify-center border border-gray-600">
-                        <span class="text-xs text-gray-400 uppercase font-bold">DIA</span>
-                        <span class="text-lg font-bold text-white leading-none">${day}</span>
+                    <div class="w-10 h-10 bg-gray-700 rounded-lg flex flex-col items-center justify-center border border-gray-600 relative overflow-hidden">
+                        ${hasPhoto ? `<img src="${item.photo}" class="absolute inset-0 w-full h-full object-cover opacity-60">` : ''}
+                        <span class="text-xs text-gray-400 uppercase font-bold z-10 drop-shadow-md">DIA</span>
+                        <span class="text-lg font-bold text-white leading-none z-10 drop-shadow-md">${day}</span>
                     </div>
                     <div>
-                        <p class="text-white font-bold text-sm">${item.type}</p>
+                        <div class="flex items-center gap-2">
+                            <p class="text-white font-bold text-sm">${item.type}</p>
+                            ${hasPhoto ? '<i class="fas fa-camera text-xs text-blue-400"></i>' : ''}
+                        </div>
                         <div class="flex items-center gap-1">
                             <i data-feather="check-circle" class="w-3 h-3 text-green-500"></i>
                             <span class="text-xs text-green-400 font-medium">Concluído</span>
@@ -482,6 +430,43 @@ function renderTrainingHistory(email: string) {
     if (typeof feather !== 'undefined') feather.replace();
 }
 
+// Global open history detail
+(window as any).openHistoryDetail = (timestamp: string) => {
+    const db = getDatabase();
+    const email = getCurrentUser();
+    const item = db.completedWorkouts?.[email]?.find((x: any) => x.timestamp === timestamp || x.date === timestamp /* fallback */);
+
+    if (item) {
+        document.getElementById('history-modal-type')!.textContent = item.type;
+        document.getElementById('history-modal-date')!.textContent = formatDate(new Date(item.date + 'T00:00:00'));
+        document.getElementById('history-modal-duration')!.textContent = item.duration;
+        
+        const distBox = document.getElementById('history-modal-distance-box');
+        if (item.distance) {
+            document.getElementById('history-modal-distance')!.textContent = item.distance;
+            distBox?.classList.remove('hidden');
+        } else {
+            distBox?.classList.add('hidden');
+        }
+
+        const imgEl = document.getElementById('history-modal-img') as HTMLImageElement;
+        const noImgEl = document.getElementById('history-modal-no-img');
+
+        if (item.photo) {
+            imgEl.src = item.photo;
+            imgEl.classList.remove('hidden');
+            noImgEl?.classList.add('hidden');
+        } else {
+            imgEl.classList.add('hidden');
+            noImgEl?.classList.remove('hidden');
+        }
+
+        document.getElementById('workoutResultModal')?.classList.remove('hidden');
+        if (typeof feather !== 'undefined') feather.replace();
+    }
+};
+
+
 // --- CALENDAR LOGIC ---
 function renderCalendar(date: Date) {
     const grid = document.getElementById('calendar-grid');
@@ -491,24 +476,19 @@ function renderCalendar(date: Date) {
     const year = date.getFullYear();
     const month = date.getMonth();
     const today = new Date();
-
     const monthNames = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
     label.textContent = `${monthNames[month]} ${year}`;
 
     grid.innerHTML = '';
-
-    // Calculate days
-    const firstDay = new Date(year, month, 1).getDay(); // 0 = Sunday
+    const firstDay = new Date(year, month, 1).getDay();
     const daysInMonth = new Date(year, month + 1, 0).getDate();
 
-    // Fill Empty Slots
     for (let i = 0; i < firstDay; i++) {
         const empty = document.createElement('div');
         empty.className = 'calendar-day opacity-0 pointer-events-none';
         grid.appendChild(empty);
     }
 
-    // Fill Days
     const db = getDatabase();
     const email = getCurrentUser();
 
@@ -516,34 +496,25 @@ function renderCalendar(date: Date) {
         const cell = document.createElement('div');
         cell.className = 'calendar-day transition-all hover:bg-gray-700 cursor-default';
         cell.textContent = d.toString();
-        
         const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
 
-        // Highlight Today
         if (year === today.getFullYear() && month === today.getMonth() && d === today.getDate()) {
             cell.classList.add('today');
         }
-
-        // Highlight Workouts
         if (db.trainingPlans && email) {
             let hasA = db.trainingPlans.treinosA?.[email]?.some((ex: any) => ex.checkIns && ex.checkIns.includes(dateStr));
             let hasB = db.trainingPlans.treinosB?.[email]?.some((ex: any) => ex.checkIns && ex.checkIns.includes(dateStr));
-
             if (hasA && hasB) cell.classList.add('treino-A-B-completed');
             else if (hasA) cell.classList.add('treino-A-completed');
             else if (hasB) cell.classList.add('treino-B-completed');
         }
-
         grid.appendChild(cell);
     }
 
-    // Update History List below calendar
-    if (email) {
-        renderTrainingHistory(email);
-    }
+    if (email) renderTrainingHistory(email);
 }
 
-// Global function to toggle individual sets
+// Global toggleSet
 (window as any).toggleSet = (idx: number, type: string, setNum: number) => {
     const db = getDatabase();
     const email = getCurrentUser();
@@ -551,41 +522,21 @@ function renderCalendar(date: Date) {
 
     const exercise = db.trainingPlans[`treinos${type}`][email][idx];
     const todayStr = new Date().toISOString().split('T')[0];
-
-    // Initialize doneSets if not present
     if (!exercise.doneSets) exercise.doneSets = [];
+    if (exercise.doneSets.includes(setNum)) exercise.doneSets = exercise.doneSets.filter((s: number) => s !== setNum);
+    else exercise.doneSets.push(setNum);
 
-    // Toggle logic
-    if (exercise.doneSets.includes(setNum)) {
-        exercise.doneSets = exercise.doneSets.filter((s: number) => s !== setNum);
-    } else {
-        exercise.doneSets.push(setNum);
-    }
-
-    // Auto-complete logic
     const totalSets = parseInt(exercise.sets) || 3;
     if (exercise.doneSets.length >= totalSets) {
-        // If not already checked in for today, check it in
         if (!exercise.checkIns) exercise.checkIns = [];
-        if (!exercise.checkIns.includes(todayStr)) {
-            exercise.checkIns.push(todayStr);
-        }
+        if (!exercise.checkIns.includes(todayStr)) exercise.checkIns.push(todayStr);
     }
-
-    // Save and re-render
     saveDatabase(db);
-    
-    // We need to re-render the screen to show updated bubbles and switch
-    // Accessing the function globally since it's defined in the module scope
     (window as any).loadTrainingScreen(type);
-    
-    // Stop propagation to prevent opening the modal when clicking the set button
-    if (window.event) {
-        window.event.stopPropagation();
-    }
+    if (window.event) window.event.stopPropagation();
 };
 
-// --- TRAINING SCREEN LOGIC (METALLIC LAYOUT) ---
+// --- TRAINING SCREEN LOGIC ---
 function loadTrainingScreen(type: string, email?: string) {
     const userEmail = email || getCurrentUser();
     if (!userEmail) return;
@@ -593,18 +544,23 @@ function loadTrainingScreen(type: string, email?: string) {
     const db = getDatabase();
     const plan = db.trainingPlans[`treinos${type}`]?.[userEmail] || [];
     
-    // 1. Setup Header & Timer
-    const titleEl = document.getElementById('training-title');
-    if (titleEl) {
-        titleEl.textContent = `TREINO ${type}`;
+    // --- Setup Header Button for Finish Flow ---
+    const saveBtn = document.getElementById('save-training-btn');
+    if (saveBtn) {
+        // Clone to remove old listeners
+        const newBtn = saveBtn.cloneNode(true);
+        saveBtn.parentNode?.replaceChild(newBtn, saveBtn);
+        newBtn.addEventListener('click', () => (window as any).openFinishWorkoutModal(type));
     }
+
+    const titleEl = document.getElementById('training-title');
+    if (titleEl) titleEl.textContent = `TREINO ${type}`;
 
     const timerEl = document.getElementById('workout-timer');
     if (timerEl) {
         if (workoutTimerInterval) clearInterval(workoutTimerInterval);
         workoutStartTime = new Date();
         timerEl.textContent = "00:00:00";
-        
         workoutTimerInterval = window.setInterval(() => {
             if (!workoutStartTime) return;
             const diff = new Date().getTime() - workoutStartTime.getTime();
@@ -615,13 +571,11 @@ function loadTrainingScreen(type: string, email?: string) {
         }, 1000);
     }
 
-    // 2. Render List with Metallic Cards & Connectors
     const listContainer = document.getElementById('training-content-wrapper');
     if (listContainer) {
         listContainer.innerHTML = '';
         const todayStr = new Date().toISOString().split('T')[0];
 
-        // Pre-process list to identify groups and connector types
         const renderedItems = plan.map((ex: any, i: number, arr: any[]) => {
             const conjugadoMatch = ex.name.match(/\(CONJUGADO\s+(\d+)\)/i);
             const conjugadoId = conjugadoMatch ? conjugadoMatch[1] : null;
@@ -630,10 +584,8 @@ function loadTrainingScreen(type: string, email?: string) {
             if (conjugadoId) {
                 const prevId = arr[i - 1]?.name.match(/\(CONJUGADO\s+(\d+)\)/i)?.[1];
                 const nextId = arr[i + 1]?.name.match(/\(CONJUGADO\s+(\d+)\)/i)?.[1];
-
                 const isPrevSame = prevId === conjugadoId;
                 const isNextSame = nextId === conjugadoId;
-
                 if (!isPrevSame && isNextSame) lineType = 'start';
                 else if (isPrevSame && isNextSame) lineType = 'middle';
                 else if (isPrevSame && !isNextSame) lineType = 'end';
@@ -642,89 +594,46 @@ function loadTrainingScreen(type: string, email?: string) {
             const cleanName = ex.name.replace(/\(CONJUGADO\s+\d+\)/i, '').trim();
             const label = conjugadoId ? `(CONJUGADO ${conjugadoId})` : '';
             const isChecked = ex.checkIns && ex.checkIns.includes(todayStr);
-
-            // Set Logic
-            const totalSets = parseInt(ex.sets) || 3; // Default to 3 if parse fails
+            const totalSets = parseInt(ex.sets) || 3; 
             const doneSets = ex.doneSets || [];
             let setsHtml = '';
             
             for (let s = 1; s <= totalSets; s++) {
                 const isDone = doneSets.includes(s);
                 const bgClass = isDone ? 'bg-green-500 border-green-600 text-white' : 'bg-gray-400/50 border-gray-400 text-gray-700 hover:bg-gray-400';
-                
-                setsHtml += `
-                    <div onclick="toggleSet(${i}, '${type}', ${s})" 
-                         class="w-6 h-6 rounded-full border ${bgClass} flex items-center justify-center font-bold text-xs cursor-pointer shadow-sm transition-all active:scale-95">
-                        ${s}
-                    </div>
-                `;
+                setsHtml += `<div onclick="toggleSet(${i}, '${type}', ${s})" class="w-6 h-6 rounded-full border ${bgClass} flex items-center justify-center font-bold text-xs cursor-pointer shadow-sm transition-all active:scale-95">${s}</div>`;
             }
 
-
-            // Container Wrapper (Handles line positioning)
             const wrapper = document.createElement('div');
-            // If it's a superset, add wrapper class for indentation
             if (conjugadoId) wrapper.className = 'superset-wrapper';
-
-            let lineHTML = '';
-            if (lineType) {
-                lineHTML = `<div class="superset-line ${lineType}"></div>`;
-            }
+            let lineHTML = lineType ? `<div class="superset-line ${lineType}"></div>` : '';
 
             wrapper.innerHTML = `
                 ${lineHTML}
                 <div class="metal-card-exercise flex-col !items-stretch !gap-3 h-auto" onclick="openExerciseModal(${i}, '${type}')">
-                    <!-- Row 1: Image, Title, Toggle -->
                     <div class="flex items-start gap-3 relative">
-                        <!-- Image -->
                         <div class="relative shrink-0">
                             <img src="${ex.img}" class="exercise-thumbnail w-16 h-16 object-cover rounded-lg shadow-sm border border-gray-400">
-                            <div class="absolute inset-0 flex items-center justify-center">
-                                <i data-feather="play-circle" class="text-white w-6 h-6 drop-shadow-md opacity-80"></i>
-                            </div>
+                            <div class="absolute inset-0 flex items-center justify-center"><i data-feather="play-circle" class="text-white w-6 h-6 drop-shadow-md opacity-80"></i></div>
                         </div>
-
-                        <!-- Title -->
                         <div class="flex-grow min-w-0 pt-0.5">
-                            <h3 class="font-black text-gray-900 text-sm leading-tight pr-10 uppercase tracking-tight">
-                                ${i + 1}. ${cleanName}
-                            </h3>
+                            <h3 class="font-black text-gray-900 text-sm leading-tight pr-10 uppercase tracking-tight">${i + 1}. ${cleanName}</h3>
                             ${label ? `<p class="text-[10px] font-bold text-red-600 mt-0.5 tracking-wider">${label}</p>` : ''}
                         </div>
-
-                        <!-- Toggle Switch (Absolute top right of container) -->
                         <div class="toggle-switch absolute top-0 right-0" onclick="event.stopPropagation()">
-                            <label>
-                                <input type="checkbox" class="exercise-check" data-idx="${i}" ${isChecked ? 'checked' : ''}>
-                                <span class="slider"></span>
-                            </label>
+                            <label><input type="checkbox" class="exercise-check" data-idx="${i}" ${isChecked ? 'checked' : ''}><span class="slider"></span></label>
                         </div>
                     </div>
-
-                    <!-- Row 2: Data Grid (The Big Change) -->
                     <div class="grid grid-cols-3 gap-2">
-                         <!-- Sets (DIVIDED) -->
                          <div class="bg-gray-300/60 rounded-lg p-1.5 border border-gray-400 flex flex-col justify-between shadow-inner h-20" onclick="event.stopPropagation()">
-                             <!-- Top: Total -->
-                             <div class="flex flex-col items-center justify-center border-b border-gray-400/30 pb-1">
-                                <span class="text-[9px] font-bold text-gray-600 uppercase tracking-wider mb-0.5">Séries</span>
-                                <span class="text-xl font-black text-blue-800 leading-none">${ex.sets}</span>
-                             </div>
-                             <!-- Bottom: Tracker -->
-                             <div class="flex justify-center items-center gap-1 h-full pt-1 px-1">
-                                ${setsHtml}
-                             </div>
+                             <div class="flex flex-col items-center justify-center border-b border-gray-400/30 pb-1"><span class="text-[9px] font-bold text-gray-600 uppercase tracking-wider mb-0.5">Séries</span><span class="text-xl font-black text-blue-800 leading-none">${ex.sets}</span></div>
+                             <div class="flex justify-center items-center gap-1 h-full pt-1 px-1">${setsHtml}</div>
                          </div>
-
-                         <!-- Reps -->
                          <div class="bg-gray-300/60 rounded-lg p-1.5 border border-gray-400 flex flex-col items-center justify-center shadow-inner h-20">
-                            <span class="text-[9px] font-bold text-gray-600 uppercase tracking-wider mb-0.5">Reps</span>
-                            <span class="text-2xl font-black text-orange-700 leading-none">${ex.reps}</span>
+                            <span class="text-[9px] font-bold text-gray-600 uppercase tracking-wider mb-0.5">Reps</span><span class="text-2xl font-black text-orange-700 leading-none">${ex.reps}</span>
                          </div>
-                         <!-- Load -->
                          <div class="bg-gray-300/60 rounded-lg p-1.5 border border-gray-400 flex flex-col items-center justify-center shadow-inner h-20">
-                            <span class="text-[9px] font-bold text-gray-600 uppercase tracking-wider mb-0.5">Carga</span>
-                            <span class="text-2xl font-black text-red-700 leading-none">${ex.carga}<span class="text-xs ml-0.5 font-bold">kg</span></span>
+                            <span class="text-[9px] font-bold text-gray-600 uppercase tracking-wider mb-0.5">Carga</span><span class="text-2xl font-black text-red-700 leading-none">${ex.carga}<span class="text-xs ml-0.5 font-bold">kg</span></span>
                          </div>
                     </div>
                 </div>
@@ -734,40 +643,140 @@ function loadTrainingScreen(type: string, email?: string) {
 
         renderedItems.forEach((el: HTMLElement) => listContainer.appendChild(el));
         
-        // Add Checkbox Listeners
         document.querySelectorAll('.exercise-check').forEach(chk => {
             chk.addEventListener('change', (e) => {
                 const target = e.target as HTMLInputElement;
                 const idx = parseInt(target.dataset.idx || '0');
                 const exercise = plan[idx];
-                
                 if (!exercise.checkIns) exercise.checkIns = [];
                 if (target.checked) {
                     if (!exercise.checkIns.includes(todayStr)) exercise.checkIns.push(todayStr);
-                    // Optional: If manual check, mark all sets as done? 
-                    // For now, let's keep them independent or user can fill them manually.
                 } else {
                     exercise.checkIns = exercise.checkIns.filter((d: string) => d !== todayStr);
-                    // Optional: Clear sets if unchecked?
-                    // exercise.doneSets = [];
                 }
                 saveDatabase(db);
-                // Refresh calendar if visible
-                if (document.getElementById('studentProfileScreen')?.style.display === 'block') {
-                    renderCalendar(currentCalendarDate);
-                }
-                // Re-render to update UI consistency if needed
+                if (document.getElementById('studentProfileScreen')?.style.display === 'block') renderCalendar(currentCalendarDate);
                 loadTrainingScreen(type); 
             });
         });
-
         if (typeof feather !== 'undefined') feather.replace();
     }
-
     showScreen('trainingScreen');
 }
 
-// --- RUNNING WORKOUTS LOGIC ---
+// --- NEW: FINISH WORKOUT LOGIC (SELFIE) ---
+(window as any).openFinishWorkoutModal = (type: string, extraData: any = null) => {
+    // Stop timers but keep variables until save
+    if (workoutTimerInterval) clearInterval(workoutTimerInterval);
+    if (trackingTimerInterval) clearInterval(trackingTimerInterval);
+    if (trackingWatchId) navigator.geolocation.clearWatch(trackingWatchId);
+
+    // Capture Data
+    const duration = extraData ? extraData.duration : (document.getElementById('workout-timer')?.textContent || "00:00:00");
+    tempWorkoutData = {
+        type: type === 'Corrida' ? 'Corrida' : `Treino ${type}`,
+        date: new Date().toISOString().split('T')[0],
+        timestamp: new Date().toISOString(),
+        duration: duration,
+        ...extraData // merges distance/pace if available
+    };
+    tempWorkoutImage = null; // Reset image
+
+    // UI Updates
+    const modal = document.getElementById('finishWorkoutModal');
+    const summary = document.getElementById('finish-modal-summary');
+    const imgPreview = document.getElementById('finish-photo-preview') as HTMLImageElement;
+    const placeholder = document.getElementById('finish-photo-placeholder');
+    const input = document.getElementById('workout-photo-input') as HTMLInputElement;
+
+    if (summary) {
+        summary.innerHTML = `
+            <div class="text-center mb-1">
+                <p class="text-gray-400 text-[10px] uppercase tracking-widest font-bold">Tempo Total</p>
+                <p class="text-5xl font-black text-white font-mono tracking-tight my-2">${tempWorkoutData.duration}</p>
+                ${tempWorkoutData.distance ? `<div class="inline-block bg-gray-900 px-3 py-1 rounded-full border border-gray-700"><p class="text-orange-500 font-bold text-sm">🏁 ${tempWorkoutData.distance}</p></div>` : ''}
+            </div>
+        `;
+    }
+
+    if (input) input.value = '';
+    if (imgPreview) {
+        imgPreview.src = '';
+        imgPreview.classList.add('hidden');
+    }
+    if (placeholder) placeholder.classList.remove('hidden');
+
+    modal?.classList.remove('hidden');
+};
+
+// Image Compression Logic
+(window as any).handlePhotoSelect = (event: any) => {
+    const file = event.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = (e: any) => {
+            const img = new Image();
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                const maxWidth = 800; // Resize to max 800px width
+                
+                let width = img.width;
+                let height = img.height;
+                
+                if (width > maxWidth) {
+                    height *= maxWidth / width;
+                    width = maxWidth;
+                }
+                
+                canvas.width = width;
+                canvas.height = height;
+                ctx?.drawImage(img, 0, 0, width, height);
+                
+                // Compress to JPEG 0.6 quality
+                const compressedBase64 = canvas.toDataURL('image/jpeg', 0.6);
+                tempWorkoutImage = compressedBase64;
+                
+                // Update Preview
+                const imgPreview = document.getElementById('finish-photo-preview') as HTMLImageElement;
+                const placeholder = document.getElementById('finish-photo-placeholder');
+                if(imgPreview) {
+                    imgPreview.src = compressedBase64;
+                    imgPreview.classList.remove('hidden');
+                }
+                if(placeholder) placeholder.classList.add('hidden');
+            };
+            img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+    }
+};
+
+(window as any).saveFinishedWorkout = () => {
+    const db = getDatabase();
+    const email = getCurrentUser();
+    if (!email) return;
+
+    if (!db.completedWorkouts[email]) db.completedWorkouts[email] = [];
+    
+    // Add photo if taken
+    const finalRecord = {
+        ...tempWorkoutData,
+        photo: tempWorkoutImage
+    };
+    
+    db.completedWorkouts[email].push(finalRecord);
+    saveDatabase(db);
+    
+    // Close Modal
+    document.getElementById('finishWorkoutModal')?.classList.add('hidden');
+    
+    // Go home
+    renderTrainingHistory(email);
+    showScreen('studentProfileScreen');
+};
+
+
 function loadRunningScreen() {
     const db = getDatabase();
     const email = getCurrentUser();
@@ -795,32 +804,10 @@ function loadRunningScreen() {
                             </div>
                             <span class="text-[10px] font-black uppercase tracking-wider text-gray-900 bg-orange-500 px-2 py-1 rounded-md shadow-sm border border-orange-400">${w.type}</span>
                         </div>
-                        
                         <div class="space-y-3 pt-2 border-t border-gray-700/50">
-                            <div class="flex items-start gap-3">
-                                <div class="w-6 flex justify-center mt-0.5"><i class="fas fa-fire-alt text-yellow-500 text-sm"></i></div>
-                                <div>
-                                    <p class="text-xs font-bold text-gray-300 uppercase tracking-wide">Aquecimento</p>
-                                    <p class="text-sm text-gray-200 leading-snug">${w.aquecimento || 'Consultar descrição'}</p>
-                                </div>
-                            </div>
-                            
-                            <div class="flex items-start gap-3 relative">
-                                <div class="absolute left-3 top-0 bottom-0 w-px bg-gray-700 -z-10"></div>
-                                <div class="w-6 flex justify-center mt-0.5"><i class="fas fa-running text-orange-500 text-lg animate-pulse"></i></div>
-                                <div class="bg-gray-700/50 p-2 rounded-lg border border-gray-600 w-full">
-                                    <p class="text-xs font-bold text-orange-400 uppercase tracking-wide mb-1">Principal</p>
-                                    <p class="text-sm font-medium text-white leading-snug">${w.principal || w.description}</p>
-                                </div>
-                            </div>
-
-                            <div class="flex items-start gap-3">
-                                <div class="w-6 flex justify-center mt-0.5"><i class="fas fa-snowflake text-blue-400 text-sm"></i></div>
-                                <div>
-                                    <p class="text-xs font-bold text-gray-300 uppercase tracking-wide">Desaquecimento</p>
-                                    <p class="text-sm text-gray-200 leading-snug">${w.desaquecimento || 'Consultar descrição'}</p>
-                                </div>
-                            </div>
+                            <div class="flex items-start gap-3"><div class="w-6 flex justify-center mt-0.5"><i class="fas fa-fire-alt text-yellow-500 text-sm"></i></div><div><p class="text-xs font-bold text-gray-300 uppercase tracking-wide">Aquecimento</p><p class="text-sm text-gray-200 leading-snug">${w.aquecimento || 'Consultar descrição'}</p></div></div>
+                            <div class="flex items-start gap-3 relative"><div class="absolute left-3 top-0 bottom-0 w-px bg-gray-700 -z-10"></div><div class="w-6 flex justify-center mt-0.5"><i class="fas fa-running text-orange-500 text-lg animate-pulse"></i></div><div class="bg-gray-700/50 p-2 rounded-lg border border-gray-600 w-full"><p class="text-xs font-bold text-orange-400 uppercase tracking-wide mb-1">Principal</p><p class="text-sm font-medium text-white leading-snug">${w.principal || w.description}</p></div></div>
+                            <div class="flex items-start gap-3"><div class="w-6 flex justify-center mt-0.5"><i class="fas fa-snowflake text-blue-400 text-sm"></i></div><div><p class="text-xs font-bold text-gray-300 uppercase tracking-wide">Desaquecimento</p><p class="text-sm text-gray-200 leading-snug">${w.desaquecimento || 'Consultar descrição'}</p></div></div>
                         </div>
                     </div>
                 `;
@@ -831,12 +818,10 @@ function loadRunningScreen() {
     showScreen('runningScreen');
 }
 
-// --- RACE CALENDAR LOGIC (REDESIGNED) ---
 function loadRaceCalendarScreen() {
     const db = getDatabase();
     const races = db.raceCalendar || [];
     const container = document.getElementById('race-calendar-list');
-
     if (container) {
         container.innerHTML = '';
         if (races.length === 0) {
@@ -849,40 +834,24 @@ function loadRaceCalendarScreen() {
                  const monthNamesShort = ["JAN", "FEV", "MAR", "ABR", "MAI", "JUN", "JUL", "AGO", "SET", "OUT", "NOV", "DEZ"];
                  const month = monthNamesShort[monthNum - 1];
                  const year = parts[0];
-
-                 // "TICKET" STYLE CARD
                  const card = document.createElement('div');
                  card.className = 'bg-gray-800 rounded-xl overflow-hidden border border-gray-700 shadow-xl relative';
                  card.innerHTML = `
-                    <!-- Background Accent -->
                     <div class="absolute top-0 right-0 w-32 h-32 bg-blue-600 rounded-full mix-blend-multiply filter blur-2xl opacity-10 animate-blob"></div>
                     <div class="absolute -bottom-8 -left-8 w-32 h-32 bg-purple-600 rounded-full mix-blend-multiply filter blur-2xl opacity-10 animate-blob animation-delay-2000"></div>
-
                     <div class="flex">
-                        <!-- Left Stub (Date) -->
                         <div class="w-24 bg-gradient-to-b from-gray-900 to-gray-800 border-r-2 border-dashed border-gray-600 flex flex-col items-center justify-center p-2 relative">
-                             <!-- Punch holes -->
                             <div class="absolute -top-3 -right-3 w-6 h-6 bg-[#000000] rounded-full z-10"></div>
                             <div class="absolute -bottom-3 -right-3 w-6 h-6 bg-[#000000] rounded-full z-10"></div>
-                            
                             <span class="text-xs text-gray-400 font-bold tracking-widest">${year}</span>
                             <span class="text-3xl font-black text-white leading-none mt-1">${day}</span>
                             <span class="text-sm font-bold text-blue-400 uppercase tracking-wider mt-1">${month}</span>
                         </div>
-
-                        <!-- Main Content -->
                         <div class="flex-1 p-4 relative z-10 flex flex-col justify-center">
                             <h3 class="font-bold text-white text-lg leading-tight mb-2">${r.name}</h3>
-                            
                             <div class="flex flex-col gap-1.5">
-                                <div class="flex items-center gap-2 text-xs text-gray-300">
-                                    <div class="w-5 flex justify-center"><i class="fas fa-map-marker-alt text-red-500"></i></div>
-                                    <span>${r.location}</span>
-                                </div>
-                                <div class="flex items-center gap-2 text-xs text-gray-300">
-                                    <div class="w-5 flex justify-center"><i class="fas fa-flag-checkered text-green-500"></i></div>
-                                    <span class="font-bold text-white">${r.distance}</span>
-                                </div>
+                                <div class="flex items-center gap-2 text-xs text-gray-300"><div class="w-5 flex justify-center"><i class="fas fa-map-marker-alt text-red-500"></i></div><span>${r.location}</span></div>
+                                <div class="flex items-center gap-2 text-xs text-gray-300"><div class="w-5 flex justify-center"><i class="fas fa-flag-checkered text-green-500"></i></div><span class="font-bold text-white">${r.distance}</span></div>
                             </div>
                         </div>
                     </div>
@@ -900,7 +869,6 @@ function loadOutdoorTrackingScreen(activity: string) {
     const titleEl = document.getElementById('tracking-activity-title');
     if(titleEl) titleEl.textContent = activity;
 
-    // Reset State
     trackingPath = [];
     trackingElapsedTime = 0;
     trackingDistance = 0;
@@ -908,147 +876,110 @@ function loadOutdoorTrackingScreen(activity: string) {
     if (trackingWatchId) navigator.geolocation.clearWatch(trackingWatchId);
     if (trackingTimerInterval) clearInterval(trackingTimerInterval);
     
-    // Reset UI
     document.getElementById('tracking-distance')!.textContent = "0.00 km";
     document.getElementById('tracking-time')!.textContent = "00:00:00";
     document.getElementById('tracking-pace')!.textContent = "--:-- /km";
     
-    // Buttons
     document.getElementById('start-tracking-btn')!.classList.remove('hidden');
     document.getElementById('pause-tracking-btn')!.classList.add('hidden');
     document.getElementById('stop-tracking-btn')!.classList.add('hidden');
 
     showScreen('outdoorTrackingScreen');
-
-    // Init Map (Leaflet)
-    // We need a slight delay or resize event because the div was hidden
     setTimeout(() => {
         if (!map) {
-            map = L.map('map').setView([-22.9068, -43.1729], 13); // Default Rio
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '&copy; OpenStreetMap contributors'
-            }).addTo(map);
+            map = L.map('map').setView([-22.9068, -43.1729], 13);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap contributors' }).addTo(map);
             mapPolyline = L.polyline([], { color: 'red', weight: 4 }).addTo(map);
         } else {
             map.invalidateSize();
             mapPolyline.setLatLngs([]);
         }
-        
-        // Locate user initially without tracking
         map.locate({setView: true, maxZoom: 16});
     }, 300);
 }
 
 function startOutdoorTracking() {
-    if (!isTrackingPaused) {
-        trackingStartTime = Date.now();
-    } else {
-        // Resuming: Adjust start time to account for pause
-        trackingStartTime = Date.now() - trackingElapsedTime;
-    }
+    if (!isTrackingPaused) trackingStartTime = Date.now();
+    else trackingStartTime = Date.now() - trackingElapsedTime;
     isTrackingPaused = false;
 
-    // UI Buttons
     document.getElementById('start-tracking-btn')!.classList.add('hidden');
     document.getElementById('pause-tracking-btn')!.classList.remove('hidden');
     document.getElementById('stop-tracking-btn')!.classList.remove('hidden');
 
-    // Timer
     trackingTimerInterval = window.setInterval(() => {
         trackingElapsedTime = Date.now() - trackingStartTime;
         document.getElementById('tracking-time')!.textContent = formatDuration(trackingElapsedTime);
         document.getElementById('tracking-pace')!.textContent = calculatePace(trackingElapsedTime, trackingDistance) + " /km";
     }, 1000);
 
-    // Geo Location
     trackingWatchId = navigator.geolocation.watchPosition((pos) => {
         const { latitude, longitude } = pos.coords;
         const latLng = [latitude, longitude];
-
-        // If we have previous points, calculate distance
         if (trackingPath.length > 0) {
             const lastPoint = trackingPath[trackingPath.length - 1];
-            // Leaflet map.distance returns meters
             const dist = map.distance(lastPoint, latLng); 
-            // Filter noise: ignore very small movements (e.g. < 5 meters)
             if (dist > 5) {
                  trackingDistance += dist;
                  trackingPath.push(latLng);
                  mapPolyline.setLatLngs(trackingPath);
                  map.setView(latLng);
-                 
                  document.getElementById('tracking-distance')!.textContent = (trackingDistance / 1000).toFixed(2) + " km";
             }
         } else {
-            // First point
             trackingPath.push(latLng);
             map.setView(latLng, 16);
         }
-    }, (err) => {
-        console.error("GPS Error", err);
-    }, {
-        enableHighAccuracy: true
-    });
+    }, (err) => { console.error("GPS Error", err); }, { enableHighAccuracy: true });
 }
 
 function pauseOutdoorTracking() {
     isTrackingPaused = true;
     if (trackingTimerInterval) clearInterval(trackingTimerInterval);
     if (trackingWatchId) navigator.geolocation.clearWatch(trackingWatchId);
-    
     document.getElementById('pause-tracking-btn')!.classList.add('hidden');
     document.getElementById('start-tracking-btn')!.classList.remove('hidden');
 }
 
 function stopOutdoorTracking() {
-    if (trackingTimerInterval) clearInterval(trackingTimerInterval);
-    if (trackingWatchId) navigator.geolocation.clearWatch(trackingWatchId);
-    
-    // Save workout to DB? (Simplified for now, just reset or alert)
-    alert(`Treino finalizado!\nAtividade: ${currentActivityType}\nDistância: ${(trackingDistance/1000).toFixed(2)} km\nTempo: ${formatDuration(trackingElapsedTime)}`);
-    
-    loadOutdoorTrackingScreen(currentActivityType); // Reset UI for next run
+    // Instead of alerting, open the finish modal
+    const extraData = {
+        distance: (trackingDistance / 1000).toFixed(2) + ' km',
+        duration: formatDuration(trackingElapsedTime),
+        pace: calculatePace(trackingElapsedTime, trackingDistance) + " /km"
+    };
+    (window as any).openFinishWorkoutModal(currentActivityType, extraData);
 }
 
 // --- PERIODIZATION LOGIC ---
 function togglePeriodizationStatus(id: number) {
     const userEmail = getCurrentUser();
     if (!userEmail) return;
-    
     const db = getDatabase();
     const periodizacao = db.trainingPlans.periodizacao[userEmail];
-    
     if (!periodizacao) return;
-
     const item = periodizacao.find((p: any) => p.id === id);
     if (item) {
-        // Cycle Status
         if (item.status === 'Não Começou') item.status = 'Em Andamento';
         else if (item.status === 'Em Andamento') item.status = 'Concluído';
         else item.status = 'Não Começou';
-        
         saveDatabase(db);
-        loadPeriodizationScreen(); // Refresh
+        loadPeriodizationScreen(); 
     }
 }
 
 function openPeriodizationModal(id: number) {
     const userEmail = getCurrentUser();
     if (!userEmail) return;
-    
     const db = getDatabase();
     const periodizacao = db.trainingPlans.periodizacao[userEmail];
     const item = periodizacao.find((p: any) => p.id === id);
-    
     if (item) {
         const modal = document.getElementById('periodizationDetailModal');
         const content = document.getElementById('periodization-modal-content');
-        
         document.getElementById('modal-periodization-phase')!.textContent = item.fase;
         document.getElementById('modal-periodization-dates')!.innerHTML = `<i data-feather="calendar" class="w-4 h-4 text-red-500"></i> ${item.inicio} - ${item.fim}`;
         document.getElementById('modal-periodization-goal')!.innerHTML = `<i data-feather="target" class="w-4 h-4 text-red-500"></i> ${item.objetivo}`;
-        
-        // Construct the detailed HTML with the new series/reps cards
         const detailsContainer = document.getElementById('modal-periodization-details');
         if (detailsContainer) {
             detailsContainer.innerHTML = `
@@ -1062,14 +993,10 @@ function openPeriodizationModal(id: number) {
                         <p class="text-2xl font-black text-white">${item.repeticoes || '-'}</p>
                     </div>
                 </div>
-                <div class="text-gray-200 text-sm leading-relaxed border-t border-gray-600 pt-3 mt-2">
-                    ${item.detalhes || 'Sem detalhes disponíveis'}
-                </div>
+                <div class="text-gray-200 text-sm leading-relaxed border-t border-gray-600 pt-3 mt-2">${item.detalhes || 'Sem detalhes disponíveis'}</div>
             `;
         }
-        
         if (typeof feather !== 'undefined') feather.replace();
-        
         modal?.classList.remove('hidden');
         content?.classList.remove('scale-95', 'opacity-0');
         content?.classList.add('scale-100', 'opacity-100');
@@ -1079,31 +1006,23 @@ function openPeriodizationModal(id: number) {
 function loadPeriodizationScreen() {
     const userEmail = getCurrentUser();
     if (!userEmail) return;
-
     const db = getDatabase();
     const periodizacao = db.trainingPlans.periodizacao[userEmail] || [];
     const container = document.getElementById('periodization-content-wrapper');
-
     if (container) {
         container.innerHTML = '';
-        
         if (periodizacao.length === 0) {
             container.innerHTML = '<p class="text-white text-center mt-10">Nenhum histórico de periodização encontrado.</p>';
         } else {
-            // Sort by ID to ensure chronological order: Adaptacao -> Hipertrofia I -> Hipertrofia II -> Forca
             const sortedPeriodization = [...periodizacao].sort((a, b) => a.id - b.id);
-
             sortedPeriodization.forEach((p: any, index: number) => {
-                // LOCKING LOGIC: Locked if it's not the first one AND the previous one is not 'Concluído'
                 const isLocked = index > 0 && sortedPeriodization[index - 1].status !== 'Concluído';
-
                 let statusColor = 'text-gray-400';
                 let statusBg = 'bg-gray-700';
                 let borderColor = 'bg-gray-600';
                 let statusIcon = 'circle';
                 let cardOpacity = 'opacity-100';
                 let pointerEvents = 'cursor-pointer hover:border-gray-500 active:scale-[0.98]';
-
                 if (isLocked) {
                     cardOpacity = 'opacity-60 grayscale';
                     pointerEvents = 'cursor-not-allowed';
@@ -1121,29 +1040,18 @@ function loadPeriodizationScreen() {
                         statusIcon = 'clock';
                     }
                 }
-
                 const card = document.createElement('div');
                 card.className = `bg-gray-800 rounded-xl p-4 border border-gray-700 shadow-lg relative overflow-hidden transition-all duration-300 ${pointerEvents} ${cardOpacity}`;
-                
-                if (!isLocked) {
-                    card.onclick = () => openPeriodizationModal(p.id);
-                }
-                
-                let actionButton = '';
-                if (isLocked) {
-                    actionButton = `
+                if (!isLocked) card.onclick = () => openPeriodizationModal(p.id);
+                let actionButton = isLocked ? `
                         <div class="text-xs font-bold px-3 py-1.5 rounded-full border bg-gray-800 text-gray-500 border-gray-600 flex items-center gap-1.5 shadow-md z-10">
                             <i data-feather="lock" class="w-3.5 h-3.5"></i> Bloqueado
                         </div>
-                    `;
-                } else {
-                    actionButton = `
+                    ` : `
                         <button onclick="event.stopPropagation(); togglePeriodizationStatus(${p.id})" class="text-xs font-bold px-3 py-1.5 rounded-full border ${statusBg} ${statusColor} flex items-center gap-1.5 hover:brightness-110 active:scale-95 transition-all shadow-md z-10">
                             <i data-feather="${statusIcon}" class="w-3.5 h-3.5"></i> ${p.status}
                         </button>
                     `;
-                }
-
                 card.innerHTML = `
                     <div class="absolute top-0 left-0 w-1.5 h-full ${borderColor}"></div>
                     <div class="flex justify-between items-start mb-2 pl-3">
@@ -1151,29 +1059,13 @@ function loadPeriodizationScreen() {
                         ${actionButton}
                     </div>
                     <div class="pl-3 space-y-2">
-                        <div class="flex items-center gap-2 text-sm text-gray-300">
-                            <i data-feather="calendar" class="w-4 h-4 text-gray-500"></i>
-                            <span>${p.inicio} - ${p.fim}</span>
-                        </div>
-                        <div class="flex items-center gap-2 text-sm text-gray-300">
-                            <i data-feather="target" class="w-4 h-4 text-red-500"></i>
-                            <span class="font-medium text-gray-200">Objetivo:</span> ${p.objetivo}
-                        </div>
+                        <div class="flex items-center gap-2 text-sm text-gray-300"><i data-feather="calendar" class="w-4 h-4 text-gray-500"></i><span>${p.inicio} - ${p.fim}</span></div>
+                        <div class="flex items-center gap-2 text-sm text-gray-300"><i data-feather="target" class="w-4 h-4 text-red-500"></i><span class="font-medium text-gray-200">Objetivo:</span> ${p.objetivo}</div>
                          <div class="flex items-center gap-4 mt-2 pt-2 border-t border-gray-700/50">
-                            <div class="flex items-center gap-1.5">
-                                <span class="text-xs text-gray-500 uppercase font-bold">Séries</span>
-                                <span class="text-sm font-bold text-white">${p.series || '-'}</span>
-                            </div>
-                            <div class="flex items-center gap-1.5">
-                                <span class="text-xs text-gray-500 uppercase font-bold">Reps</span>
-                                <span class="text-sm font-bold text-white">${p.repeticoes || '-'}</span>
-                            </div>
+                            <div class="flex items-center gap-1.5"><span class="text-xs text-gray-500 uppercase font-bold">Séries</span><span class="text-sm font-bold text-white">${p.series || '-'}</span></div>
+                            <div class="flex items-center gap-1.5"><span class="text-xs text-gray-500 uppercase font-bold">Reps</span><span class="text-sm font-bold text-white">${p.repeticoes || '-'}</span></div>
                         </div>
-                        ${!isLocked ? `
-                         <div class="flex items-center gap-2 text-xs text-blue-400 mt-2">
-                            <i data-feather="info" class="w-3 h-3"></i>
-                            <span>Toque para ver detalhes</span>
-                        </div>` : ''}
+                        ${!isLocked ? `<div class="flex items-center gap-2 text-xs text-blue-400 mt-2"><i data-feather="info" class="w-3 h-3"></i><span>Toque para ver detalhes</span></div>` : ''}
                     </div>
                 `;
                 container.appendChild(card);
@@ -1181,18 +1073,14 @@ function loadPeriodizationScreen() {
             if (typeof feather !== 'undefined') feather.replace();
         }
     }
-
     showScreen('periodizationScreen');
 }
 
-// --- PROFILE & DASHBOARD ---
 function loadStudentProfile(email: string) {
     const db = getDatabase();
     const user = db.users.find((u: any) => u.email === email);
-    
     if (!user) return; 
 
-    // Update Profile Info
     const profileInfo = document.getElementById('student-profile-info');
     if (profileInfo) {
         profileInfo.innerHTML = `
@@ -1205,57 +1093,22 @@ function loadStudentProfile(email: string) {
         profileInfo.classList.remove('hidden');
     }
 
-    // Render Buttons - UPDATED LAYOUT AND ORDER
     const btnContainer = document.getElementById('student-profile-buttons');
     if (btnContainer) {
-        // Change grid to 2 cols mobile, 4 cols desktop
         btnContainer.className = "grid grid-cols-2 md:grid-cols-4 gap-3 mb-6 mt-4";
-        
         btnContainer.innerHTML = `
-            <!-- ROW 1 -->
-            <button onclick="loadTrainingScreen('A')" class="metal-btn-highlight p-3 flex flex-col items-center justify-center gap-1 active:scale-95 transition-transform h-28">
-                <i class="fas fa-dumbbell text-2xl"></i>
-                <span class="text-sm font-bold">TREINO A</span>
-            </button>
-            <button onclick="loadTrainingScreen('B')" class="metal-btn-highlight p-3 flex flex-col items-center justify-center gap-1 active:scale-95 transition-transform h-28">
-                <i class="fas fa-dumbbell text-2xl"></i>
-                <span class="text-sm font-bold">TREINO B</span>
-            </button>
-            <button onclick="loadRunningScreen()" class="metal-btn p-3 flex flex-col items-center justify-center gap-1 active:scale-95 transition-transform h-28">
-                <i class="fas fa-running text-orange-500 text-2xl"></i>
-                <span class="text-sm font-bold">CORRIDA</span>
-            </button>
-            <button onclick="loadPeriodizationScreen()" class="metal-btn p-3 flex flex-col items-center justify-center gap-1 active:scale-95 transition-transform h-28">
-                <i class="fas fa-calendar-alt text-yellow-500 text-2xl"></i>
-                <span class="text-sm font-bold">PERIODIZAÇÃO</span>
-            </button>
-
-            <!-- ROW 2 -->
-            <button onclick="showScreen('outdoorSelectionScreen')" class="metal-btn p-3 flex flex-col items-center justify-center gap-1 active:scale-95 transition-transform h-28">
-                <i class="fas fa-map-marked-alt text-green-500 text-2xl"></i>
-                <span class="text-sm font-bold">OUTDOOR</span>
-            </button>
-            <button onclick="loadRaceCalendarScreen()" class="metal-btn p-3 flex flex-col items-center justify-center gap-1 active:scale-95 transition-transform h-28">
-                <i class="fas fa-flag-checkered text-blue-500 text-2xl"></i>
-                <span class="text-sm font-bold">PROVAS</span>
-            </button>
-             <button onclick="showScreen('physioAssessmentScreen')" class="metal-btn p-3 flex flex-col items-center justify-center gap-1 active:scale-95 transition-transform h-28">
-                <i class="fas fa-clipboard-user text-red-400 text-2xl"></i>
-                <span class="text-sm font-bold">AVALIAÇÃO</span>
-            </button>
-             <button onclick="showScreen('aiAnalysisScreen')" class="metal-btn p-3 flex flex-col items-center justify-center gap-1 active:scale-95 transition-transform h-28">
-                <i class="fas fa-brain text-teal-400 text-2xl"></i>
-                <span class="text-sm font-bold">ANÁLISE IA</span>
-            </button>
+            <button onclick="loadTrainingScreen('A')" class="metal-btn-highlight p-3 flex flex-col items-center justify-center gap-1 active:scale-95 transition-transform h-28"><i class="fas fa-dumbbell text-2xl"></i><span class="text-sm font-bold">TREINO A</span></button>
+            <button onclick="loadTrainingScreen('B')" class="metal-btn-highlight p-3 flex flex-col items-center justify-center gap-1 active:scale-95 transition-transform h-28"><i class="fas fa-dumbbell text-2xl"></i><span class="text-sm font-bold">TREINO B</span></button>
+            <button onclick="loadRunningScreen()" class="metal-btn p-3 flex flex-col items-center justify-center gap-1 active:scale-95 transition-transform h-28"><i class="fas fa-running text-orange-500 text-2xl"></i><span class="text-sm font-bold">CORRIDA</span></button>
+            <button onclick="loadPeriodizationScreen()" class="metal-btn p-3 flex flex-col items-center justify-center gap-1 active:scale-95 transition-transform h-28"><i class="fas fa-calendar-alt text-yellow-500 text-2xl"></i><span class="text-sm font-bold">PERIODIZAÇÃO</span></button>
+            <button onclick="showScreen('outdoorSelectionScreen')" class="metal-btn p-3 flex flex-col items-center justify-center gap-1 active:scale-95 transition-transform h-28"><i class="fas fa-map-marked-alt text-green-500 text-2xl"></i><span class="text-sm font-bold">OUTDOOR</span></button>
+            <button onclick="loadRaceCalendarScreen()" class="metal-btn p-3 flex flex-col items-center justify-center gap-1 active:scale-95 transition-transform h-28"><i class="fas fa-flag-checkered text-blue-500 text-2xl"></i><span class="text-sm font-bold">PROVAS</span></button>
+             <button onclick="showScreen('physioAssessmentScreen')" class="metal-btn p-3 flex flex-col items-center justify-center gap-1 active:scale-95 transition-transform h-28"><i class="fas fa-clipboard-user text-red-400 text-2xl"></i><span class="text-sm font-bold">AVALIAÇÃO</span></button>
+             <button onclick="showScreen('aiAnalysisScreen')" class="metal-btn p-3 flex flex-col items-center justify-center gap-1 active:scale-95 transition-transform h-28"><i class="fas fa-brain text-teal-400 text-2xl"></i><span class="text-sm font-bold">ANÁLISE IA</span></button>
         `;
     }
-
-    // Initialize Calendar for Student
     renderCalendar(currentCalendarDate);
-    
-    // Fetch and display weather
     fetchWeather();
-
     showScreen('studentProfileScreen');
 }
 
@@ -1263,15 +1116,11 @@ function loadStudentProfile(email: string) {
 document.addEventListener('DOMContentLoaded', () => {
     initializeDatabase();
     
-    // --- 1. SPLASH SCREEN & NAVIGATION LOGIC ---
     const splashScreen = document.getElementById('splashScreen');
     const appContainer = document.getElementById('appContainer');
     
-    // Função auxiliar para trocar de telas
     function navigateTo(screenId: string) {
-        // Esconde todas as telas
         document.querySelectorAll('.screen').forEach(el => el.classList.remove('active'));
-        // Mostra a tela alvo
         const target = document.getElementById(screenId);
         if (target) {
             target.classList.add('active');
@@ -1279,34 +1128,28 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Inicialização: Aguarda 2 segundos e vai para o Login
     setTimeout(() => {
         if (splashScreen && appContainer) {
-            // Animação de saída do Splash
             splashScreen.classList.add('fade-out');
-            
-            // Aguarda a animação CSS terminar (0.5s)
             setTimeout(() => {
-                splashScreen.classList.add('hidden'); // Remove o splash
-                appContainer.classList.remove('hidden'); // Mostra o container do app
-                
-                // Pequeno delay para a opacidade (fade-in do app)
+                splashScreen.classList.add('hidden');
+                appContainer.classList.remove('hidden');
                 requestAnimationFrame(() => {
                     appContainer.classList.remove('init-hidden');
                 });
 
-                // Verifica se já existe usuário logado
+                // FORCE LOGIN LOGIC
                 const user = getCurrentUser();
                 if (user) {
-                    loadStudentProfile(user);
-                } else {
-                    navigateTo('loginScreen');
+                    // Pre-fill but stay on login screen
+                    const emailInput = document.getElementById('login-email') as HTMLInputElement;
+                    if(emailInput) emailInput.value = user;
                 }
+                navigateTo('loginScreen');
             }, 500);
         }
     }, 2000);
 
-    // --- 2. LOGIN LOGIC ---
     const loginForm = document.getElementById('login-form');
     const loginEmailInput = document.getElementById('login-email') as HTMLInputElement;
     const loginBtn = document.getElementById('login-btn');
@@ -1316,41 +1159,27 @@ document.addEventListener('DOMContentLoaded', () => {
         loginForm.addEventListener('submit', (e) => {
             e.preventDefault();
             const email = loginEmailInput.value.trim().toLowerCase();
-
             if (!email) {
                 if (loginError) loginError.textContent = "Por favor, digite seu e-mail.";
                 return;
             }
-
-            // Verifica se o email existe no banco
             const db = getDatabase();
             if (!db.users.find((u: any) => u.email === email)) {
                  if (loginError) loginError.textContent = "Email não encontrado.";
                  return;
             }
-
-            // Feedback visual de carregamento
             if (loginBtn) {
                 const originalText = loginBtn.innerText;
                 loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Entrando...';
-                
-                // Simula processamento de login (1s) e entra no perfil
                 setTimeout(() => {
-                    // Salva e-mail na sessão
                     setCurrentUser(email);
-                    
-                    // Carrega dados e redireciona
                     loadStudentProfile(email);
-                    
-                    // Restaura botão
                     loginBtn.innerText = originalText;
                 }, 1000);
             }
         });
     }
 
-    // --- 4. GLOBAL CLICK HANDLERS FOR NAVIGATION ---
-    // Gerencia botões de "Voltar" e navegação interna
     document.body.addEventListener('click', (e) => {
         const target = e.target as HTMLElement;
         const btn = target.closest('button');
@@ -1358,72 +1187,25 @@ document.addEventListener('DOMContentLoaded', () => {
         if (btn && btn.getAttribute('data-target')) {
             const targetScreen = btn.getAttribute('data-target');
             if (targetScreen) {
-                // If returning to profile, refresh calendar
                 if (targetScreen === 'studentProfileScreen') renderCalendar(currentCalendarDate);
                 showScreen(targetScreen);
             }
         }
-        
-        // Logout Button
         if (btn && btn.id === 'logout-btn') {
             localStorage.removeItem(STORAGE_KEYS.CURRENT_USER);
             location.reload();
         }
     });
 
-    // --- 5. PWA INSTALLATION LOGIC ---
-    function setupPwa() {
-        const banner = document.getElementById('pwa-install-banner');
-        const installBtn = document.getElementById('pwa-install-btn');
-        const closeBtn = document.getElementById('pwa-close-btn');
-        let deferredPrompt: any = null;
-
-        if (!banner || !installBtn || !closeBtn) return;
-
-        const isStandalone = window.matchMedia('(display-mode: standalone)').matches || (window.navigator as any).standalone;
-        if (isStandalone) return;
-
-        window.addEventListener('beforeinstallprompt', (e) => {
-            e.preventDefault();
-            deferredPrompt = e;
-            // Mostra o banner APÓS o splash screen sair (ex: 4.5s)
-            setTimeout(() => {
-                 banner.classList.remove('hidden');
-                 banner.classList.remove('translate-y-0');
-            }, 4500);
-        });
-
-        const isIos = /iphone|ipad|ipod/.test(window.navigator.userAgent.toLowerCase());
-        if (isIos && !isStandalone) {
-             setTimeout(() => {
-                 banner.classList.remove('hidden');
-             }, 4500);
-        }
-
-        installBtn.addEventListener('click', async () => {
-            if (deferredPrompt) {
-                deferredPrompt.prompt();
-                const { outcome } = await deferredPrompt.userChoice;
-                deferredPrompt = null;
-                banner.classList.add('hidden');
-            } else if (isIos) {
-                alert("Para instalar no iOS/iPhone:\n\n1. Toque no botão de Compartilhar.\n2. Selecione 'Adicionar à Tela de Início'.");
-            } else {
-                 alert("Para instalar, procure a opção 'Adicionar à Tela de Início' no menu do seu navegador.");
-            }
-        });
-
-        closeBtn.addEventListener('click', () => {
-            banner.classList.add('hidden');
-        });
+    // PWA Logic (simplified)
+    const banner = document.getElementById('pwa-install-banner');
+    if (banner && !window.matchMedia('(display-mode: standalone)').matches) {
+        setTimeout(() => banner.classList.remove('hidden'), 4500);
+        document.getElementById('pwa-close-btn')?.addEventListener('click', () => banner.classList.add('hidden'));
     }
 
-    setupPwa();
-
-    // Feather Icons
     if (typeof feather !== 'undefined') feather.replace();
 
-    // Calendar Navigation Listeners
     document.getElementById('prev-month-btn')?.addEventListener('click', () => {
         currentCalendarDate.setMonth(currentCalendarDate.getMonth() - 1);
         renderCalendar(currentCalendarDate);
@@ -1434,20 +1216,13 @@ document.addEventListener('DOMContentLoaded', () => {
         renderCalendar(currentCalendarDate);
     });
 
-    // Outdoor Specific Back Buttons
     document.querySelectorAll('.outdoor-back-btn').forEach(btn => {
         btn.addEventListener('click', () => {
             const target = btn.getAttribute('data-target');
-            if(target) {
-                if(target === 'outdoorSelectionScreen') {
-                     // Handle tracking stop logic if needed
-                }
-                showScreen(target);
-            }
+            if(target) showScreen(target);
         });
     });
 
-    // OUTDOOR ACTIVITY BUTTONS
     document.querySelectorAll('.outdoor-activity-btn').forEach(btn => {
         btn.addEventListener('click', () => {
             const activity = btn.getAttribute('data-activity');
@@ -1455,18 +1230,14 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // OUTDOOR CONTROLS
     document.getElementById('start-tracking-btn')?.addEventListener('click', startOutdoorTracking);
     document.getElementById('pause-tracking-btn')?.addEventListener('click', pauseOutdoorTracking);
     document.getElementById('stop-tracking-btn')?.addEventListener('click', stopOutdoorTracking);
     
-    // Exercise Modal Logic
     (window as any).openExerciseModal = (idx: number, type: string) => {
         const db = getDatabase();
         const email = getCurrentUser();
         const exercise = db.trainingPlans[`treinos${type}`][email][idx];
-        
-        // Populate modal
         document.getElementById('modal-exercise-name')!.textContent = exercise.name;
         (document.getElementById('modal-exercise-img') as HTMLImageElement).src = exercise.img;
         document.getElementById('exerciseDetailModal')!.classList.remove('hidden');
@@ -1484,7 +1255,6 @@ document.addEventListener('DOMContentLoaded', () => {
         setTimeout(() => modal?.classList.add('hidden'), 200);
     });
 
-    // Periodization Modal Logic
     document.getElementById('closePeriodizationModalBtn')?.addEventListener('click', () => {
         const modal = document.getElementById('periodizationDetailModal');
         const content = document.getElementById('periodization-modal-content');
@@ -1495,17 +1265,13 @@ document.addEventListener('DOMContentLoaded', () => {
         setTimeout(() => modal?.classList.add('hidden'), 200);
     });
 
-    // AI Analysis Listener
     document.getElementById('generate-analysis-btn')?.addEventListener('click', generateAIAnalysis);
 
-    // --- ASSESSMENT FIX (Force listeners) ---
+    // Assessment tab logic
     const tabProfessor = document.getElementById('tab-professor');
     const tabAluno = document.getElementById('tab-aluno');
     const viewProfessor = document.getElementById('view-professor');
     const viewAluno = document.getElementById('view-aluno');
-    const modalAddAluno = document.getElementById('modal-add-aluno');
-    const modalContentAluno = document.getElementById('modal-content');
-
     if (tabProfessor && tabAluno && viewProfessor && viewAluno) {
         tabProfessor.addEventListener('click', () => {
             tabProfessor.classList.add('tab-active');
@@ -1513,7 +1279,6 @@ document.addEventListener('DOMContentLoaded', () => {
             viewProfessor.classList.remove('hidden');
             viewAluno.classList.add('hidden');
         });
-
         tabAluno.addEventListener('click', () => {
             tabProfessor.classList.remove('tab-active');
             tabAluno.classList.add('tab-active');
@@ -1522,35 +1287,31 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Force Open Modal logic inside main app scope
     const btnAddAluno = document.getElementById('btn-add-aluno');
-    if (btnAddAluno && modalAddAluno && modalContentAluno) {
-        // Remove existing to avoid dupes if any
+    if (btnAddAluno) {
         const newBtn = btnAddAluno.cloneNode(true);
         btnAddAluno.parentNode?.replaceChild(newBtn, btnAddAluno);
-        
         newBtn.addEventListener('click', () => {
-            modalAddAluno.classList.remove('hidden');
+            document.getElementById('modal-add-aluno')?.classList.remove('hidden');
             setTimeout(() => {
-                modalContentAluno.classList.remove('scale-95', 'opacity-0');
-                modalContentAluno.classList.add('scale-100', 'opacity-100');
+                document.getElementById('modal-content')?.classList.remove('scale-95', 'opacity-0');
+                document.getElementById('modal-content')?.classList.add('scale-100', 'opacity-100');
             }, 10);
         });
     }
 
     const btnCancelModal = document.getElementById('btn-cancel-modal');
-    if (btnCancelModal && modalAddAluno && modalContentAluno) {
+    if (btnCancelModal) {
         btnCancelModal.addEventListener('click', () => {
-             modalContentAluno.classList.remove('scale-100', 'opacity-100');
-             modalContentAluno.classList.add('scale-95', 'opacity-0');
+             document.getElementById('modal-content')?.classList.remove('scale-100', 'opacity-100');
+             document.getElementById('modal-content')?.classList.add('scale-95', 'opacity-0');
              setTimeout(() => {
-                modalAddAluno.classList.add('hidden');
+                document.getElementById('modal-add-aluno')?.classList.add('hidden');
              }, 200);
         });
     }
 });
 
-// Expose globals for HTML clicks
 (window as any).loadTrainingScreen = loadTrainingScreen;
 (window as any).loadPeriodizationScreen = loadPeriodizationScreen;
 (window as any).togglePeriodizationStatus = togglePeriodizationStatus;
