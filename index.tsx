@@ -192,20 +192,29 @@ function initializeDatabase() {
         const now = new Date();
         const y = now.getFullYear();
         const m = String(now.getMonth() + 1).padStart(2, '0');
+        const todayStr = now.toISOString().split('T')[0];
+
         const historyData = [
             { date: `${y}-${m}-08`, type: 'Treino A', duration: '50 min' },
             { date: `${y}-${m}-09`, type: 'Treino B', duration: '50 min' },
-            { date: `${y}-${m}-10`, type: 'Treino A', duration: '37 min' }
+            { date: `${y}-${m}-10`, type: 'Treino A', duration: '37 min' },
+            { date: todayStr, type: 'Treino A', duration: '54 min' } // INJECTED WORKOUT TODAY
         ];
+
         if (!db.completedWorkouts[email]) db.completedWorkouts[email] = [];
         historyData.forEach(item => {
-            if (!db.completedWorkouts[email].some((w:any) => w.date === item.date)) {
+            // Updated logic: Check if a workout of same type exists on date, or just add it if it's the requested injection
+            const exists = db.completedWorkouts[email].some((w:any) => w.date === item.date && w.type === item.type);
+            
+            if (!exists) {
                 db.completedWorkouts[email].push(item);
-                const planKey = item.type === 'Treino A' ? 'treinosA' : 'treinosB';
-                const plan = db.trainingPlans[planKey][email];
-                if(plan && plan.length > 0) {
-                    if(!plan[0].checkIns) plan[0].checkIns = [];
-                    if(!plan[0].checkIns.includes(item.date)) plan[0].checkIns.push(item.date);
+                const planKey = item.type === 'Treino A' ? 'treinosA' : (item.type === 'Treino B' ? 'treinosB' : null);
+                if (planKey) {
+                    const plan = db.trainingPlans[planKey][email];
+                    if(plan && plan.length > 0) {
+                        if(!plan[0].checkIns) plan[0].checkIns = [];
+                        if(!plan[0].checkIns.includes(item.date)) plan[0].checkIns.push(item.date);
+                    }
                 }
             }
         });
@@ -253,37 +262,58 @@ function initializeDatabase() {
 async function fetchWeather() {
     const widget = document.getElementById('weather-widget');
     if (!widget) return;
+    
+    // Default Rio coords
     let lat = -22.9068;
     let lon = -43.1729;
-    let city = "Rio de Janeiro";
+    let locationName = "Rio de Janeiro";
+
     try {
         const position: any = await new Promise((resolve, reject) => {
             navigator.geolocation.getCurrentPosition(resolve, reject, {
                 enableHighAccuracy: true, 
-                timeout: 10000, 
+                timeout: 15000, // Increased timeout for better GPS lock
                 maximumAge: 0   
             });
         });
         lat = position.coords.latitude;
         lon = position.coords.longitude;
+        
+        // Reverse Geocoding
         try {
-             const geoRes = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=10`);
+             const geoRes = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=14`);
              const geoData = await geoRes.json();
              if (geoData && geoData.address) {
-                 city = geoData.address.city || geoData.address.town || geoData.address.municipality || geoData.address.village || geoData.address.suburb || city;
-                 if (city.includes("Município de")) city = city.replace("Município de ", "");
+                 // Try to get specific neighborhood/suburb first
+                 locationName = geoData.address.suburb || 
+                                geoData.address.city_district || 
+                                geoData.address.town || 
+                                geoData.address.city || 
+                                geoData.address.municipality || 
+                                "Local Atual";
+                 
+                 if (locationName.includes("Município de")) locationName = locationName.replace("Município de ", "");
              }
-        } catch(e) {}
-    } catch (e) {}
+        } catch(e) {
+            console.error("Geocoding error", e);
+        }
+    } catch (e) {
+        console.warn("Geolocation failed or denied", e);
+    }
 
     try {
-        const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weather_code&daily=temperature_2m_max,temperature_2m_min&timezone=auto`;
+        // Updated API call to include apparent_temperature and rain probability
+        const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,apparent_temperature,weather_code&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=auto`;
         const res = await fetch(url);
         const data = await res.json();
+        
         const currentTemp = Math.round(data.current.temperature_2m);
+        const feelsLike = Math.round(data.current.apparent_temperature);
         const minTemp = Math.round(data.daily.temperature_2m_min[0]);
         const maxTemp = Math.round(data.daily.temperature_2m_max[0]);
+        const rainProb = data.daily.precipitation_probability_max ? data.daily.precipitation_probability_max[0] : 0;
         const weatherCode = data.current.weather_code;
+        
         let iconName = 'sun';
         let iconColor = 'text-yellow-400';
         if (weatherCode >= 1 && weatherCode <= 3) { iconName = 'cloud'; iconColor = 'text-gray-300'; }
@@ -293,19 +323,27 @@ async function fetchWeather() {
         else if (weatherCode >= 95) { iconName = 'cloud-lightning'; iconColor = 'text-yellow-600'; }
         
         widget.innerHTML = `
-            <div class="flex items-center justify-end gap-2">
-                <i data-feather="${iconName}" class="${iconColor} w-6 h-6"></i>
-                <span class="text-xl font-bold text-white">${currentTemp}°C</span>
-            </div>
-            <p class="text-[10px] text-gray-400 font-medium">${city}</p>
-            <div class="flex items-center gap-2 text-[10px] text-gray-500 mt-0.5">
-                <span class="flex items-center"><i class="fas fa-arrow-down text-blue-400 text-[8px] mr-0.5"></i> ${minTemp}°</span>
-                <span class="flex items-center"><i class="fas fa-arrow-up text-red-400 text-[8px] mr-0.5"></i> ${maxTemp}°</span>
+            <div class="flex flex-col items-end">
+                <div class="flex items-center gap-2 mb-0.5">
+                    <i data-feather="${iconName}" class="${iconColor} w-6 h-6"></i>
+                    <span class="text-3xl font-bold text-white leading-none">${currentTemp}°</span>
+                </div>
+                <p class="text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-1">${locationName}</p>
+                <div class="flex items-center gap-2 text-[9px] text-gray-400 bg-gray-800/50 px-2 py-1 rounded-md border border-gray-700/50">
+                    <span class="flex items-center gap-0.5"><i class="fas fa-temperature-high text-orange-400"></i> ${maxTemp}°</span>
+                    <span class="w-px h-2 bg-gray-600"></span>
+                    <span class="flex items-center gap-0.5"><i class="fas fa-temperature-low text-blue-400"></i> ${minTemp}°</span>
+                </div>
+                <div class="flex items-center gap-2 text-[9px] text-gray-400 mt-1">
+                    <span>Sensação: <strong class="text-white">${feelsLike}°</strong></span>
+                    ${rainProb > 0 ? `<span class="flex items-center gap-0.5 text-blue-300"><i class="fas fa-umbrella text-[8px]"></i> ${rainProb}%</span>` : ''}
+                </div>
             </div>
         `;
         if (typeof feather !== 'undefined') feather.replace();
     } catch (err) {
-        widget.innerHTML = '<span class="text-xs text-red-500">Erro ao carregar clima</span>';
+        console.error(err);
+        widget.innerHTML = '<span class="text-xs text-red-500">Erro clima</span>';
     }
 }
 
