@@ -23,6 +23,12 @@ body {
 h1, h2, h3, h4, h5, h6 { color: #ffffff; }
 p, label, span, div { color: #e5e7eb; /* gray-200 */ }
 
+/* --- CRITICAL: SCREEN VISIBILITY LOGIC --- */
+/* Override Tailwind's flex/grid classes when screen is inactive */
+.screen:not(.active) {
+    display: none !important;
+}
+
 /* --- MAP CONTAINER --- */
 .map-container {
     height: 350px;
@@ -71,7 +77,7 @@ p, label, span, div { color: #e5e7eb; /* gray-200 */ }
 }
 
 .screen {
-    display: none;
+    /* Base styles for screens */
     flex: 1; /* Take all available space in wrapper */
     width: 100%;
     height: 100%;
@@ -80,7 +86,6 @@ p, label, span, div { color: #e5e7eb; /* gray-200 */ }
     animation: fadeIn 0.3s ease-out;
     -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
 }
-.screen.active { display: block; }
 
 @keyframes fadeIn {
     from { opacity: 0; transform: translateY(10px); }

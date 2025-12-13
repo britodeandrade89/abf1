@@ -323,60 +323,6 @@ function initializeDatabase() {
     }
 }
 
-// --- WEATHER FETCHING ---
-async function fetchWeather() {
-    const widget = document.getElementById('weather-widget');
-    if (!widget) return;
-    
-    // Default Rio coords
-    let lat = -22.9068;
-    let lon = -43.1729;
-    let locationName = "Rio de Janeiro";
-
-    try {
-        const position: any = await new Promise((resolve, reject) => {
-            navigator.geolocation.getCurrentPosition(resolve, reject, {
-                enableHighAccuracy: true, 
-                timeout: 5000
-            });
-        });
-        lat = position.coords.latitude;
-        lon = position.coords.longitude;
-    } catch (error) {
-        console.log("Using default location");
-    }
-
-    try {
-        const response = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weather_code&daily=temperature_2m_max,temperature_2m_min&timezone=auto`);
-        const data = await response.json();
-        
-        const temp = data.current.temperature_2m;
-        const code = data.current.weather_code;
-        const min = data.daily.temperature_2m_min[0];
-        const max = data.daily.temperature_2m_max[0];
-        
-        let icon = 'sun';
-        if (code > 3) icon = 'cloud';
-        if (code > 50) icon = 'cloud-rain';
-        if (code > 95) icon = 'cloud-lightning';
-
-        widget.innerHTML = `
-            <div class="flex items-center justify-between">
-                <div>
-                    <div class="text-3xl font-bold">${temp}°C</div>
-                    <div class="text-sm text-gray-500">${min}° / ${max}°</div>
-                </div>
-                <i data-feather="${icon}" class="text-gray-400" style="width: 32px; height: 32px;"></i>
-            </div>
-            <div class="text-xs text-gray-400 mt-2">${locationName}</div>
-        `;
-        if (typeof feather !== 'undefined') feather.replace();
-
-    } catch (e) {
-        widget.innerHTML = '<div class="text-sm text-gray-500">Clima indisponível</div>';
-    }
-}
-
 // --- AI ANALYSIS LOGIC ---
 async function generateAIAnalysis() {
     const btn = document.getElementById('generate-analysis-btn');
@@ -422,15 +368,22 @@ async function generateAIAnalysis() {
 
 // --- NAVIGATION ---
 function showScreen(screenId: string) {
+    // 1. Hide all screens
     const screens = document.querySelectorAll('.screen');
     screens.forEach(s => {
         s.classList.remove('active');
-        (s as HTMLElement).style.display = 'none';
+        // Do NOT manually set style.display = 'none'.
+        // We rely on CSS rule: .screen:not(.active) { display: none !important; }
+        // Just clear any inline overrides if they exist.
+        (s as HTMLElement).style.display = '';
     });
+
+    // 2. Show target screen
     const target = document.getElementById(screenId);
     if (target) {
-        target.style.display = 'block';
-        requestAnimationFrame(() => target.classList.add('active'));
+        target.classList.add('active');
+        // Ensure inline style doesn't hide it (just in case)
+        target.style.display = '';
     }
     window.scrollTo(0, 0);
 }
@@ -1154,6 +1107,61 @@ function loadPeriodizationScreen() {
         }
     }
     showScreen('periodizationScreen');
+}
+
+// --- WEATHER LOGIC ---
+async function fetchWeather() {
+    const container = document.getElementById('weather-widget');
+    if (!container) return;
+
+    // Default to Rio de Janeiro coordinates
+    const lat = -22.9068;
+    const lng = -43.1729;
+
+    try {
+        const response = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&current=temperature_2m,weather_code&daily=temperature_2m_max,temperature_2m_min&timezone=auto`);
+        const data = await response.json();
+
+        const currentTemp = Math.round(data.current.temperature_2m);
+        const code = data.current.weather_code;
+        const maxTemp = Math.round(data.daily.temperature_2m_max[0]);
+        const minTemp = Math.round(data.daily.temperature_2m_min[0]);
+
+        let icon = 'sun';
+        let desc = 'Limpo';
+
+        // WMO Weather interpretation
+        if (code >= 1 && code <= 3) { icon = 'cloud'; desc = 'Nublado'; }
+        else if (code >= 45 && code <= 48) { icon = 'align-justify'; desc = 'Nevoeiro'; }
+        else if (code >= 51 && code <= 67) { icon = 'cloud-drizzle'; desc = 'Garoa'; }
+        else if (code >= 71 && code <= 77) { icon = 'cloud-snow'; desc = 'Neve'; }
+        else if (code >= 80 && code <= 82) { icon = 'cloud-rain'; desc = 'Chuva'; }
+        else if (code >= 85 && code <= 86) { icon = 'cloud-snow'; desc = 'Neve'; }
+        else if (code >= 95) { icon = 'cloud-lightning'; desc = 'Tempestade'; }
+
+        container.innerHTML = `
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <i data-feather="${icon}" class="w-8 h-8 text-yellow-500 drop-shadow-sm"></i>
+                    <div>
+                        <p class="text-3xl font-black text-white leading-none">${currentTemp}°</p>
+                        <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">${desc}</p>
+                    </div>
+                </div>
+                <div class="text-right">
+                    <div class="flex items-center gap-2 text-xs font-bold">
+                        <span class="text-red-400 flex items-center"><i data-feather="arrow-up" class="w-3 h-3"></i> ${maxTemp}°</span>
+                        <span class="text-blue-400 flex items-center"><i data-feather="arrow-down" class="w-3 h-3"></i> ${minTemp}°</span>
+                    </div>
+                    <p class="text-[9px] font-bold text-gray-600 uppercase tracking-widest mt-0.5">Rio de Janeiro</p>
+                </div>
+            </div>
+        `;
+        if (typeof feather !== 'undefined') feather.replace();
+    } catch (error) {
+        console.error('Weather fetch error:', error);
+        container.innerHTML = '<p class="text-xs text-gray-500 text-center">Clima indisponível</p>';
+    }
 }
 
 function loadStudentProfile(email: string) {
