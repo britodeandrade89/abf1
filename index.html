@@ -775,8 +775,10 @@
         setTimeout(() => {
             const splash = document.getElementById('splashScreen');
             const app = document.getElementById('appContainer');
-            // Simplified failsafe condition to be more aggressive
-            if(splash && !splash.classList.contains('hidden')) {
+            // Modified failsafe: only trigger if application logic hasn't loaded (window.isAppLoaded)
+            // This prevents race condition where user logs in before this timer fires, 
+            // causing the splash screen logic to overwrite the logged-in screen state.
+            if(splash && !splash.classList.contains('hidden') && !window.isAppLoaded) {
                 console.warn("Failsafe triggered: Hiding splash screen due to timeout.");
                 splash.classList.add('hidden');
                 if(app) {
@@ -786,7 +788,7 @@
                 const login = document.getElementById('loginScreen');
                 if(login) login.style.display = 'block';
             }
-        }, 2500);
+        }, 4000);
     </script>
 </body>
 </html>
