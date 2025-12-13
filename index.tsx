@@ -1191,9 +1191,26 @@ function loadStudentProfile(email: string) {
 document.addEventListener('DOMContentLoaded', () => {
     initializeDatabase();
     
-    const splashScreen = document.getElementById('splashScreen');
+    // Check for logged in user IMMEDIATELY (Silent Auth)
+    const user = getCurrentUser();
     const appContainer = document.getElementById('appContainer');
-    
+    const splashScreen = document.getElementById('splashScreen');
+
+    if (user) {
+        const db = getDatabase();
+        const userExists = db.users.find((u: any) => u.email.toLowerCase() === user.toLowerCase());
+        if (userExists) {
+            // Load profile behind the scenes
+            loadStudentProfile(user);
+        } else {
+            // Fallback to login if data is inconsistent
+            showScreen('loginScreen');
+        }
+    } else {
+        showScreen('loginScreen');
+    }
+
+    // Now fade out splash screen after delay
     setTimeout(() => {
         if (splashScreen && appContainer) {
             splashScreen.classList.add('fade-out');
@@ -1206,23 +1223,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 // IMPORTANT: Tell the HTML failsafe that app loaded successfully
                 (window as any).isAppLoaded = true;
-
-                // AUTO LOGIN LOGIC
-                const user = getCurrentUser();
-                if (user) {
-                    // Try to load profile directly
-                    const db = getDatabase();
-                    // Ensure robust case-insensitive check
-                    const userExists = db.users.find((u: any) => u.email.toLowerCase() === user.toLowerCase());
-                    if (userExists) {
-                        loadStudentProfile(user);
-                    } else {
-                        // User in local storage but not in DB (cleared?) -> Login
-                        showScreen('loginScreen');
-                    }
-                } else {
-                    showScreen('loginScreen');
-                }
             }, 500);
         }
     }, 2000);
@@ -1234,7 +1234,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (loginForm) {
         loginForm.addEventListener('submit', (e) => {
-            e.preventDefault();
+            e.preventDefault(); // Double protection
             // Force lowercase for consistent comparison
             const email = loginEmailInput.value.trim().toLowerCase();
             
