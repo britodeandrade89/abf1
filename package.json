@@ -4,7 +4,7 @@
   "version": "1.1.0",
   "description": "Assessoria de Treinamento Físico por André Brito.",
   "scripts": {
-    "build": "rimraf public && esbuild index.tsx --bundle --minify --outfile=public/index.js && cpx \"./*.{html,css,json}\" public && cpx \"service-worker.js\" public"
+    "build": "rimraf public && esbuild index.tsx --bundle --minify --outfile=public/index.js --external:@google/genai --external:@capacitor/cli && cpx \"./*.{html,css,json}\" public && cpx \"service-worker.js\" public"
   },
   "devDependencies": {
     "@types/leaflet": "^1.9.12",

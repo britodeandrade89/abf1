@@ -775,14 +775,18 @@
         setTimeout(() => {
             const splash = document.getElementById('splashScreen');
             const app = document.getElementById('appContainer');
-            if(splash && !splash.classList.contains('hidden') && app.classList.contains('init-hidden')) {
+            // Simplified failsafe condition to be more aggressive
+            if(splash && !splash.classList.contains('hidden')) {
                 console.warn("Failsafe triggered: Hiding splash screen due to timeout.");
                 splash.classList.add('hidden');
-                app.classList.remove('hidden');
-                app.classList.remove('init-hidden');
-                document.getElementById('loginScreen').style.display = 'block';
+                if(app) {
+                    app.classList.remove('hidden');
+                    app.classList.remove('init-hidden');
+                }
+                const login = document.getElementById('loginScreen');
+                if(login) login.style.display = 'block';
             }
-        }, 2200);
+        }, 2500);
     </script>
 </body>
 </html>
