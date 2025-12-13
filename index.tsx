@@ -1233,17 +1233,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 2000);
 
     const loginForm = document.getElementById('login-form');
-    // Ensure input is grabbed fresh inside the handler or check for existence
+    const loginEmailInput = document.getElementById('login-email') as HTMLInputElement;
     const loginBtn = document.getElementById('login-btn');
     const loginError = document.getElementById('login-error');
 
     if (loginForm) {
         loginForm.addEventListener('submit', (e) => {
             e.preventDefault(); // Double protection
-            
-            const loginEmailInput = document.getElementById('login-email') as HTMLInputElement;
-            if (!loginEmailInput) return;
-
             // Force lowercase for consistent comparison
             const email = loginEmailInput.value.trim().toLowerCase();
             
@@ -1262,9 +1258,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 const originalText = loginBtn.innerText;
                 loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Entrando...';
                 
+                // CRITICAL FIX: Save session immediately to survive potential page refresh
+                setCurrentUser(email);
+
                 // Simulate network delay for UX
                 setTimeout(() => {
-                    setCurrentUser(email);
+                    // Session already saved above
                     loadStudentProfile(email);
                     // Reset button state
                     loginBtn.innerText = originalText;
