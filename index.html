@@ -70,7 +70,7 @@
         </div>
         <div class="absolute bottom-8 text-center">
             <p class="text-gray-400 text-sm">Desenvolvido por André Brito</p>
-            <p class="text-gray-500 text-xs mt-1">Versão 1.3.3</p>
+            <p class="text-gray-500 text-xs mt-1">Versão 1.3.5</p>
         </div>
     </div>
 
@@ -609,7 +609,8 @@
     <!-- Scripts do PhysioApp -->
     <script src="assessment.js"></script>
     <!-- Compiled TSX -->
-    <script src="index.js"></script>
+    <!-- FIX: Changed to type="module" so imports work and the app doesn't crash on load -->
+    <script type="module" src="index.js"></script>
 
     <script>
         // Failsafe for splash screen

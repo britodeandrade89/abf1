@@ -186,136 +186,141 @@ function calculatePace(ms: number, meters: number) {
 
 // --- INITIALIZATION ---
 function initializeDatabase() {
-    const db = getDatabase();
-    
-    // Ensure emails are lowercase for consistency
-    const usersToInit = ['britodeandrade@gmail.com', 'marcellybispo92@gmail.com'];
-    
-    // Ensure Marcelly is in the user list if loaded from old DB
-    // Corrected to lowercase email check
-    const marcelly = db.users.find((u: any) => u.email === 'marcellybispo92@gmail.com');
-    if (!marcelly) {
-        db.users.push({ id: 2, name: 'Marcelly Bispo', email: 'marcellybispo92@gmail.com', photo: 'marcelly.jpg', weightHistory: [], nutritionistData: { consultation: { step: 0, answers: {} }, plans: [], status: 'idle' }, periodizationStartDate: '2025-01-15', stressData: { assessments: [] } });
-    } else {
-        marcelly.photo = 'marcelly.jpg';
-    }
-
-    // Default Workout Data (André Brito's Template)
-    const treinosA = [
-        { name: 'Agachamento livre com HBC', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/77Uth2fQUxtPXvqu1UCb.png', sets: '3', reps: '10', carga: '12', obs: 'Método Simples' },
-        { name: 'Leg press horizontal', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/qF4Qx4su0tiGLT3oTZqu.png', sets: '3', reps: '10', carga: '40', obs: 'Método Simples' },
-        { name: 'Leg press horizontal unilateral', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/qF4Qx4su0tiGLT3oTZqu.png', sets: '3', reps: '10', carga: '20', obs: 'Método Simples' },
-        { name: 'Cadeira extensora', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/ZEcYnpswJBmu24PWZXwq.jpg', sets: '3', reps: '10', carga: '10', obs: 'Método Simples' },
-        { name: 'Cadeira extensora unilateral', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/ZEcYnpswJBmu24PWZXwq.jpg', sets: '3', reps: '10', carga: '5', obs: 'Método Simples' },
-        { name: 'Supino aberto com HBC no banco inclinado', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/isKs5qzBPblirwR4IHPO.png', sets: '3', reps: '10', carga: '12', obs: 'Método Simples' },
-        { name: 'Crucifixo aberto com HBC no banco inclinado', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/isKs5qzBPblirwR4IHPO.png', sets: '3', reps: '10', carga: '8', obs: 'Método Simples' },
-        { name: 'Desenvolvimento aberto com HBC no banco 75 graus', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/TYYs8dYewPrOA5MB0LKt.png', sets: '3', reps: '10', carga: '8', obs: 'Método Simples' },
-        { name: 'Extensão de cotovelos aberto no solo', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/qF4Qx4su0tiGLT3oTZqu.png', sets: '3', reps: '10', carga: '0', obs: 'Método Simples' },
-        { name: 'Extensão de cotovelos fechado no solo', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/qF4Qx4su0tiGLT3oTZqu.png', sets: '3', reps: '10', carga: '0', obs: 'Método Simples' },
-        { name: 'Abdominal remador no solo', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/sGz9YqGUPf7lIqX8vULE.png', sets: '3', reps: '15', carga: '0', obs: 'Método Simples' }
-    ];
-
-    const treinosB = [
-        { name: 'Agachamento sumô com HBC', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/sGz9YqGUPf7lIqX8vULE.png', sets: '3', reps: '12', carga: '16', obs: 'Método Simples' },
-        { name: 'Extensão de quadril com caneleira', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/qF4Qx4su0tiGLT3oTZqu.png', sets: '3', reps: '12', carga: '5', obs: 'Método Simples' },
-        { name: 'Flexão de joelho em pé com caneleira', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/ZEcYnpswJBmu24PWZXwq.jpg', sets: '3', reps: '12', carga: '5', obs: 'Método Simples' },
-        { name: 'Cadeira flexora', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/ZEcYnpswJBmu24PWZXwq.jpg', sets: '3', reps: '12', carga: '15', obs: 'Método Simples' },
-        { name: 'Cadeira abdutora', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/qF4Qx4su0tiGLT3oTZqu.png', sets: '3', reps: '12', carga: '20', obs: 'Método Simples' },
-        { name: 'Remada declinado no smith', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/isKs5qzBPblirwR4IHPO.png', sets: '3', reps: '12', carga: '10', obs: 'Método Simples' },
-        { name: 'Remada curvada supinada no cross', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/isKs5qzBPblirwR4IHPO.png', sets: '3', reps: '12', carga: '15', obs: 'Método Simples' },
-        { name: 'Bíceps em pé no cross barra reta', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/TYYs8dYewPrOA5MB0LKt.png', sets: '3', reps: '12', carga: '10', obs: 'Método Simples' },
-        { name: 'Puxada aberta no pulley alto', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/isKs5qzBPblirwR4IHPO.png', sets: '3', reps: '12', carga: '25', obs: 'Método Simples' },
-        { name: 'Puxada supinada no pulley alto', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/isKs5qzBPblirwR4IHPO.png', sets: '3', reps: '12', carga: '25', obs: 'Método Simples' },
-        { name: 'Abdominal remador no solo', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/sGz9YqGUPf7lIqX8vULE.png', sets: '3', reps: '15', carga: '0', obs: 'Método Simples' }
-    ];
-
-    const runningWorkouts = [
-        { name: 'Corrida Leve', distance: '5km', duration: '30min' },
-        { name: 'Tiro de Velocidade', distance: '3km', duration: '20min' }
-    ];
-
-    usersToInit.forEach(email => {
-        if (email === 'marcellybispo92@gmail.com') {
-             let tA = JSON.parse(JSON.stringify(treinosA));
-             let tB = JSON.parse(JSON.stringify(treinosB));
-             if(tA.length >= 10) tA.splice(9, 1);
-             if(tB.length >= 10) tB.splice(9, 1);
-             db.trainingPlans.treinosA[email] = tA;
-             db.trainingPlans.treinosB[email] = tB;
+    try {
+        const db = getDatabase();
+        
+        // Ensure emails are lowercase for consistency
+        const usersToInit = ['britodeandrade@gmail.com', 'marcellybispo92@gmail.com'];
+        
+        // Ensure Marcelly is in the user list if loaded from old DB
+        // Corrected to lowercase email check
+        const marcelly = db.users.find((u: any) => u.email === 'marcellybispo92@gmail.com');
+        if (!marcelly) {
+            db.users.push({ id: 2, name: 'Marcelly Bispo', email: 'marcellybispo92@gmail.com', photo: 'marcelly.jpg', weightHistory: [], nutritionistData: { consultation: { step: 0, answers: {} }, plans: [], status: 'idle' }, periodizationStartDate: '2025-01-15', stressData: { assessments: [] } });
         } else {
-            if (!db.trainingPlans.treinosA[email]) db.trainingPlans.treinosA[email] = treinosA;
-            if (!db.trainingPlans.treinosB[email]) db.trainingPlans.treinosB[email] = treinosB;
+            marcelly.photo = 'marcelly.jpg';
         }
-        db.userRunningWorkouts[email] = runningWorkouts;
 
-        // History injection (keep requested history)
-        const now = new Date();
-        const y = now.getFullYear();
-        const m = String(now.getMonth() + 1).padStart(2, '0');
-        const todayStr = now.toISOString().split('T')[0];
-
-        const historyData = [
-            { date: `${y}-${m}-08`, type: 'Treino A', duration: '50 min' },
-            { date: `${y}-${m}-09`, type: 'Treino B', duration: '50 min' },
-            { date: `${y}-${m}-10`, type: 'Treino A', duration: '37 min' },
-            { date: todayStr, type: 'Treino A', duration: '54 min' } // INJECTED WORKOUT TODAY
+        // Default Workout Data (André Brito's Template)
+        const treinosA = [
+            { name: 'Agachamento livre com HBC', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/77Uth2fQUxtPXvqu1UCb.png', sets: '3', reps: '10', carga: '12', obs: 'Método Simples' },
+            { name: 'Leg press horizontal', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/qF4Qx4su0tiGLT3oTZqu.png', sets: '3', reps: '10', carga: '40', obs: 'Método Simples' },
+            { name: 'Leg press horizontal unilateral', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/qF4Qx4su0tiGLT3oTZqu.png', sets: '3', reps: '10', carga: '20', obs: 'Método Simples' },
+            { name: 'Cadeira extensora', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/ZEcYnpswJBmu24PWZXwq.jpg', sets: '3', reps: '10', carga: '10', obs: 'Método Simples' },
+            { name: 'Cadeira extensora unilateral', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/ZEcYnpswJBmu24PWZXwq.jpg', sets: '3', reps: '10', carga: '5', obs: 'Método Simples' },
+            { name: 'Supino aberto com HBC no banco inclinado', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/isKs5qzBPblirwR4IHPO.png', sets: '3', reps: '10', carga: '12', obs: 'Método Simples' },
+            { name: 'Crucifixo aberto com HBC no banco inclinado', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/isKs5qzBPblirwR4IHPO.png', sets: '3', reps: '10', carga: '8', obs: 'Método Simples' },
+            { name: 'Desenvolvimento aberto com HBC no banco 75 graus', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/TYYs8dYewPrOA5MB0LKt.png', sets: '3', reps: '10', carga: '8', obs: 'Método Simples' },
+            { name: 'Extensão de cotovelos aberto no solo', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/qF4Qx4su0tiGLT3oTZqu.png', sets: '3', reps: '10', carga: '0', obs: 'Método Simples' },
+            { name: 'Extensão de cotovelos fechado no solo', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/qF4Qx4su0tiGLT3oTZqu.png', sets: '3', reps: '10', carga: '0', obs: 'Método Simples' },
+            { name: 'Abdominal remador no solo', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/sGz9YqGUPf7lIqX8vULE.png', sets: '3', reps: '15', carga: '0', obs: 'Método Simples' }
         ];
 
-        if (!db.completedWorkouts[email]) db.completedWorkouts[email] = [];
-        historyData.forEach(item => {
-            // Updated logic: Check if a workout of same type exists on date, or just add it if it's the requested injection
-            const exists = db.completedWorkouts[email].some((w:any) => w.date === item.date && w.type === item.type);
-            
-            if (!exists) {
-                db.completedWorkouts[email].push(item);
-                const planKey = item.type === 'Treino A' ? 'treinosA' : (item.type === 'Treino B' ? 'treinosB' : null);
-                if (planKey) {
-                    const plan = db.trainingPlans[planKey][email];
-                    if(plan && plan.length > 0) {
-                        if(!plan[0].checkIns) plan[0].checkIns = [];
-                        if(!plan[0].checkIns.includes(item.date)) plan[0].checkIns.push(item.date);
+        const treinosB = [
+            { name: 'Agachamento sumô com HBC', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/sGz9YqGUPf7lIqX8vULE.png', sets: '3', reps: '12', carga: '16', obs: 'Método Simples' },
+            { name: 'Extensão de quadril com caneleira', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/qF4Qx4su0tiGLT3oTZqu.png', sets: '3', reps: '12', carga: '5', obs: 'Método Simples' },
+            { name: 'Flexão de joelho em pé com caneleira', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/ZEcYnpswJBmu24PWZXwq.jpg', sets: '3', reps: '12', carga: '5', obs: 'Método Simples' },
+            { name: 'Cadeira flexora', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/ZEcYnpswJBmu24PWZXwq.jpg', sets: '3', reps: '12', carga: '15', obs: 'Método Simples' },
+            { name: 'Cadeira abdutora', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/qF4Qx4su0tiGLT3oTZqu.png', sets: '3', reps: '12', carga: '20', obs: 'Método Simples' },
+            { name: 'Remada declinado no smith', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/isKs5qzBPblirwR4IHPO.png', sets: '3', reps: '12', carga: '10', obs: 'Método Simples' },
+            { name: 'Remada curvada supinada no cross', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/isKs5qzBPblirwR4IHPO.png', sets: '3', reps: '12', carga: '15', obs: 'Método Simples' },
+            { name: 'Bíceps em pé no cross barra reta', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/TYYs8dYewPrOA5MB0LKt.png', sets: '3', reps: '12', carga: '10', obs: 'Método Simples' },
+            { name: 'Puxada aberta no pulley alto', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/isKs5qzBPblirwR4IHPO.png', sets: '3', reps: '12', carga: '25', obs: 'Método Simples' },
+            { name: 'Puxada supinada no pulley alto', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/isKs5qzBPblirwR4IHPO.png', sets: '3', reps: '12', carga: '25', obs: 'Método Simples' },
+            { name: 'Abdominal remador no solo', img: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/sGz9YqGUPf7lIqX8vULE.png', sets: '3', reps: '15', carga: '0', obs: 'Método Simples' }
+        ];
+
+        const runningWorkouts = [
+            { name: 'Corrida Leve', distance: '5km', duration: '30min' },
+            { name: 'Tiro de Velocidade', distance: '3km', duration: '20min' }
+        ];
+
+        usersToInit.forEach(email => {
+            if (email === 'marcellybispo92@gmail.com') {
+                 let tA = JSON.parse(JSON.stringify(treinosA));
+                 let tB = JSON.parse(JSON.stringify(treinosB));
+                 if(tA.length >= 10) tA.splice(9, 1);
+                 if(tB.length >= 10) tB.splice(9, 1);
+                 db.trainingPlans.treinosA[email] = tA;
+                 db.trainingPlans.treinosB[email] = tB;
+            } else {
+                if (!db.trainingPlans.treinosA[email]) db.trainingPlans.treinosA[email] = treinosA;
+                if (!db.trainingPlans.treinosB[email]) db.trainingPlans.treinosB[email] = treinosB;
+            }
+            db.userRunningWorkouts[email] = runningWorkouts;
+
+            // History injection (keep requested history)
+            const now = new Date();
+            const y = now.getFullYear();
+            const m = String(now.getMonth() + 1).padStart(2, '0');
+            const todayStr = now.toISOString().split('T')[0];
+
+            const historyData = [
+                { date: `${y}-${m}-08`, type: 'Treino A', duration: '50 min' },
+                { date: `${y}-${m}-09`, type: 'Treino B', duration: '50 min' },
+                { date: `${y}-${m}-10`, type: 'Treino A', duration: '37 min' },
+                { date: todayStr, type: 'Treino A', duration: '54 min' } // INJECTED WORKOUT TODAY
+            ];
+
+            if (!db.completedWorkouts[email]) db.completedWorkouts[email] = [];
+            historyData.forEach(item => {
+                // Updated logic: Check if a workout of same type exists on date, or just add it if it's the requested injection
+                const exists = db.completedWorkouts[email].some((w:any) => w.date === item.date && w.type === item.type);
+                
+                if (!exists) {
+                    db.completedWorkouts[email].push(item);
+                    const planKey = item.type === 'Treino A' ? 'treinosA' : (item.type === 'Treino B' ? 'treinosB' : null);
+                    if (planKey) {
+                        const plan = db.trainingPlans[planKey][email];
+                        if(plan && plan.length > 0) {
+                            if(!plan[0].checkIns) plan[0].checkIns = [];
+                            if(!plan[0].checkIns.includes(item.date)) plan[0].checkIns.push(item.date);
+                        }
                     }
                 }
-            }
+            });
         });
-    });
 
-    // Periodization
-    const startDate = getMonday(new Date());
-    const addWeeks = (date: Date, weeks: number) => {
-        const result = new Date(date);
-        result.setDate(result.getDate() + (weeks * 7));
-        return result;
-    };
-    const p1Start = startDate;
-    const p1End = addWeeks(p1Start, 2); 
-    const p2Start = new Date(p1End);
-    p2Start.setDate(p2Start.getDate() + 1);
-    const p2End = addWeeks(p2Start, 2); 
-    const p3Start = new Date(p2End);
-    p3Start.setDate(p3Start.getDate() + 1);
-    const p3End = addWeeks(p3Start, 2); 
-    const p4Start = new Date(p3End);
-    p4Start.setDate(p4Start.getDate() + 1);
-    const p4End = addWeeks(p4Start, 2);
+        // Periodization
+        const startDate = getMonday(new Date());
+        const addWeeks = (date: Date, weeks: number) => {
+            const result = new Date(date);
+            result.setDate(result.getDate() + (weeks * 7));
+            return result;
+        };
+        const p1Start = startDate;
+        const p1End = addWeeks(p1Start, 2); 
+        const p2Start = new Date(p1End);
+        p2Start.setDate(p2Start.getDate() + 1);
+        const p2End = addWeeks(p2Start, 2); 
+        const p3Start = new Date(p2End);
+        p3Start.setDate(p3Start.getDate() + 1);
+        const p3End = addWeeks(p3Start, 2); 
+        const p4Start = new Date(p3End);
+        p4Start.setDate(p4Start.getDate() + 1);
+        const p4End = addWeeks(p4Start, 2);
 
-    const periodizacaoTemplate = [
-        { id: 1, fase: 'Adaptação', inicio: formatDate(p1Start), fim: formatDate(p1End), objetivo: 'Resistência Muscular', status: 'Não Começou', series: '3', repeticoes: '10', detalhes: 'Fase de adaptação anatômica.' },
-        { id: 2, fase: 'Hipertrofia I', inicio: formatDate(p2Start), fim: formatDate(p2End), objetivo: 'Ganho de Massa', status: 'Não Começou', series: '3', repeticoes: '10', detalhes: 'Fase principal de construção muscular.' },
-        { id: 3, fase: 'Hipertrofia II', inicio: formatDate(p3Start), fim: formatDate(p3End), objetivo: 'Definição e Volume', status: 'Não Começou', series: '3', repeticoes: '10', detalhes: 'Intensificação do treino.' },
-        { id: 4, fase: 'Força Pura', inicio: formatDate(p4Start), fim: formatDate(p4End), objetivo: 'Aumento de Carga', status: 'Não Começou', series: '4', repeticoes: '4-6', detalhes: 'Foco no aumento de força bruta.' }
-    ];
+        const periodizacaoTemplate = [
+            { id: 1, fase: 'Adaptação', inicio: formatDate(p1Start), fim: formatDate(p1End), objetivo: 'Resistência Muscular', status: 'Não Começou', series: '3', repeticoes: '10', detalhes: 'Fase de adaptação anatômica.' },
+            { id: 2, fase: 'Hipertrofia I', inicio: formatDate(p2Start), fim: formatDate(p2End), objetivo: 'Ganho de Massa', status: 'Não Começou', series: '3', repeticoes: '10', detalhes: 'Fase principal de construção muscular.' },
+            { id: 3, fase: 'Hipertrofia II', inicio: formatDate(p3Start), fim: formatDate(p3End), objetivo: 'Definição e Volume', status: 'Não Começou', series: '3', repeticoes: '10', detalhes: 'Intensificação do treino.' },
+            { id: 4, fase: 'Força Pura', inicio: formatDate(p4Start), fim: formatDate(p4End), objetivo: 'Aumento de Carga', status: 'Não Começou', series: '4', repeticoes: '4-6', detalhes: 'Foco no aumento de força bruta.' }
+        ];
 
-    usersToInit.forEach(email => {
-        const existing = db.trainingPlans.periodizacao[email] || [];
-        const merged = periodizacaoTemplate.map(newItem => {
-            const old = existing.find((o: any) => o.id === newItem.id);
-            return old ? { ...newItem, status: old.status } : newItem;
+        usersToInit.forEach(email => {
+            const existing = db.trainingPlans.periodizacao[email] || [];
+            const merged = periodizacaoTemplate.map(newItem => {
+                const old = existing.find((o: any) => o.id === newItem.id);
+                return old ? { ...newItem, status: old.status } : newItem;
+            });
+            db.trainingPlans.periodizacao[email] = merged;
         });
-        db.trainingPlans.periodizacao[email] = merged;
-    });
-    
-    saveDatabase(db);
+        
+        saveDatabase(db);
+    } catch (e) {
+        console.error("Initialization error:", e);
+        // Ensure at least safe default if crashed
+    }
 }
 
 // --- WEATHER FETCHING ---
@@ -1228,13 +1233,17 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 2000);
 
     const loginForm = document.getElementById('login-form');
-    const loginEmailInput = document.getElementById('login-email') as HTMLInputElement;
+    // Ensure input is grabbed fresh inside the handler or check for existence
     const loginBtn = document.getElementById('login-btn');
     const loginError = document.getElementById('login-error');
 
     if (loginForm) {
         loginForm.addEventListener('submit', (e) => {
             e.preventDefault(); // Double protection
+            
+            const loginEmailInput = document.getElementById('login-email') as HTMLInputElement;
+            if (!loginEmailInput) return;
+
             // Force lowercase for consistent comparison
             const email = loginEmailInput.value.trim().toLowerCase();
             
