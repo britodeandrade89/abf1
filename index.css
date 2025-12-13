@@ -29,6 +29,12 @@ p, label, span, div { color: #e5e7eb; /* gray-200 */ }
     display: none !important;
 }
 
+/* --- SPLASH SCREEN TRANSITION --- */
+.fade-out {
+    opacity: 0 !important;
+    pointer-events: none;
+}
+
 /* --- MAP CONTAINER --- */
 .map-container {
     height: 350px;

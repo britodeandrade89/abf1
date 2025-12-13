@@ -1226,26 +1226,30 @@ function loadStudentProfile(email: string) {
 document.addEventListener('DOMContentLoaded', () => {
     initializeDatabase();
     
-    // Check for logged in user IMMEDIATELY (Silent Auth)
+    // STARTUP LOGIC: Determine where to go but keep it hidden behind splash
     const user = getCurrentUser();
     const appContainer = document.getElementById('appContainer');
     const splashScreen = document.getElementById('splashScreen');
+    
+    let targetScreen = 'loginScreen';
 
     if (user) {
         const db = getDatabase();
         const userExists = db.users.find((u: any) => u.email.toLowerCase() === user.toLowerCase());
         if (userExists) {
-            // Load profile behind the scenes
+            // Already logged in? Pre-load data
+            targetScreen = 'studentProfileScreen';
             loadStudentProfile(user);
         } else {
-            // Fallback to login if data is inconsistent
-            showScreen('loginScreen');
+            // Invalid session
+            localStorage.removeItem(STORAGE_KEYS.CURRENT_USER);
         }
-    } else {
-        showScreen('loginScreen');
     }
+    
+    // Set the initial screen state (it's still invisible)
+    showScreen(targetScreen);
 
-    // Now fade out splash screen after delay
+    // Show Splash for 2 seconds then transition
     setTimeout(() => {
         if (splashScreen && appContainer) {
             splashScreen.classList.add('fade-out');
