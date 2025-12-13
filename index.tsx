@@ -589,6 +589,32 @@ function loadTrainingScreen(type: string, email?: string) {
     const titleEl = document.getElementById('training-title');
     if (titleEl) titleEl.textContent = `TREINO ${type}`;
 
+    // --- Workout Navigation Logic ---
+    const navContainer = document.getElementById('workout-nav-bar');
+    if (navContainer) {
+        let navHtml = '';
+        if (type === 'A') {
+            // Left empty (disabled), Right points to B
+            navHtml = `
+                <div></div>
+                <button onclick="loadTrainingScreen('B')" class="flex items-center justify-end gap-2 text-xs font-bold text-gray-400 hover:text-white transition group text-right">
+                    <span class="group-hover:text-red-500 transition">Treino B</span> <i data-feather="chevron-right"></i>
+                </button>
+            `;
+        } else if (type === 'B') {
+            // Left points to A, Right empty
+            navHtml = `
+                <button onclick="loadTrainingScreen('A')" class="flex items-center justify-start gap-2 text-xs font-bold text-gray-400 hover:text-white transition group text-left">
+                    <i data-feather="chevron-left"></i> <span class="group-hover:text-red-500 transition">Treino A</span>
+                </button>
+                <div></div>
+            `;
+        } else {
+            navHtml = ''; // Clear for other types if any
+        }
+        navContainer.innerHTML = navHtml;
+    }
+
     const timerEl = document.getElementById('workout-timer');
     if (timerEl) {
         if (workoutTimerInterval) clearInterval(workoutTimerInterval);
@@ -634,7 +660,7 @@ function loadTrainingScreen(type: string, email?: string) {
             for (let s = 1; s <= totalSets; s++) {
                 const isDone = doneSets.includes(s);
                 const bgClass = isDone ? 'bg-green-500 border-green-600 text-white' : 'bg-gray-400/50 border-gray-400 text-gray-700 hover:bg-gray-400';
-                setsHtml += `<div onclick="toggleSet(${i}, '${type}', ${s})" class="w-6 h-6 rounded-full border ${bgClass} flex items-center justify-center font-bold text-xs cursor-pointer shadow-sm transition-all active:scale-95">${s}</div>`;
+                setsHtml += `<div onclick="toggleSet(${i}, '${type}', ${s})" class="w-6 h-6 rounded-full border ${bgClass} flex items-center justify-center font-bold text-xs cursor-pointer shadow-sm transition-all active:scale-95 shrink-0">${s}</div>`;
             }
 
             const wrapper = document.createElement('div');
@@ -660,7 +686,7 @@ function loadTrainingScreen(type: string, email?: string) {
                     <div class="grid grid-cols-3 gap-2">
                          <div class="bg-gray-300/60 rounded-lg p-1.5 border border-gray-400 flex flex-col justify-between shadow-inner h-20" onclick="event.stopPropagation()">
                              <div class="flex flex-col items-center justify-center border-b border-gray-400/30 pb-1"><span class="text-[9px] font-bold text-gray-600 uppercase tracking-wider mb-0.5">Séries</span><span class="text-xl font-black text-blue-800 leading-none">${ex.sets}</span></div>
-                             <div class="flex justify-center items-center gap-1 h-full pt-1 px-1">${setsHtml}</div>
+                             <div class="flex justify-evenly items-center w-full h-full pt-1 px-0.5 overflow-hidden">${setsHtml}</div>
                          </div>
                          <div class="bg-gray-300/60 rounded-lg p-1.5 border border-gray-400 flex flex-col items-center justify-center shadow-inner h-20">
                             <span class="text-[9px] font-bold text-gray-600 uppercase tracking-wider mb-0.5">Reps</span><span class="text-2xl font-black text-orange-700 leading-none">${ex.reps}</span>
@@ -1109,58 +1135,53 @@ function loadPeriodizationScreen() {
     showScreen('periodizationScreen');
 }
 
-// --- WEATHER LOGIC ---
+// --- WEATHER ---
 async function fetchWeather() {
-    const container = document.getElementById('weather-widget');
-    if (!container) return;
-
-    // Default to Rio de Janeiro coordinates
-    const lat = -22.9068;
-    const lng = -43.1729;
+    const display = document.getElementById('weather-display');
+    if (!display) return;
 
     try {
-        const response = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&current=temperature_2m,weather_code&daily=temperature_2m_max,temperature_2m_min&timezone=auto`);
+        // Rio de Janeiro coordinates
+        const lat = -22.9068;
+        const lng = -43.1729;
+        
+        const response = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&current=temperature_2m,weather_code&timezone=America%2FSao_Paulo`);
+        if (!response.ok) throw new Error('Weather fetch failed');
+        
         const data = await response.json();
-
-        const currentTemp = Math.round(data.current.temperature_2m);
+        const temp = Math.round(data.current.temperature_2m);
         const code = data.current.weather_code;
-        const maxTemp = Math.round(data.daily.temperature_2m_max[0]);
-        const minTemp = Math.round(data.daily.temperature_2m_min[0]);
-
+        
+        // WMO Weather interpretation codes (simplified)
+        // 0: Clear sky
+        // 1, 2, 3: Mainly clear, partly cloudy, and overcast
+        // 45, 48: Fog
+        // 51, 53, 55: Drizzle
+        // 61, 63, 65: Rain
+        // 80, 81, 82: Rain showers
+        // 95, 96, 99: Thunderstorm
+        
         let icon = 'sun';
-        let desc = 'Limpo';
+        let color = 'text-yellow-400';
+        
+        if (code >= 1 && code <= 3) { icon = 'cloud'; color = 'text-gray-400'; }
+        else if (code >= 51) { icon = 'cloud-rain'; color = 'text-blue-400'; }
+        else if (code >= 95) { icon = 'cloud-lightning'; color = 'text-purple-400'; }
 
-        // WMO Weather interpretation
-        if (code >= 1 && code <= 3) { icon = 'cloud'; desc = 'Nublado'; }
-        else if (code >= 45 && code <= 48) { icon = 'align-justify'; desc = 'Nevoeiro'; }
-        else if (code >= 51 && code <= 67) { icon = 'cloud-drizzle'; desc = 'Garoa'; }
-        else if (code >= 71 && code <= 77) { icon = 'cloud-snow'; desc = 'Neve'; }
-        else if (code >= 80 && code <= 82) { icon = 'cloud-rain'; desc = 'Chuva'; }
-        else if (code >= 85 && code <= 86) { icon = 'cloud-snow'; desc = 'Neve'; }
-        else if (code >= 95) { icon = 'cloud-lightning'; desc = 'Tempestade'; }
-
-        container.innerHTML = `
-            <div class="flex items-center justify-between">
-                <div class="flex items-center gap-3">
-                    <i data-feather="${icon}" class="w-8 h-8 text-yellow-500 drop-shadow-sm"></i>
-                    <div>
-                        <p class="text-3xl font-black text-white leading-none">${currentTemp}°</p>
-                        <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">${desc}</p>
-                    </div>
+        display.innerHTML = `
+            <div class="flex flex-col items-end">
+                <div class="flex items-center gap-1.5">
+                    <i data-feather="${icon}" class="${color} w-5 h-5"></i>
+                    <span class="text-2xl font-black text-white leading-none">${temp}°</span>
                 </div>
-                <div class="text-right">
-                    <div class="flex items-center gap-2 text-xs font-bold">
-                        <span class="text-red-400 flex items-center"><i data-feather="arrow-up" class="w-3 h-3"></i> ${maxTemp}°</span>
-                        <span class="text-blue-400 flex items-center"><i data-feather="arrow-down" class="w-3 h-3"></i> ${minTemp}°</span>
-                    </div>
-                    <p class="text-[9px] font-bold text-gray-600 uppercase tracking-widest mt-0.5">Rio de Janeiro</p>
-                </div>
+                <span class="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Rio de Janeiro</span>
             </div>
         `;
         if (typeof feather !== 'undefined') feather.replace();
-    } catch (error) {
-        console.error('Weather fetch error:', error);
-        container.innerHTML = '<p class="text-xs text-gray-500 text-center">Clima indisponível</p>';
+        
+    } catch (e) {
+        console.warn('Weather widget error:', e);
+        display.innerHTML = '';
     }
 }
 
@@ -1177,6 +1198,7 @@ function loadStudentProfile(email: string) {
                 <h2 class="text-lg font-bold text-white">Olá, ${user.name.split(' ')[0]}</h2>
                 <p class="text-xs text-gray-400">Aluno(a) ABFIT</p>
             </div>
+            <div id="weather-display" class="ml-auto"></div>
         `;
         profileInfo.classList.remove('hidden');
     }
