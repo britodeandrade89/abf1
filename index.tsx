@@ -1226,45 +1226,45 @@ function loadStudentProfile(email: string) {
 document.addEventListener('DOMContentLoaded', () => {
     initializeDatabase();
     
-    // STARTUP LOGIC: Determine where to go but keep it hidden behind splash
-    const user = getCurrentUser();
-    const appContainer = document.getElementById('appContainer');
     const splashScreen = document.getElementById('splashScreen');
-    
+    const appContainer = document.getElementById('appContainer');
+
+    // 1. Determine Target Screen (Login vs Profile)
+    const user = getCurrentUser();
     let targetScreen = 'loginScreen';
 
     if (user) {
         const db = getDatabase();
-        const userExists = db.users.find((u: any) => u.email.toLowerCase() === user.toLowerCase());
-        if (userExists) {
-            // Already logged in? Pre-load data
+        if (db.users.find((u: any) => u.email.toLowerCase() === user.toLowerCase())) {
             targetScreen = 'studentProfileScreen';
             loadStudentProfile(user);
         } else {
-            // Invalid session
             localStorage.removeItem(STORAGE_KEYS.CURRENT_USER);
         }
     }
-    
-    // Set the initial screen state (it's still invisible)
+
+    // 2. Prepare the underlying screen (invisible behind splash)
     showScreen(targetScreen);
 
-    // Show Splash for 2 seconds then transition
-    setTimeout(() => {
-        if (splashScreen && appContainer) {
-            splashScreen.classList.add('fade-out');
+    // 3. Handle Splash Screen Timing (2.0 seconds)
+    if (splashScreen && appContainer) {
+        // Ensure App Container is visible in DOM but behind splash or ready to fade in
+        appContainer.classList.remove('hidden'); 
+        
+        // Wait exactly 2000ms
+        setTimeout(() => {
+            // Start Fade Out
+            splashScreen.classList.add('fade-out'); // Relies on CSS transition
+            
+            // Wait for CSS transition (e.g., 500ms) then remove from DOM flow
             setTimeout(() => {
                 splashScreen.classList.add('hidden');
-                appContainer.classList.remove('hidden');
-                requestAnimationFrame(() => {
-                    appContainer.classList.remove('init-hidden');
-                });
-                
-                // IMPORTANT: Tell the HTML failsafe that app loaded successfully
+                // Ensure App Container is fully visible/interactive
+                appContainer.classList.remove('init-hidden');
                 (window as any).isAppLoaded = true;
-            }, 500);
-        }
-    }, 2000);
+            }, 500); 
+        }, 2000);
+    }
 
     const loginForm = document.getElementById('login-form');
     const loginEmailInput = document.getElementById('login-email') as HTMLInputElement;
