@@ -224,84 +224,14 @@
     <script>
         // Inline Database for immediate validation
         const VALID_USERS = [
-            { email: 'britodeandrade@gmail.com', name: 'André Brito', photo: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/3Zy4n6ZmWp9DW98VtXpO.jpeg' },
-            { email: 'marcellybispo92@gmail.com', name: 'Marcelly Bispo', photo: 'marcelly.jpg' }
+            'britodeandrade@gmail.com', 
+            'marcellybispo92@gmail.com'
         ];
 
         // Ensure icons load
         window.addEventListener('load', function() {
             if(typeof feather !== 'undefined') feather.replace();
-            
-            // Check session on load
-            const savedEmail = localStorage.getItem('abfit_current_user');
-            if (savedEmail) {
-                const user = VALID_USERS.find(u => u.email === savedEmail);
-                if (user) {
-                    renderProfileManually(user);
-                }
-            }
         });
-
-        // MANUAL PROFILE RENDERER (Fallback if index.js fails)
-        function renderProfileManually(user) {
-            document.getElementById('loginScreen').classList.remove('active');
-            const profileScreen = document.getElementById('studentProfileScreen');
-            profileScreen.classList.add('active');
-            
-            profileScreen.innerHTML = `
-                <!-- Header Organizado -->
-                <header class="flex flex-col pt-6 pb-2">
-                    <div class="flex items-center justify-between mb-4">
-                        <div class="flex-none flex flex-col items-start">
-                            <h1 class="abfit-logo-style text-5xl leading-none">
-                                <span class="part-ab">AB</span><span class="part-fit">FIT</span>
-                            </h1>
-                        </div>
-                        <div class="flex-1 flex flex-col items-end">
-                             <div id="weather-widget" class="text-right flex flex-col items-end min-h-[50px] justify-center">
-                                <span class="text-xs text-gray-500">Rio de Janeiro</span>
-                            </div>
-                             <button id="logout-btn" onclick="manualLogout()" class="mt-2 p-1 rounded-full hover:bg-gray-700 text-gray-400 hover:text-white border border-transparent hover:border-gray-600">
-                                <i data-feather="log-out" class="w-4 h-4"></i>
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Faixa de Informações do Aluno -->
-                    <div class="bg-gray-800/80 backdrop-blur-md border border-gray-700 rounded-xl p-4 flex items-center gap-4 shadow-lg">
-                        <img src="${user.photo}" class="w-14 h-14 rounded-full border-2 border-red-600 object-cover">
-                        <div>
-                            <h2 class="text-lg font-bold text-white">Olá, ${user.name.split(' ')[0]}</h2>
-                            <p class="text-xs text-gray-400">Aluno(a) ABFIT</p>
-                        </div>
-                    </div>
-                </header>
-
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6 mt-4">
-                    <button onclick="window.loadTrainingScreen && window.loadTrainingScreen('A')" class="metal-btn-highlight p-3 flex flex-col items-center justify-center gap-1 active:scale-95 transition-transform h-28"><i class="fas fa-dumbbell text-2xl"></i><span class="text-sm font-bold">TREINO A</span></button>
-                    <button onclick="window.loadTrainingScreen && window.loadTrainingScreen('B')" class="metal-btn-highlight p-3 flex flex-col items-center justify-center gap-1 active:scale-95 transition-transform h-28"><i class="fas fa-dumbbell text-2xl"></i><span class="text-sm font-bold">TREINO B</span></button>
-                    <button onclick="window.loadRunningScreen && window.loadRunningScreen()" class="metal-btn p-3 flex flex-col items-center justify-center gap-1 active:scale-95 transition-transform h-28"><i class="fas fa-running text-orange-500 text-2xl"></i><span class="text-sm font-bold">CORRIDA</span></button>
-                    <button onclick="window.loadPeriodizationScreen && window.loadPeriodizationScreen()" class="metal-btn p-3 flex flex-col items-center justify-center gap-1 active:scale-95 transition-transform h-28"><i class="fas fa-calendar-alt text-yellow-500 text-2xl"></i><span class="text-sm font-bold">PERIODIZAÇÃO</span></button>
-                    <button onclick="window.showScreen && window.showScreen('outdoorSelectionScreen')" class="metal-btn p-3 flex flex-col items-center justify-center gap-1 active:scale-95 transition-transform h-28"><i class="fas fa-map-marked-alt text-green-500 text-2xl"></i><span class="text-sm font-bold">OUTDOOR</span></button>
-                    <button onclick="window.loadRaceCalendarScreen && window.loadRaceCalendarScreen()" class="metal-btn p-3 flex flex-col items-center justify-center gap-1 active:scale-95 transition-transform h-28"><i class="fas fa-flag-checkered text-blue-500 text-2xl"></i><span class="text-sm font-bold">PROVAS</span></button>
-                    <button onclick="window.showScreen && window.showScreen('physioAssessmentScreen')" class="metal-btn p-3 flex flex-col items-center justify-center gap-1 active:scale-95 transition-transform h-28"><i class="fas fa-clipboard-user text-red-400 text-2xl"></i><span class="text-sm font-bold">AVALIAÇÃO</span></button>
-                    <button onclick="window.showScreen && window.showScreen('aiAnalysisScreen')" class="metal-btn p-3 flex flex-col items-center justify-center gap-1 active:scale-95 transition-transform h-28"><i class="fas fa-brain text-teal-400 text-2xl"></i><span class="text-sm font-bold">ANÁLISE IA</span></button>
-                </div>
-
-                <div class="bg-gray-800 p-4 rounded-xl border border-gray-700 shadow-lg">
-                    <div class="text-center text-gray-400 text-sm py-4">Calendário carregando...</div>
-                </div>
-                
-                <div id="training-history-container" class="mt-6"></div>
-            `;
-            
-            if(typeof feather !== 'undefined') feather.replace();
-        }
-
-        function manualLogout() {
-            localStorage.removeItem('abfit_current_user');
-            window.location.reload();
-        }
 
         // Robust Login Function
         function handleLogin(e) {
@@ -325,17 +255,17 @@
             errorMsg.textContent = "";
 
             setTimeout(() => {
-                const user = VALID_USERS.find(u => u.email === email);
-                if (user) {
-                    // Success: Save session
+                if (VALID_USERS.includes(email)) {
+                    // Success: Save session to the key used by index.tsx
                     localStorage.setItem('abfit_current_user', email);
                     
-                    // Render Profile Immediately (Don't wait for modules)
-                    renderProfileManually(user);
-                    
-                    // Trigger external sync if available
+                    // Try to trigger the main app loader if loaded
                     if (window.loadStudentProfile) {
                         window.loadStudentProfile(email);
+                        document.getElementById('loginScreen').classList.remove('active');
+                    } else {
+                        // Fallback: Reload page so index.js picks up the session on start
+                        window.location.reload();
                     }
                 } else {
                     errorMsg.textContent = "E-mail não encontrado.";
