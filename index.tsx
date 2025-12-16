@@ -1226,49 +1226,23 @@ function loadStudentProfile(email: string) {
 document.addEventListener('DOMContentLoaded', () => {
     initializeDatabase();
     
-    const splashScreen = document.getElementById('splashScreen');
-    const appContainer = document.getElementById('appContainer');
+    // Check Auth Immediately
     const user = getCurrentUser();
-
-    // 1. Determine Target Screen (Login vs Profile)
-    let nextScreen = 'loginScreen';
-    let emailToLoad = null;
-
+    
     if (user) {
         const db = getDatabase();
         if (db.users.find((u: any) => u.email.toLowerCase() === user.toLowerCase())) {
-            nextScreen = 'studentProfileScreen';
-            emailToLoad = user;
+            // Logged in: Switch to Profile immediately
+            loadStudentProfile(user);
+            showScreen('studentProfileScreen');
         } else {
+            // Invalid session: Clear and show Login
             localStorage.removeItem(STORAGE_KEYS.CURRENT_USER);
+            showScreen('loginScreen');
         }
-    }
-
-    // 2. Pre-load data if logged in, but keep screen hidden behind splash
-    if (nextScreen === 'studentProfileScreen' && emailToLoad) {
-        loadStudentProfile(emailToLoad);
-    }
-    
-    // Set the initial active screen in the DOM (it is underneath the splash)
-    // NOTE: This call is critical. If not called, all screens are 'hidden' via CSS.
-    showScreen(nextScreen);
-
-    // 3. Splash Screen Logic (Strict 2s duration)
-    if (splashScreen && appContainer) {
-        
-        setTimeout(() => {
-            // Start fade out animation
-            splashScreen.classList.add('fade-out'); 
-            
-            // At the SAME TIME, ensure the app container is fully visible
-            appContainer.classList.remove('init-hidden');
-            
-            // Wait for CSS transition (500ms) then remove splash from DOM
-            setTimeout(() => {
-                splashScreen.classList.add('hidden');
-                (window as any).isAppLoaded = true; // Signal failsafe that we loaded correctly
-            }, 500); 
-        }, 2000);
+    } else {
+        // Not logged in: Show Login (default in HTML, but ensuring here)
+        showScreen('loginScreen');
     }
 
     const loginForm = document.getElementById('login-form');
@@ -1278,16 +1252,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (loginForm) {
         loginForm.addEventListener('submit', (e) => {
-            e.preventDefault(); // Double protection
-            // Force lowercase for consistent comparison
+            e.preventDefault(); 
             const email = loginEmailInput.value.trim().toLowerCase();
             
             if (!email) {
-                if (loginError) loginError.textContent = "Por favor, digite seu e-mail.";
+                if (loginError) loginError.textContent = "Digite seu e-mail.";
                 return;
             }
             const db = getDatabase();
-            // Robust check against DB
             if (!db.users.find((u: any) => u.email.toLowerCase() === email)) {
                  if (loginError) loginError.textContent = "Email não encontrado.";
                  return;
@@ -1295,18 +1267,18 @@ document.addEventListener('DOMContentLoaded', () => {
             
             if (loginBtn) {
                 const originalText = loginBtn.innerText;
-                loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Entrando...';
+                loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
                 
-                // CRITICAL FIX: Save session immediately to survive potential page refresh
+                // Save session
                 setCurrentUser(email);
 
-                // Simulate network delay for UX
+                // Small delay for UX feel, then switch
                 setTimeout(() => {
-                    // Session already saved above
                     loadStudentProfile(email);
+                    showScreen('studentProfileScreen');
                     // Reset button state
                     loginBtn.innerText = originalText;
-                }, 800);
+                }, 500);
             }
         });
     }

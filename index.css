@@ -1,39 +1,50 @@
 /* Reset basics */
-html {
-    background-color: #000000;
-    height: 100%;
-    overflow: hidden; /* Prevent scroll on root */
-}
-
-body {
-    font-family: 'Inter', sans-serif;
-    color: #f3f4f6; /* Lighter base text (gray-100) */
-    background-color: #000000;
-    /* Gradient: Black top -> Red bottom (Smooth) */
-    background-image: linear-gradient(to bottom, #000000 0%, #991b1b 100%);
-    background-attachment: fixed;
-    background-size: cover;
-    background-repeat: no-repeat;
+html, body {
     height: 100%;
     margin: 0;
-    overflow: hidden; /* App container handles scrolling */
+    overflow: hidden;
+    background-color: #000000;
+    background-image: linear-gradient(to bottom, #000000 0%, #991b1b 100%);
+    background-attachment: fixed;
+    font-family: 'Inter', sans-serif;
 }
 
-/* Global resets for text color in dark mode context */
-h1, h2, h3, h4, h5, h6 { color: #ffffff; }
-p, label, span, div { color: #e5e7eb; /* gray-200 */ }
+#appContainer {
+    height: 100%;
+    width: 100%;
+}
 
-/* --- CRITICAL: SCREEN VISIBILITY LOGIC --- */
-/* Override Tailwind's flex/grid classes when screen is inactive */
+/* Regra de visibilidade das telas */
+.screen {
+    width: 100%;
+    height: 100%;
+    display: block;
+    overflow-y: auto;
+    animation: fadeIn 0.3s ease-out;
+}
+
 .screen:not(.active) {
     display: none !important;
 }
 
-/* --- SPLASH SCREEN TRANSITION --- */
-.fade-out {
-    opacity: 0 !important;
-    pointer-events: none;
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
 }
+
+/* Estilo do Logo */
+.abfit-logo-style {
+    font-family: 'Inter', sans-serif;
+    font-weight: 900;
+    font-style: italic;
+    letter-spacing: -0.05em;
+}
+.abfit-logo-style .part-ab { color: #ef4444; margin-right: -0.05em; }
+.abfit-logo-style .part-fit { color: #ffffff; }
+
+/* Global text resets */
+h1, h2, h3, h4, h5, h6 { color: #ffffff; }
+p, label, span, div { color: #e5e7eb; }
 
 /* --- MAP CONTAINER --- */
 .map-container {
@@ -45,38 +56,11 @@ p, label, span, div { color: #e5e7eb; /* gray-200 */ }
     z-index: 1;
 }
 
-/* --- LOGO STYLES --- */
-.abfit-logo-style {
-    font-family: 'Inter', sans-serif;
-    font-weight: 900;
-    font-style: italic;
-    line-height: 0.85;
-    text-transform: uppercase;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    -webkit-text-stroke: 0.08em black;
-    paint-order: stroke fill;
-    filter: drop-shadow(2px 2px 0px rgba(255,255,255,0.2));
-}
-
-.abfit-logo-style .part-ab { color: #ef4444; z-index: 10; position: relative; margin-right: -0.02em; }
-.abfit-logo-style .part-fit { color: #ffffff; z-index: 9; }
-
 /* --- NAVIGATION & SCREENS --- */
-#appContainer {
-    height: 100%; /* Uses html/body height */
-    display: flex;
-    flex-direction: column;
-    overflow: hidden; /* Ensures screens don't expand the app container */
-    transition: opacity 0.3s ease-in-out;
-}
-#appContainer.init-hidden { opacity: 0; }
-
 /* Wrapper for screens (the <main> element) */
 .screens-wrapper {
     flex: 1;
-    overflow: hidden; /* Critical: Forces inner content to scroll, not expand parent */
+    overflow: hidden;
     position: relative;
     display: flex;
     flex-direction: column;
@@ -84,18 +68,12 @@ p, label, span, div { color: #e5e7eb; /* gray-200 */ }
 
 .screen {
     /* Base styles for screens */
-    flex: 1; /* Take all available space in wrapper */
+    flex: 1;
     width: 100%;
     height: 100%;
-    overflow-y: auto; /* Enable vertical scrolling */
-    padding-bottom: 8rem; /* Space for footer/bottom elements */
-    animation: fadeIn 0.3s ease-out;
-    -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
-}
-
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
+    overflow-y: auto;
+    padding-bottom: 8rem;
+    -webkit-overflow-scrolling: touch;
 }
 
 /* --- HUD HEADER (DIGITAL TIMER) --- */
