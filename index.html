@@ -1,16 +1,13 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>ABFIT</title>
-    <meta name="theme-color" content="#111827">
+    <meta name="theme-color" content="#000000">
     <link rel="manifest" href="manifest.json">
     
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@700&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/feather-icons"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
@@ -18,12 +15,13 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@700&display=swap" rel="stylesheet">
 
     <!-- Environment Setup -->
     <script>
         window.process = { env: { NODE_ENV: 'production' } };
     </script>
-    <link rel="stylesheet" href="index.css">
     
     <script type="importmap">
     {
@@ -33,39 +31,97 @@
       }
     }
     </script>
-</head>
 
+    <style>
+        /* CSS CRÍTICO - GARANTIA DE FUNCIONAMENTO */
+        body, html {
+            height: 100%;
+            margin: 0;
+            background-color: #000;
+            background-image: linear-gradient(to bottom, #000000 0%, #991b1b 100%);
+            background-attachment: fixed;
+            font-family: 'Inter', sans-serif;
+            color: white;
+            overflow: hidden; 
+        }
+
+        /* Estilo do Logo */
+        .abfit-logo-style {
+            font-family: 'Inter', sans-serif;
+            font-weight: 900;
+            font-style: italic;
+            letter-spacing: -0.05em;
+        }
+        .part-ab { color: #ef4444; margin-right: -0.05em; }
+        .part-fit { color: #ffffff; }
+
+        /* LÓGICA DE TELAS - FORÇADA (NUCLEAR OPTION) */
+        .screen {
+            display: none !important; /* Esconde tudo por padrão */
+            width: 100%;
+            height: 100%;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            padding-bottom: 2rem;
+        }
+
+        .screen.active {
+            display: flex !important; /* Mostra quem tem a classe active */
+            flex-direction: column;
+        }
+        
+        /* Ajuste para telas de conteúdo (não centralizadas) */
+        #studentProfileScreen.active, 
+        #trainingScreen.active,
+        #periodizationScreen.active,
+        #runningScreen.active,
+        #raceCalendarScreen.active,
+        #outdoorSelectionScreen.active,
+        #outdoorTrackingScreen.active,
+        #aiAnalysisScreen.active,
+        #physioAssessmentScreen.active {
+            display: block !important;
+        }
+
+        /* Helpers extras */
+        .hidden { display: none !important; }
+        
+        /* Override do index.css externo se necessário */
+    </style>
+    <link rel="stylesheet" href="index.css">
+</head>
 <body class="overscroll-none">
 
-    <!-- APP CONTAINER -->
     <div id="appContainer" class="h-full w-full max-w-lg mx-auto relative">
-        
+
         <!-- LOGIN SCREEN -->
-        <div id="loginScreen" class="screen active justify-center items-center p-8">
-            <div class="text-center mb-12 transform scale-125">
-                <h1 class="abfit-logo-style text-6xl mb-0 leading-none drop-shadow-2xl">
+        <div id="loginScreen" class="screen active justify-center items-center p-6">
+            <div class="w-full max-w-sm text-center">
+                
+                <h1 class="abfit-logo-style text-6xl mb-12 drop-shadow-2xl">
                     <span class="part-ab">AB</span><span class="part-fit">FIT</span>
                 </h1>
-            </div>
 
-            <!-- Login logic handled by inline function handleLogin() -->
-            <form id="login-form" class="w-full max-w-xs flex flex-col gap-6" onsubmit="handleLogin(event)">
-                <div class="relative group">
-                    <input type="email" id="login-email" required placeholder="Digite seu e-mail"
-                        class="w-full p-4 bg-transparent border-b-2 border-gray-600 text-white text-center text-lg placeholder-gray-500 focus:border-red-600 focus:outline-none transition-colors rounded-none">
-                </div>
-                
-                <button id="login-btn" type="submit"
-                    class="mt-4 w-full bg-red-600 hover:bg-red-700 active:scale-95 text-white font-black uppercase tracking-widest py-4 rounded-xl shadow-lg shadow-red-900/50 transition-all cursor-pointer">
-                    ENTRAR
-                </button>
-                
-                <div id="login-error" class="text-red-400 text-center text-sm font-bold min-h-[20px]"></div>
-            </form>
+                <form onsubmit="handleLogin(event)" class="flex flex-col gap-6">
+                    <div>
+                        <input type="email" id="login-email" placeholder="Seu e-mail" required
+                            class="w-full bg-transparent border-b-2 border-gray-600 p-4 text-center text-white placeholder-gray-500 text-lg focus:border-red-600 focus:outline-none transition-colors rounded-none">
+                    </div>
+
+                    <button type="submit" id="login-btn"
+                        class="w-full bg-red-600 hover:bg-red-700 text-white font-black py-4 rounded-xl shadow-lg shadow-red-900/50 active:scale-95 transition-all uppercase tracking-widest cursor-pointer">
+                        ENTRAR
+                    </button>
+
+                    <p id="login-error" class="text-red-400 font-bold text-sm h-6 mt-2"></p>
+                </form>
+            </div>
         </div>
 
-        <!-- APP SCREENS -->
-        <div id="studentProfileScreen" class="screen p-6"></div> <!-- Content injected by script below -->
+        <!-- APP SCREENS (Mantendo todos para o index.js popular) -->
+        <div id="studentProfileScreen" class="screen p-6">
+            <!-- Fallback content injected by inline script, overwritten by index.js -->
+        </div>
         <div id="trainingScreen" class="screen"></div>
         <div id="periodizationScreen" class="screen"></div>
         <div id="runningScreen" class="screen"></div>
@@ -77,7 +133,7 @@
 
     </div>
 
-    <!-- MODALS -->
+    <!-- MODALS (Include structure for index.js logic) -->
     <!-- Exercise Detail Modal -->
     <div id="exerciseDetailModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 hidden backdrop-blur-sm transition-opacity">
         <div id="exercise-modal-content" class="bg-gray-800 w-11/12 max-w-md rounded-2xl overflow-hidden shadow-2xl transform scale-95 opacity-0 transition-all duration-300 border border-gray-600">
@@ -88,11 +144,7 @@
             </div>
             <div class="p-6 relative -mt-6">
                 <h3 id="modal-exercise-name" class="text-2xl font-black text-white uppercase leading-tight drop-shadow-lg mb-2"></h3>
-                <div class="flex gap-2 mb-4">
-                     <span class="bg-red-600 text-white text-[10px] font-bold px-2 py-1 rounded uppercase">Hipertrofia</span>
-                     <span class="bg-gray-600 text-white text-[10px] font-bold px-2 py-1 rounded uppercase">Intermediário</span>
-                </div>
-                <p class="text-gray-300 text-sm leading-relaxed">Execute o movimento com controle total na fase excêntrica. Mantenha a postura e respire adequadamente.</p>
+                <p class="text-gray-300 text-sm leading-relaxed">Execute com controle.</p>
             </div>
         </div>
     </div>
@@ -103,177 +155,160 @@
             <button id="closePeriodizationModalBtn" class="absolute top-4 right-4 text-gray-400 hover:text-white"><i data-feather="x"></i></button>
             <h3 id="modal-periodization-phase" class="text-2xl font-black text-white uppercase mb-1"></h3>
             <p id="modal-periodization-dates" class="text-sm text-gray-400 font-bold mb-4 flex items-center gap-2"></p>
-            <div class="bg-gray-700/50 p-3 rounded-lg border border-gray-600 mb-4">
-                 <p id="modal-periodization-goal" class="text-white font-medium flex items-center gap-2"></p>
-            </div>
+            <div class="bg-gray-700/50 p-3 rounded-lg border border-gray-600 mb-4"><p id="modal-periodization-goal" class="text-white font-medium flex items-center gap-2"></p></div>
             <div id="modal-periodization-details"></div>
         </div>
     </div>
 
-    <!-- Info Modal (Footer) -->
-    <div id="infoModal" class="fixed inset-0 z-[60] flex items-center justify-center bg-black/90 hidden backdrop-blur-sm p-4">
-        <div class="bg-gray-800 w-full max-w-sm rounded-2xl p-6 shadow-2xl border border-gray-700 relative max-h-[80vh] overflow-y-auto">
-             <button onclick="document.getElementById('infoModal').classList.add('hidden')" class="absolute top-4 right-4 text-gray-400 hover:text-white"><i data-feather="x"></i></button>
-             <h3 id="info-modal-title" class="text-xl font-bold text-white mb-4"></h3>
-             <div id="info-modal-body" class="text-gray-300 text-sm space-y-3 leading-relaxed"></div>
-        </div>
-    </div>
-
-    <!-- Finish Workout Modal (Selfie) -->
+    <!-- Finish Workout Modal -->
     <div id="finishWorkoutModal" class="fixed inset-0 z-[70] flex items-center justify-center bg-black/90 hidden backdrop-blur-sm p-4">
         <div class="bg-gray-800 w-full max-w-sm rounded-2xl p-6 shadow-2xl border border-gray-700 relative flex flex-col items-center">
             <h3 class="text-2xl font-black text-white uppercase italic mb-2">Treino Finalizado!</h3>
-            <p class="text-gray-400 text-sm mb-6 text-center">Parabéns! Mais um pra conta.</p>
-            
             <div id="finish-modal-summary" class="w-full bg-gray-900/50 rounded-xl p-4 mb-6 border border-gray-600"></div>
-
             <div class="w-full mb-6">
                 <label for="workout-photo-input" class="cursor-pointer group block relative w-full aspect-square bg-gray-900 rounded-xl border-2 border-dashed border-gray-600 hover:border-red-500 transition overflow-hidden flex flex-col items-center justify-center">
-                     <div id="finish-photo-placeholder" class="text-center p-4">
-                        <i class="fas fa-camera text-3xl text-gray-500 group-hover:text-red-500 transition mb-2"></i>
-                        <p class="text-xs text-gray-400 font-bold uppercase">Adicionar Selfie (Opcional)</p>
-                     </div>
+                     <div id="finish-photo-placeholder" class="text-center p-4"><i class="fas fa-camera text-3xl text-gray-500 mb-2"></i><p class="text-xs text-gray-400 uppercase">Selfie</p></div>
                      <img id="finish-photo-preview" class="hidden absolute inset-0 w-full h-full object-cover">
-                     <input type="file" id="workout-photo-input" accept="image/*" class="hidden" onchange="handlePhotoSelect(event)">
+                     <input type="file" id="workout-photo-input" accept="image/*" class="hidden" onchange="window.handlePhotoSelect && window.handlePhotoSelect(event)">
                 </label>
             </div>
-
             <div class="grid grid-cols-2 gap-3 w-full">
-                <button onclick="document.getElementById('finishWorkoutModal').classList.add('hidden')" class="py-3 rounded-xl font-bold text-gray-400 hover:text-white hover:bg-gray-700 transition">Cancelar</button>
-                <button onclick="saveFinishedWorkout()" class="py-3 bg-red-600 hover:bg-red-700 text-white rounded-xl font-bold shadow-lg shadow-red-900/30">Salvar Treino</button>
+                <button onclick="document.getElementById('finishWorkoutModal').classList.add('hidden')" class="py-3 rounded-xl font-bold text-gray-400 hover:bg-gray-700">Cancelar</button>
+                <button onclick="window.saveFinishedWorkout && window.saveFinishedWorkout()" class="py-3 bg-red-600 hover:bg-red-700 text-white rounded-xl font-bold">Salvar</button>
             </div>
         </div>
     </div>
-    
-    <!-- Workout Result Modal (History Detail) -->
+
+    <!-- Workout Result Modal -->
     <div id="workoutResultModal" class="fixed inset-0 z-[70] flex items-center justify-center bg-black/90 hidden backdrop-blur-sm p-4">
         <div class="bg-gray-800 w-full max-w-sm rounded-2xl p-0 shadow-2xl border border-gray-700 relative overflow-hidden">
             <div class="relative h-64 bg-gray-900 flex items-center justify-center">
                 <img id="history-modal-img" class="absolute inset-0 w-full h-full object-cover hidden">
-                <div id="history-modal-no-img" class="flex flex-col items-center text-gray-600">
-                    <i class="fas fa-dumbbell text-4xl mb-2"></i>
-                    <span class="text-xs font-bold uppercase tracking-widest">Sem foto</span>
-                </div>
-                <button onclick="document.getElementById('workoutResultModal').classList.add('hidden')" class="absolute top-4 right-4 bg-black/50 text-white p-2 rounded-full backdrop-blur hover:bg-black/70 z-10"><i data-feather="x"></i></button>
-                <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-gray-800 to-transparent h-20"></div>
+                <div id="history-modal-no-img" class="flex flex-col items-center text-gray-600"><i class="fas fa-dumbbell text-4xl mb-2"></i></div>
+                <button onclick="document.getElementById('workoutResultModal').classList.add('hidden')" class="absolute top-4 right-4 bg-black/50 text-white p-2 rounded-full"><i data-feather="x"></i></button>
             </div>
-            <div class="p-6 relative -mt-4">
+            <div class="p-6 relative -mt-4 bg-gray-800">
                  <div class="flex justify-between items-end mb-4">
-                    <div>
-                        <p id="history-modal-date" class="text-xs text-red-500 font-bold uppercase tracking-widest mb-1"></p>
-                        <h3 id="history-modal-type" class="text-2xl font-black text-white italic uppercase leading-none"></h3>
-                    </div>
+                    <div><p id="history-modal-date" class="text-xs text-red-500 font-bold uppercase"></p><h3 id="history-modal-type" class="text-2xl font-black text-white italic uppercase"></h3></div>
                 </div>
                 <div class="grid grid-cols-2 gap-4 bg-gray-900/50 p-4 rounded-xl border border-gray-700">
-                    <div class="text-center border-r border-gray-700">
-                        <p class="text-[10px] text-gray-400 font-bold uppercase">Tempo</p>
-                        <p id="history-modal-duration" class="text-xl font-mono font-bold text-white"></p>
-                    </div>
-                     <div class="text-center hidden" id="history-modal-distance-box">
-                        <p class="text-[10px] text-gray-400 font-bold uppercase">Distância</p>
-                        <p id="history-modal-distance" class="text-xl font-mono font-bold text-white"></p>
-                    </div>
-                     <div class="text-center flex flex-col justify-center items-center col-span-2 pt-2 border-t border-gray-700">
-                        <div class="flex items-center gap-1 text-green-500">
-                             <i class="fas fa-check-circle"></i> <span class="text-xs font-bold uppercase">Concluído</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="mt-6 text-center">
-                    <button onclick="document.getElementById('workoutResultModal').classList.add('hidden')" class="text-sm text-gray-500 hover:text-white underline">Fechar</button>
+                    <div class="text-center border-r border-gray-700"><p class="text-[10px] text-gray-400 uppercase">Tempo</p><p id="history-modal-duration" class="text-xl font-mono font-bold text-white"></p></div>
+                     <div class="text-center hidden" id="history-modal-distance-box"><p class="text-[10px] text-gray-400 uppercase">Distância</p><p id="history-modal-distance" class="text-xl font-mono font-bold text-white"></p></div>
                 </div>
             </div>
-        </div>
-    </div>
-    
-    <!-- Modal Add Aluno (Avaliação) -->
-    <div id="modal-add-aluno" class="fixed inset-0 z-[80] flex items-center justify-center bg-black/80 hidden backdrop-blur-sm p-4">
-        <div id="modal-content" class="bg-white w-full max-w-sm rounded-xl p-6 shadow-2xl transform scale-95 opacity-0 transition-all duration-200">
-            <h3 class="text-xl font-bold text-gray-900 mb-4">Novo Aluno</h3>
-            <form id="form-novo-aluno" class="space-y-4">
-                <div>
-                    <label class="block text-sm font-bold text-gray-700">Nome Completo</label>
-                    <input type="text" id="nome-aluno" required class="w-full p-2 border rounded-lg bg-gray-50 text-black">
-                </div>
-                <div>
-                    <label class="block text-sm font-bold text-gray-700">Data de Nascimento</label>
-                    <input type="date" id="nascimento-aluno" required class="w-full p-2 border rounded-lg bg-gray-50 text-black">
-                </div>
-                <div>
-                    <label class="block text-sm font-bold text-gray-700">Sexo Biológico</label>
-                    <select id="sexo-aluno" required class="w-full p-2 border rounded-lg bg-gray-50 text-black">
-                        <option value="Masculino">Masculino</option>
-                        <option value="Feminino">Feminino</option>
-                    </select>
-                </div>
-                <div class="flex justify-end gap-2 mt-4">
-                    <button type="button" id="btn-cancel-modal" class="px-4 py-2 text-gray-600 font-bold hover:bg-gray-100 rounded-lg">Cancelar</button>
-                    <button type="submit" class="px-4 py-2 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700">Salvar</button>
-                </div>
-            </form>
         </div>
     </div>
 
     <!-- Scripts do PhysioApp -->
     <script src="assessment.js"></script>
     
-    <!-- MAIN MODULE (Loaded after inline logic) -->
+    <!-- MAIN MODULE (Keep this so the app features actually work!) -->
     <script type="module" src="index.js"></script>
 
-    <!-- INLINE BOOTSTRAP SCRIPT (Fixes Login Issues) -->
+    <!-- ROBUST INLINE LOGIC -->
     <script>
-        // Inline Database for immediate validation
-        const VALID_USERS = [
-            'britodeandrade@gmail.com', 
-            'marcellybispo92@gmail.com'
+        // 1. DADOS DOS ALUNOS
+        const ALUNOS = [
+            { email: 'britodeandrade@gmail.com', nome: 'André Brito', photo: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/3Zy4n6ZmWp9DW98VtXpO.jpeg' },
+            { email: 'marcellybispo92@gmail.com', nome: 'Marcelly Bispo', photo: 'marcelly.jpg' }
         ];
 
-        // Ensure icons load
-        window.addEventListener('load', function() {
-            if(typeof feather !== 'undefined') feather.replace();
-        });
+        // 2. FUNÇÃO DE LOGIN
+        function handleLogin(event) {
+            event.preventDefault();
 
-        // Robust Login Function
-        function handleLogin(e) {
-            e.preventDefault(); 
-            
-            const emailInput = document.getElementById('login-email');
+            const input = document.getElementById('login-email');
             const btn = document.getElementById('login-btn');
-            const errorMsg = document.getElementById('login-error');
+            const msg = document.getElementById('login-error');
             
-            const email = emailInput.value.trim().toLowerCase();
-            
-            if(!email) {
-                errorMsg.textContent = "Digite um e-mail.";
+            const emailDigitado = input.value.trim().toLowerCase();
+
+            if(!emailDigitado) {
+                msg.textContent = "Digite seu e-mail.";
                 return;
             }
 
-            // Visual Feedback
-            const originalText = btn.innerText;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Entrando...';
+            // Visual
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ENTRANDO...';
             btn.disabled = true;
-            errorMsg.textContent = "";
+            msg.textContent = "";
 
             setTimeout(() => {
-                if (VALID_USERS.includes(email)) {
-                    // Success: Save session to the key used by index.tsx
-                    localStorage.setItem('abfit_current_user', email);
+                const aluno = ALUNOS.find(u => u.email === emailDigitado);
+
+                if (aluno) {
+                    // SUCESSO: Salva sessão (usando a chave do app principal)
+                    localStorage.setItem('abfit_current_user', emailDigitado);
                     
-                    // Try to trigger the main app loader if loaded
-                    if (window.loadStudentProfile) {
-                        window.loadStudentProfile(email);
-                        document.getElementById('loginScreen').classList.remove('active');
+                    // Renderiza perfil imediatamente (Shell)
+                    carregarTelaPerfil(aluno);
+                    
+                    // Tenta acionar o carregamento completo via index.js se disponível
+                    if(window.loadStudentProfile) {
+                        window.loadStudentProfile(emailDigitado);
                     } else {
-                        // Fallback: Reload page so index.js picks up the session on start
-                        window.location.reload();
+                        // Se index.js falhar ou demorar, reload para garantir
+                        // window.location.reload(); 
+                        // Mas como já renderizamos o perfil básico abaixo, deixamos o usuário navegar
                     }
                 } else {
-                    errorMsg.textContent = "E-mail não encontrado.";
-                    btn.innerHTML = originalText;
+                    msg.textContent = "E-mail não encontrado.";
+                    btn.innerHTML = "ENTRAR";
                     btn.disabled = false;
                 }
             }, 600);
         }
+
+        // 3. CARREGAR PERFIL BÁSICO (Fallback se JS não carregar)
+        function carregarTelaPerfil(aluno) {
+            const profileScreen = document.getElementById('studentProfileScreen');
+            
+            // Só injeta HTML básico se o index.js não tiver injetado ainda
+            if(!profileScreen.innerHTML.trim() || profileScreen.innerHTML.trim() === '') {
+                profileScreen.innerHTML = `
+                    <header class="flex justify-between items-center mb-8 pt-4">
+                        <h2 class="abfit-logo-style text-3xl"><span class="part-ab">AB</span><span class="part-fit">FIT</span></h2>
+                        <button onclick="manualLogout()" class="text-gray-400 p-2"><i data-feather="log-out"></i></button>
+                    </header>
+                    <div class="text-center mt-8 mb-12">
+                        <div class="w-24 h-24 bg-gray-800 rounded-full mx-auto mb-4 border-2 border-red-600 flex items-center justify-center overflow-hidden">
+                            <img src="${aluno.photo}" class="w-full h-full object-cover">
+                        </div>
+                        <h1 class="text-2xl font-bold text-white">Olá, ${aluno.nome.split(' ')[0]}</h1>
+                        <p class="text-gray-400 text-sm">Carregando funcionalidades...</p>
+                        <div class="mt-4"><i class="fas fa-spinner fa-spin text-red-600 text-2xl"></i></div>
+                    </div>
+                `;
+            }
+
+            // TROCA DE TELA VIA CSS CLASS (!important)
+            document.getElementById('loginScreen').classList.remove('active');
+            document.getElementById('studentProfileScreen').classList.add('active');
+            
+            if(typeof feather !== 'undefined') feather.replace();
+        }
+
+        // 4. LOGOUT MANUAL
+        function manualLogout() {
+            localStorage.removeItem('abfit_current_user');
+            window.location.reload();
+        }
+
+        // 5. VERIFICAÇÃO INICIAL
+        window.addEventListener('load', () => {
+            if(typeof feather !== 'undefined') feather.replace();
+            
+            const salvo = localStorage.getItem('abfit_current_user');
+            if (salvo) {
+                const aluno = ALUNOS.find(u => u.email === salvo);
+                if(aluno) {
+                    carregarTelaPerfil(aluno);
+                    if(window.loadStudentProfile) window.loadStudentProfile(salvo);
+                } else {
+                    localStorage.removeItem('abfit_current_user');
+                }
+            }
+        });
     </script>
 </body>
 </html>

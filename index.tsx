@@ -1,4 +1,4 @@
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenAI, Chat } from "@google/genai";
 
 // Globals defined by imported scripts
 declare var feather: any;
@@ -27,6 +27,22 @@ let currentCalendarDate = new Date(); // Track calendar state
 // --- FINISH WORKOUT STATE ---
 let tempWorkoutData: any = {};
 let tempWorkoutImage: string | null = null;
+
+// --- AI CHAT STATE ---
+let chatSession: Chat | null = null;
+const CHAT_SYSTEM_INSTRUCTION = `Você é o coach virtual da ABFIT, uma assessoria esportiva de alta performance fundada por André Brito.
+Seu nome é AB Coach.
+Seu objetivo é ajudar os alunos com dúvidas sobre:
+1. Execução de exercícios (dê dicas técnicas).
+2. Nutrição e suplementação (dicas gerais, não prescrição médica).
+3. Motivação e disciplina.
+4. Explicação sobre periodização de treino.
+
+Personalidade:
+- Energético, motivador e profissional.
+- Use emojis relacionados a esporte (💪, 🏋️, 🔥).
+- Respostas concisas e fáceis de ler no celular.
+- Se não souber, diga que vai consultar o André Brito.`;
 
 // --- FOOTER CONTENT (AI Generated Responses) ---
 const footerContent: any = {
@@ -323,48 +339,153 @@ function initializeDatabase() {
     }
 }
 
-// --- AI ANALYSIS LOGIC ---
-async function generateAIAnalysis() {
-    const btn = document.getElementById('generate-analysis-btn');
-    const spinner = document.getElementById('ai-analysis-spinner');
-    const resultDiv = document.getElementById('ai-analysis-result');
-    const db = getDatabase();
-    const email = getCurrentUser();
+// --- AI CHAT LOGIC ---
+async function loadAIAnalysisScreen() {
+    const screen = document.getElementById('aiAnalysisScreen');
+    if (!screen) return;
 
-    if (!btn || !spinner || !resultDiv) return;
+    // Build Chat Interface
+    screen.innerHTML = `
+        <div class="flex flex-col h-full bg-gray-900 relative">
+            <!-- Header -->
+            <div class="flex items-center justify-between p-4 bg-gray-800/90 backdrop-blur border-b border-gray-700 shadow-lg z-20">
+                <button onclick="showScreen('studentProfileScreen')" class="p-2 -ml-2 text-gray-400 hover:text-white transition-colors">
+                    <i data-feather="arrow-left"></i>
+                </button>
+                <div class="flex flex-col items-center">
+                    <h2 class="text-lg font-black text-white italic tracking-wide flex items-center gap-2">
+                        ABFIT <span class="text-teal-400">AI</span>
+                    </h2>
+                </div>
+                <div class="w-8"></div>
+            </div>
 
-    btn.classList.add('hidden');
-    spinner.classList.remove('hidden');
-    resultDiv.classList.add('hidden');
+            <!-- Chat Messages -->
+            <div id="chat-messages" class="flex-1 overflow-y-auto p-4 space-y-4 pb-32 scroll-smooth">
+                <!-- Welcome -->
+                <div class="flex justify-start animate-fadeIn">
+                    <div class="w-8 h-8 rounded-full bg-teal-500/20 flex items-center justify-center mr-2 border border-teal-500/50 flex-shrink-0">
+                        <i class="fas fa-robot text-teal-400 text-xs"></i>
+                    </div>
+                    <div class="bg-gray-800 text-gray-200 p-3 rounded-2xl rounded-tl-none max-w-[80%] shadow-sm border border-gray-700">
+                        <p class="text-sm">Fala! Sou a inteligência artificial da ABFIT. 💪<br>Tem alguma dúvida sobre seu treino ou dieta hoje?</p>
+                    </div>
+                </div>
+            </div>
 
-    try {
-        const userPlans = db.trainingPlans.periodizacao?.[email] || [];
-        const context = {
-            periodization: userPlans.map((p: any) => `${p.fase}: ${p.status} (Obj: ${p.objetivo})`).join('\n')
-        };
-        const prompt = `
-            Analise o progresso deste aluno de musculação com base no seguinte histórico de periodização:
-            ${context.periodization}
-            Forneça 3 insights curtos e motivacionais sobre o que esperar das próximas fases e como otimizar os resultados.
-            Use formatação HTML simples (negrito, quebras de linha). Responda em português do Brasil, tom de treinador experiente.
-        `;
-        const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-        const response = await ai.models.generateContent({
-            model: 'gemini-2.5-flash',
-            contents: prompt,
-        });
-        resultDiv.innerHTML = response.text;
-        resultDiv.classList.remove('hidden');
-    } catch (error) {
-        resultDiv.innerHTML = "<p class='text-red-400'>Erro ao gerar análise. Tente novamente.</p>";
-        resultDiv.classList.remove('hidden');
-    } finally {
-        spinner.classList.add('hidden');
-        btn.classList.remove('hidden');
-        btn.innerHTML = `<i data-feather="refresh-cw"></i> <span>Gerar Nova Análise</span>`;
-        if (typeof feather !== 'undefined') feather.replace();
+            <!-- Input Area -->
+            <div class="absolute bottom-0 left-0 right-0 p-4 bg-gray-900/95 border-t border-gray-800 z-20 pb-8">
+                <form onsubmit="handleChatSubmit(event)" class="flex gap-2 items-end">
+                    <div class="flex-1 relative">
+                        <input type="text" id="chat-input" 
+                            class="w-full bg-gray-800 border border-gray-700 text-white rounded-2xl px-4 py-3 pr-4 focus:outline-none focus:border-teal-500 focus:ring-1 focus:ring-teal-500 transition-all placeholder-gray-500 max-h-32" 
+                            placeholder="Digite sua dúvida..." 
+                            autocomplete="off">
+                    </div>
+                    <button type="submit" 
+                        class="bg-teal-500 hover:bg-teal-600 active:scale-95 text-gray-900 font-bold p-3 rounded-xl transition-all shadow-lg shadow-teal-500/20 flex-shrink-0">
+                        <i data-feather="send" class="w-5 h-5"></i>
+                    </button>
+                </form>
+            </div>
+        </div>
+    `;
+
+    if (typeof feather !== 'undefined') feather.replace();
+    showScreen('aiAnalysisScreen');
+
+    // Init Chat Session
+    if (!chatSession) {
+        try {
+            const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+            chatSession = ai.chats.create({
+                model: 'gemini-2.5-flash',
+                config: {
+                    systemInstruction: CHAT_SYSTEM_INSTRUCTION,
+                }
+            });
+        } catch (e) {
+            console.error("AI Init Error:", e);
+        }
     }
 }
+
+(window as any).handleChatSubmit = async (e: Event) => {
+    e.preventDefault();
+    const input = document.getElementById('chat-input') as HTMLInputElement;
+    const container = document.getElementById('chat-messages');
+    const msg = input.value.trim();
+    if (!msg || !chatSession) return;
+
+    input.value = '';
+
+    // User Message
+    const userDiv = document.createElement('div');
+    userDiv.className = 'flex justify-end animate-fadeIn';
+    userDiv.innerHTML = `
+        <div class="bg-teal-600 text-white p-3 rounded-2xl rounded-tr-none max-w-[80%] shadow-md">
+            <p class="text-sm">${msg.replace(/\n/g, '<br>')}</p>
+        </div>
+    `;
+    container?.appendChild(userDiv);
+    container?.scrollTo(0, container.scrollHeight);
+
+    // Loading Bubble
+    const loaderId = 'chat-loader-' + Date.now();
+    const loaderDiv = document.createElement('div');
+    loaderDiv.id = loaderId;
+    loaderDiv.className = 'flex justify-start animate-fadeIn';
+    loaderDiv.innerHTML = `
+        <div class="w-8 h-8 rounded-full bg-teal-500/20 flex items-center justify-center mr-2 border border-teal-500/50 flex-shrink-0">
+            <i class="fas fa-robot text-teal-400 text-xs"></i>
+        </div>
+        <div class="bg-gray-800 p-4 rounded-2xl rounded-tl-none shadow-sm border border-gray-700 flex gap-1.5 items-center">
+            <div class="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce"></div>
+            <div class="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce delay-100"></div>
+            <div class="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce delay-200"></div>
+        </div>
+    `;
+    container?.appendChild(loaderDiv);
+    container?.scrollTo(0, container.scrollHeight);
+
+    try {
+        const response = await chatSession.sendMessage({ message: msg });
+        const text = response.text;
+        
+        document.getElementById(loaderId)?.remove();
+
+        const aiDiv = document.createElement('div');
+        aiDiv.className = 'flex justify-start animate-fadeIn';
+        // Use marked for formatting
+        const contentHtml = (typeof marked !== 'undefined') ? marked.parse(text) : text;
+        
+        aiDiv.innerHTML = `
+            <div class="w-8 h-8 rounded-full bg-teal-500/20 flex items-center justify-center mr-2 border border-teal-500/50 flex-shrink-0 mt-1">
+                <i class="fas fa-robot text-teal-400 text-xs"></i>
+            </div>
+            <div class="bg-gray-800 text-gray-200 p-3 rounded-2xl rounded-tl-none max-w-[85%] shadow-sm border border-gray-700 prose prose-invert prose-sm leading-snug">
+                ${contentHtml}
+            </div>
+        `;
+        container?.appendChild(aiDiv);
+        container?.scrollTo(0, container.scrollHeight);
+    } catch (err) {
+        document.getElementById(loaderId)?.remove();
+        console.error(err);
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'flex justify-start animate-fadeIn';
+        errorDiv.innerHTML = `
+             <div class="w-8 h-8 rounded-full bg-red-500/20 flex items-center justify-center mr-2 border border-red-500/50 flex-shrink-0">
+                <i class="fas fa-exclamation text-red-400 text-xs"></i>
+            </div>
+            <div class="bg-gray-800 text-red-300 p-3 rounded-2xl rounded-tl-none max-w-[85%] shadow-sm border border-red-900/50">
+                <p class="text-sm">Erro ao conectar com a IA. Tente novamente.</p>
+            </div>
+        `;
+        container?.appendChild(errorDiv);
+        container?.scrollTo(0, container.scrollHeight);
+    }
+};
 
 // --- NAVIGATION ---
 function showScreen(screenId: string) {
@@ -1214,7 +1335,7 @@ function loadStudentProfile(email: string) {
             <button onclick="showScreen('outdoorSelectionScreen')" class="metal-btn p-3 flex flex-col items-center justify-center gap-1 active:scale-95 transition-transform h-28"><i class="fas fa-map-marked-alt text-green-500 text-2xl"></i><span class="text-sm font-bold">OUTDOOR</span></button>
             <button onclick="loadRaceCalendarScreen()" class="metal-btn p-3 flex flex-col items-center justify-center gap-1 active:scale-95 transition-transform h-28"><i class="fas fa-flag-checkered text-blue-500 text-2xl"></i><span class="text-sm font-bold">PROVAS</span></button>
              <button onclick="showScreen('physioAssessmentScreen')" class="metal-btn p-3 flex flex-col items-center justify-center gap-1 active:scale-95 transition-transform h-28"><i class="fas fa-clipboard-user text-red-400 text-2xl"></i><span class="text-sm font-bold">AVALIAÇÃO</span></button>
-             <button onclick="showScreen('aiAnalysisScreen')" class="metal-btn p-3 flex flex-col items-center justify-center gap-1 active:scale-95 transition-transform h-28"><i class="fas fa-brain text-teal-400 text-2xl"></i><span class="text-sm font-bold">ANÁLISE IA</span></button>
+             <button onclick="loadAIAnalysisScreen()" class="metal-btn p-3 flex flex-col items-center justify-center gap-1 active:scale-95 transition-transform h-28"><i class="fas fa-brain text-teal-400 text-2xl"></i><span class="text-sm font-bold">ANÁLISE IA</span></button>
         `;
     }
     renderCalendar(currentCalendarDate);
@@ -1330,8 +1451,6 @@ document.addEventListener('DOMContentLoaded', () => {
         setTimeout(() => modal?.classList.add('hidden'), 200);
     });
 
-    document.getElementById('generate-analysis-btn')?.addEventListener('click', generateAIAnalysis);
-
     // Assessment tab logic
     const tabProfessor = document.getElementById('tab-professor');
     const tabAluno = document.getElementById('tab-aluno');
@@ -1385,3 +1504,4 @@ document.addEventListener('DOMContentLoaded', () => {
 (window as any).loadRunningScreen = loadRunningScreen;
 (window as any).loadRaceCalendarScreen = loadRaceCalendarScreen;
 (window as any).loadStudentProfile = loadStudentProfile; // EXPOSE TO WINDOW FOR INLINE SCRIPT
+(window as any).loadAIAnalysisScreen = loadAIAnalysisScreen;
