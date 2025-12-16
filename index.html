@@ -42,11 +42,10 @@
             <!-- LOGIN SCREEN -->
             <div id="loginScreen" class="screen">
                 <div class="h-full flex flex-col justify-center items-center p-8 w-full">
-                    <div class="text-center mb-12 transform scale-110">
+                    <div class="text-center mb-10 transform">
                         <div class="inline-flex flex-col items-center">
-                            <h1 class="abfit-logo-style text-6xl mb-0 leading-none drop-shadow-2xl">
-                                <span class="part-ab">AB</span><span class="part-fit">FIT</span>
-                            </h1>
+                            <!-- LOGO IMAGE REPLACEMENT -->
+                            <img src="logo.png" alt="ABFIT Assessoria" class="w-72 max-w-full drop-shadow-2xl">
                         </div>
                     </div>
                     <form id="login-form" class="w-full max-w-xs flex flex-col gap-4" onsubmit="event.preventDefault(); return false;">
@@ -66,7 +65,8 @@
             <!-- STUDENT PROFILE SCREEN -->
             <div id="studentProfileScreen" class="screen p-6">
                 <header class="flex justify-between items-center mb-6 pt-2">
-                    <h2 class="abfit-logo-style text-3xl"><span class="part-ab">AB</span><span class="part-fit">FIT</span></h2>
+                    <!-- LOGO IMAGE REPLACEMENT -->
+                    <img src="logo.png" alt="ABFIT" class="h-12 w-auto object-contain drop-shadow-md">
                     <button id="logout-btn" class="text-gray-400 p-2"><i data-feather="log-out"></i></button>
                 </header>
 
