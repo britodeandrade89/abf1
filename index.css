@@ -4,50 +4,47 @@ html, body {
     margin: 0;
     overflow: hidden;
     background-color: #000000;
+    /* Gradiente de fundo */
     background-image: linear-gradient(to bottom, #000000 0%, #991b1b 100%);
     background-attachment: fixed;
     font-family: 'Inter', sans-serif;
 }
 
+/* Transição do App Container */
 #appContainer {
+    opacity: 1;
+    transition: opacity 0.5s ease-in-out;
     height: 100%;
     width: 100%;
 }
 
-/* Regra de visibilidade das telas */
+/* Classe para esconder inicialmente (usada pelo JS) */
+#appContainer.init-hidden {
+    opacity: 0;
+}
+
+/* Telas */
 .screen {
     width: 100%;
     height: 100%;
-    display: none;
+    display: block; /* Garante display block quando ativo */
+    animation: fadeIn 0.4s ease-out;
     overflow-y: auto;
-    animation: fadeIn 0.3s ease-out;
 }
 
-/* Login screen specific alignment */
-#loginScreen.active {
-    display: flex;
-    flex-direction: column;
+/* Regra CRÍTICA: Se não tiver a classe active, some */
+.screen:not(.active) {
+    display: none !important;
 }
 
-.screen.active {
-    display: block;
-}
-
-/* Ensure login is flex, but others are block by default when active */
-#studentProfileScreen.active, 
-#trainingScreen.active, 
-#periodizationScreen.active,
-#runningScreen.active,
-#raceCalendarScreen.active,
-#outdoorSelectionScreen.active,
-#outdoorTrackingScreen.active,
-#aiAnalysisScreen.active,
-#physioAssessmentScreen.active {
-    display: block !important;
+/* Splash Screen Fade Out */
+.fade-out {
+    opacity: 0 !important;
+    pointer-events: none;
 }
 
 @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
+    from { opacity: 0; transform: translateY(5px); }
     to { opacity: 1; transform: translateY(0); }
 }
 

@@ -6,6 +6,9 @@ declare var Chart: any;
 declare var marked: any;
 declare var L: any; // Leaflet global
 
+// --- CONFIGURATION ---
+const SPLASH_DURATION = 2000; // 2 seconds
+
 // Timer Variables (Indoor)
 let workoutTimerInterval: number | null = null;
 let workoutStartTime: Date | null = null;
@@ -137,27 +140,28 @@ const footerContent: any = {
 };
 
 // --- DATABASE ---
-const database = {
+// Default user data structure for fallback
+const defaultDatabase = {
     users: [
         { id: 1, name: 'André Brito', email: 'britodeandrade@gmail.com', photo: 'https://storage.googleapis.com/glide-prod.appspot.com/uploads-v2/WsTwhcQeE99iAkUHmCmn/pub/3Zy4n6ZmWp9DW98VtXpO.jpeg', weightHistory: [], nutritionistData: { consultation: { step: 0, answers: {} }, plans: [], status: 'idle' }, periodizationStartDate: '2025-01-15', stressData: { assessments: [] } },
         { id: 2, name: 'Marcelly Bispo', email: 'marcellybispo92@gmail.com', photo: 'marcelly.jpg', weightHistory: [], nutritionistData: { consultation: { step: 0, answers: {} }, plans: [], status: 'idle' }, periodizationStartDate: '2025-01-15', stressData: { assessments: [] } }
     ],
     trainingPlans: { treinosA: {}, treinosB: {}, periodizacao: {} },
     userRunningWorkouts: {},
-    completedWorkouts: {}, // Stores detailed history { date: 'YYYY-MM-DD', type: 'Treino A', duration: '50 min', photo: 'base64...' }
+    completedWorkouts: {}, 
     activeSessions: {},
     raceCalendar: []
 };
 
 // --- STORAGE ---
 const STORAGE_KEYS = {
-    DATABASE: 'abfit_database_v8', // Incremented version to force update
+    DATABASE: 'abfit_database_v8', 
     CURRENT_USER: 'abfit_current_user'
 };
 
 function getDatabase() {
     const saved = localStorage.getItem(STORAGE_KEYS.DATABASE);
-    return saved ? JSON.parse(saved) : database;
+    return saved ? JSON.parse(saved) : defaultDatabase;
 }
 
 function saveDatabase(db: any) {
@@ -209,7 +213,6 @@ function initializeDatabase() {
         const usersToInit = ['britodeandrade@gmail.com', 'marcellybispo92@gmail.com'];
         
         // Ensure Marcelly is in the user list if loaded from old DB
-        // Corrected to lowercase email check
         const marcelly = db.users.find((u: any) => u.email === 'marcellybispo92@gmail.com');
         if (!marcelly) {
             db.users.push({ id: 2, name: 'Marcelly Bispo', email: 'marcellybispo92@gmail.com', photo: 'marcelly.jpg', weightHistory: [], nutritionistData: { consultation: { step: 0, answers: {} }, plans: [], status: 'idle' }, periodizationStartDate: '2025-01-15', stressData: { assessments: [] } });
@@ -335,7 +338,6 @@ function initializeDatabase() {
         saveDatabase(db);
     } catch (e) {
         console.error("Initialization error:", e);
-        // Ensure at least safe default if crashed
     }
 }
 
@@ -505,6 +507,9 @@ function showScreen(screenId: string) {
         target.classList.add('active');
         // Ensure inline style doesn't hide it (just in case)
         target.style.display = '';
+        console.log(`Navigating to: ${screenId}`);
+    } else {
+        console.error(`Screen not found: ${screenId}`);
     }
     window.scrollTo(0, 0);
 }
@@ -535,10 +540,6 @@ function renderTrainingHistory(email: string) {
         const dateObj = new Date(item.date + 'T00:00:00');
         const day = String(dateObj.getDate()).padStart(2, '0');
         const hasPhoto = item.photo ? true : false;
-        
-        // Pass index to global function to open details
-        // Note: Using a global lookup by finding the item again is safer than index if filtering changes, but for now simple index relative to this array is okay for display?
-        // Better: Store timestamp as ID.
         
         html += `
             <div onclick="openHistoryDetail('${item.timestamp}')" class="flex items-center justify-between bg-gray-800/80 p-3 rounded-xl border border-gray-700 cursor-pointer hover:bg-gray-700 transition">
@@ -1274,14 +1275,6 @@ async function fetchWeather() {
         const code = data.current.weather_code;
         
         // WMO Weather interpretation codes (simplified)
-        // 0: Clear sky
-        // 1, 2, 3: Mainly clear, partly cloudy, and overcast
-        // 45, 48: Fog
-        // 51, 53, 55: Drizzle
-        // 61, 63, 65: Rain
-        // 80, 81, 82: Rain showers
-        // 95, 96, 99: Thunderstorm
-        
         let icon = 'sun';
         let color = 'text-yellow-400';
         
@@ -1343,29 +1336,103 @@ function loadStudentProfile(email: string) {
     showScreen('studentProfileScreen');
 }
 
-// --- BOOTSTRAP ---
+// --- BOOTSTRAP (INITIALIZATION) ---
 document.addEventListener('DOMContentLoaded', () => {
-    initializeDatabase();
     
-    // Check Auth Immediately
+    // 1. DOM References
+    const splashScreen = document.getElementById('splashScreen');
+    const appContainer = document.getElementById('appContainer');
     const user = getCurrentUser();
-    
+
+    // 2. Initial Routing Logic
+    let startScreen = 'loginScreen';
+    let emailToLoad = null;
+
+    initializeDatabase();
+
     if (user) {
         const db = getDatabase();
+        // Verify user exists
         if (db.users.find((u: any) => u.email.toLowerCase() === user.toLowerCase())) {
-            // Logged in: Switch to Profile immediately
-            loadStudentProfile(user);
-            showScreen('studentProfileScreen');
+            startScreen = 'studentProfileScreen';
+            emailToLoad = user;
         } else {
-            // Invalid session: Clear and show Login
             localStorage.removeItem(STORAGE_KEYS.CURRENT_USER);
-            showScreen('loginScreen');
         }
-    } else {
-        // Not logged in: Show Login (default in HTML, but ensuring here)
-        showScreen('loginScreen');
     }
 
+    // 3. Prepare Initial Screen (Hidden behind splash)
+    showScreen(startScreen);
+    
+    if (startScreen === 'studentProfileScreen' && emailToLoad) {
+        loadStudentProfile(emailToLoad);
+    }
+
+    // 4. Splash Screen Logic (2 Seconds Fixed)
+    if (splashScreen && appContainer) {
+        setTimeout(() => {
+            // Fade out splash
+            splashScreen.classList.add('fade-out');
+            
+            // Make App Visible
+            appContainer.classList.remove('init-hidden'); // Remove opacity 0
+            
+            // Remove Splash from DOM
+            setTimeout(() => {
+                splashScreen.classList.add('hidden');
+                (window as any).isAppLoaded = true; // Signal failsafe
+            }, 500);
+
+        }, SPLASH_DURATION);
+    }
+
+    // 5. Login Form Setup
+    const loginForm = document.getElementById('login-form');
+    const loginEmailInput = document.getElementById('login-email') as HTMLInputElement;
+    const loginBtn = document.getElementById('login-btn');
+    const loginError = document.getElementById('login-error');
+
+    if (loginForm) {
+        loginForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const email = loginEmailInput.value.trim().toLowerCase();
+            
+            if (!email) {
+                if (loginError) loginError.textContent = "Digite seu e-mail.";
+                return;
+            }
+
+            // Feedback
+            if (loginBtn) {
+                const originalText = loginBtn.innerText;
+                loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Entrando...';
+                
+                setTimeout(() => {
+                    const db = getDatabase();
+                    const userExists = db.users.find((u: any) => u.email.toLowerCase() === email);
+
+                    if (userExists) {
+                        setCurrentUser(email);
+                        loadStudentProfile(email);
+                        showScreen('studentProfileScreen');
+                    } else {
+                        if (loginError) loginError.textContent = "E-mail não encontrado.";
+                        loginBtn.innerText = originalText;
+                    }
+                }, 800); // Small UX delay
+            }
+        });
+    }
+
+    // Init icons
+    if (typeof feather !== 'undefined') feather.replace();
+    
+    // Setup listeners for other UI elements (Modals, Nav, etc)
+    setupEventListeners();
+});
+
+function setupEventListeners() {
     document.body.addEventListener('click', (e) => {
         const target = e.target as HTMLElement;
         const btn = target.closest('button');
@@ -1450,51 +1517,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         setTimeout(() => modal?.classList.add('hidden'), 200);
     });
-
-    // Assessment tab logic
-    const tabProfessor = document.getElementById('tab-professor');
-    const tabAluno = document.getElementById('tab-aluno');
-    const viewProfessor = document.getElementById('view-professor');
-    const viewAluno = document.getElementById('view-aluno');
-    if (tabProfessor && tabAluno && viewProfessor && viewAluno) {
-        tabProfessor.addEventListener('click', () => {
-            tabProfessor.classList.add('tab-active');
-            tabAluno.classList.remove('tab-active');
-            viewProfessor.classList.remove('hidden');
-            viewAluno.classList.add('hidden');
-        });
-        tabAluno.addEventListener('click', () => {
-            tabProfessor.classList.remove('tab-active');
-            tabAluno.classList.add('tab-active');
-            viewProfessor.classList.add('hidden');
-            viewAluno.classList.remove('hidden');
-        });
-    }
-
-    const btnAddAluno = document.getElementById('btn-add-aluno');
-    if (btnAddAluno) {
-        const newBtn = btnAddAluno.cloneNode(true);
-        btnAddAluno.parentNode?.replaceChild(newBtn, btnAddAluno);
-        newBtn.addEventListener('click', () => {
-            document.getElementById('modal-add-aluno')?.classList.remove('hidden');
-            setTimeout(() => {
-                document.getElementById('modal-content')?.classList.remove('scale-95', 'opacity-0');
-                document.getElementById('modal-content')?.classList.add('scale-100', 'opacity-100');
-            }, 10);
-        });
-    }
-
-    const btnCancelModal = document.getElementById('btn-cancel-modal');
-    if (btnCancelModal) {
-        btnCancelModal.addEventListener('click', () => {
-             document.getElementById('modal-content')?.classList.remove('scale-100', 'opacity-100');
-             document.getElementById('modal-content')?.classList.add('scale-95', 'opacity-0');
-             setTimeout(() => {
-                document.getElementById('modal-add-aluno')?.classList.add('hidden');
-             }, 200);
-        });
-    }
-});
+}
 
 (window as any).loadTrainingScreen = loadTrainingScreen;
 (window as any).loadPeriodizationScreen = loadPeriodizationScreen;
@@ -1503,5 +1526,5 @@ document.addEventListener('DOMContentLoaded', () => {
 (window as any).showScreen = showScreen;
 (window as any).loadRunningScreen = loadRunningScreen;
 (window as any).loadRaceCalendarScreen = loadRaceCalendarScreen;
-(window as any).loadStudentProfile = loadStudentProfile; // EXPOSE TO WINDOW FOR INLINE SCRIPT
+(window as any).loadStudentProfile = loadStudentProfile;
 (window as any).loadAIAnalysisScreen = loadAIAnalysisScreen;
