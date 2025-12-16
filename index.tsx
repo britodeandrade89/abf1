@@ -1254,8 +1254,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 3. Splash Screen Logic (Strict 2s duration)
     if (splashScreen && appContainer) {
-        // Ensure App Container is present in DOM but maybe hidden by splash z-index
-        appContainer.classList.remove('hidden'); 
+        // App container is already 'flex' via HTML, just has 'init-hidden' (opacity 0)
         
         setTimeout(() => {
             // Start fade out animation
