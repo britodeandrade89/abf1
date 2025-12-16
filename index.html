@@ -35,23 +35,13 @@
 
 <body class="overscroll-none">
 
-    <!-- SPLASH SCREEN -->
-    <div id="splashScreen" class="w-full h-screen flex flex-col items-center justify-center bg-black z-[9999] fixed inset-0 transition-opacity duration-500">
-        <div class="inline-flex flex-col items-center animate-pulse">
-            <h1 class="abfit-logo-style text-8xl mb-0 leading-none">
-                <span class="part-ab">AB</span><span class="part-fit">FIT</span>
-            </h1>
-        </div>
-    </div>
-
     <!-- MAIN APP CONTAINER -->
-    <div id="appContainer" class="init-hidden h-screen flex flex-col max-w-lg mx-auto relative z-10 transition-opacity duration-500">
+    <div id="appContainer" class="h-screen flex flex-col max-w-lg mx-auto relative z-10">
         <main class="flex-grow screens-wrapper">
 
-            <!-- LOGIN SCREEN (Minimalist) -->
+            <!-- LOGIN SCREEN -->
             <div id="loginScreen" class="screen">
                 <div class="h-full flex flex-col justify-center items-center p-8 w-full">
-                    
                     <div class="text-center mb-12 transform scale-110">
                         <div class="inline-flex flex-col items-center">
                             <h1 class="abfit-logo-style text-6xl mb-0 leading-none drop-shadow-2xl">
@@ -59,35 +49,262 @@
                             </h1>
                         </div>
                     </div>
-
                     <form id="login-form" class="w-full max-w-xs flex flex-col gap-4" onsubmit="event.preventDefault(); return false;">
-                        
                         <div class="relative">
                             <input type="email" id="login-email" required placeholder="Seu e-mail de aluno"
                                 class="w-full p-4 bg-transparent border-b-2 border-gray-600 text-white text-center text-lg placeholder-gray-500 focus:border-red-600 focus:outline-none transition-colors rounded-none">
                         </div>
-                        
                         <button id="login-btn" type="submit"
                             class="mt-6 w-full bg-red-600 hover:bg-red-700 active:scale-95 text-white font-black uppercase tracking-widest py-4 rounded-xl shadow-lg shadow-red-900/50 transition-all">
                             ENTRAR
                         </button>
-                        
                         <div id="login-error" class="text-red-400 text-center text-sm font-bold h-4"></div>
                     </form>
-
                 </div>
             </div>
 
-            <!-- APP SCREENS -->
-            <div id="studentProfileScreen" class="screen hidden p-6"></div>
-            <div id="trainingScreen" class="screen hidden"></div>
-            <div id="periodizationScreen" class="screen hidden"></div>
-            <div id="runningScreen" class="screen hidden"></div>
-            <div id="raceCalendarScreen" class="screen hidden"></div>
-            <div id="outdoorSelectionScreen" class="screen hidden"></div>
-            <div id="outdoorTrackingScreen" class="screen hidden"></div>
-            <div id="aiAnalysisScreen" class="screen hidden"></div>
-            <div id="physioAssessmentScreen" class="screen hidden"></div>
+            <!-- STUDENT PROFILE SCREEN -->
+            <div id="studentProfileScreen" class="screen p-6">
+                <header class="flex justify-between items-center mb-6 pt-2">
+                    <h2 class="abfit-logo-style text-3xl"><span class="part-ab">AB</span><span class="part-fit">FIT</span></h2>
+                    <button id="logout-btn" class="text-gray-400 p-2"><i data-feather="log-out"></i></button>
+                </header>
+
+                <div id="student-profile-info" class="flex items-center gap-4 mb-6">
+                    <!-- Injected via JS -->
+                </div>
+
+                <div id="student-profile-buttons" class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+                    <!-- Injected via JS -->
+                </div>
+                
+                <div class="mt-8">
+                    <div class="flex justify-between items-center mb-4 px-1">
+                        <h3 id="calendar-month-year" class="text-lg font-bold text-white capitalize"></h3>
+                        <div class="flex gap-2">
+                            <button id="prev-month-btn" class="p-1 text-gray-400 hover:text-white"><i data-feather="chevron-left"></i></button>
+                            <button id="next-month-btn" class="p-1 text-gray-400 hover:text-white"><i data-feather="chevron-right"></i></button>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-7 gap-1 text-center mb-2">
+                        <div class="text-xs text-gray-500 font-bold">D</div><div class="text-xs text-gray-500 font-bold">S</div><div class="text-xs text-gray-500 font-bold">T</div><div class="text-xs text-gray-500 font-bold">Q</div><div class="text-xs text-gray-500 font-bold">Q</div><div class="text-xs text-gray-500 font-bold">S</div><div class="text-xs text-gray-500 font-bold">S</div>
+                    </div>
+                    <div id="calendar-grid" class="grid grid-cols-7 gap-1"></div>
+                </div>
+
+                <div id="training-history-container" class="mt-8"></div>
+                
+                <!-- Footer Links -->
+                <div class="mt-12 pb-8 grid grid-cols-2 gap-4 text-xs text-gray-500 border-t border-gray-800 pt-8">
+                    <button onclick="openInfoModal('sobre')" class="text-left hover:text-white">Sobre a ABFIT</button>
+                    <button onclick="openInfoModal('carreiras')" class="text-left hover:text-white">Carreiras</button>
+                    <button onclick="openInfoModal('imprensa')" class="text-left hover:text-white">Imprensa</button>
+                    <button onclick="openInfoModal('fale')" class="text-left hover:text-white">Fale Conosco</button>
+                    <button onclick="openInfoModal('suporte')" class="text-left hover:text-white">Suporte Técnico</button>
+                    <button onclick="openInfoModal('privacidade')" class="text-left hover:text-white">Privacidade</button>
+                    <button onclick="openInfoModal('termos')" class="text-left hover:text-white">Termos de Uso</button>
+                </div>
+            </div>
+
+            <!-- TRAINING SCREEN -->
+            <div id="trainingScreen" class="screen">
+                <div class="pb-24 p-4">
+                    <div class="sticky top-0 bg-black/90 backdrop-blur-md z-20 pb-4 pt-2 mb-4 border-b border-gray-800">
+                        <div class="flex items-center justify-between mb-4">
+                             <button onclick="showScreen('studentProfileScreen')" class="text-gray-400 hover:text-white"><i data-feather="arrow-left"></i></button>
+                             <div class="timer-header-box">
+                                <p id="training-title" class="text-center"></p>
+                                <div id="workout-timer" class="digital-timer">00:00:00</div>
+                             </div>
+                             <div class="w-6"></div>
+                        </div>
+                        <div id="workout-nav-bar" class="grid grid-cols-2 gap-4 px-2"></div>
+                    </div>
+                    <div id="training-content-wrapper" class="space-y-4"></div>
+                    <div class="fixed bottom-6 left-6 right-6 z-30">
+                        <button id="save-training-btn" class="w-full bg-red-600 hover:bg-red-700 text-white font-black py-4 rounded-2xl shadow-2xl uppercase tracking-widest text-lg flex items-center justify-center gap-2 border-2 border-red-500">
+                            <i class="fas fa-check-circle"></i> Finalizar Treino
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PERIODIZATION SCREEN -->
+            <div id="periodizationScreen" class="screen p-6">
+                <div class="flex items-center justify-between mb-6">
+                    <button onclick="showScreen('studentProfileScreen')" class="text-gray-400"><i data-feather="arrow-left"></i></button>
+                    <h2 class="text-2xl font-black text-white italic">PERIODIZAÇÃO</h2>
+                    <div class="w-6"></div>
+                </div>
+                <div id="periodization-content-wrapper" class="space-y-4"></div>
+            </div>
+
+            <!-- RUNNING SCREEN -->
+            <div id="runningScreen" class="screen p-6">
+                <div class="flex items-center justify-between mb-6">
+                    <button onclick="showScreen('studentProfileScreen')" class="text-gray-400"><i data-feather="arrow-left"></i></button>
+                    <h2 class="text-2xl font-black text-white italic">CORRIDA</h2>
+                    <div class="w-6"></div>
+                </div>
+                <div id="running-workouts-list" class="space-y-4"></div>
+            </div>
+
+            <!-- RACE CALENDAR SCREEN -->
+            <div id="raceCalendarScreen" class="screen p-6">
+                 <div class="flex items-center justify-between mb-6">
+                    <button onclick="showScreen('studentProfileScreen')" class="text-gray-400"><i data-feather="arrow-left"></i></button>
+                    <h2 class="text-2xl font-black text-white italic">PRÓXIMAS PROVAS</h2>
+                    <div class="w-6"></div>
+                </div>
+                <div id="race-calendar-list" class="space-y-4"></div>
+            </div>
+
+            <!-- OUTDOOR SELECTION SCREEN -->
+            <div id="outdoorSelectionScreen" class="screen p-6">
+                <div class="flex items-center justify-between mb-8">
+                    <button onclick="showScreen('studentProfileScreen')" class="text-gray-400"><i data-feather="arrow-left"></i></button>
+                    <h2 class="text-2xl font-black text-white italic">OUTDOOR</h2>
+                    <div class="w-6"></div>
+                </div>
+                <div class="grid grid-cols-1 gap-4">
+                    <button class="outdoor-activity-btn bg-gray-800 p-6 rounded-2xl border border-gray-700 flex items-center gap-4 hover:bg-gray-700" data-activity="Caminhada">
+                        <div class="bg-green-500/20 p-4 rounded-full text-green-500"><i class="fas fa-walking text-2xl"></i></div>
+                        <div class="text-left"><h3 class="font-bold text-lg text-white">Caminhada</h3><p class="text-xs text-gray-400">Rastreamento GPS</p></div>
+                    </button>
+                     <button class="outdoor-activity-btn bg-gray-800 p-6 rounded-2xl border border-gray-700 flex items-center gap-4 hover:bg-gray-700" data-activity="Corrida">
+                        <div class="bg-orange-500/20 p-4 rounded-full text-orange-500"><i class="fas fa-running text-2xl"></i></div>
+                        <div class="text-left"><h3 class="font-bold text-lg text-white">Corrida de Rua</h3><p class="text-xs text-gray-400">Rastreamento GPS + Pace</p></div>
+                    </button>
+                     <button class="outdoor-activity-btn bg-gray-800 p-6 rounded-2xl border border-gray-700 flex items-center gap-4 hover:bg-gray-700" data-activity="Ciclismo">
+                        <div class="bg-blue-500/20 p-4 rounded-full text-blue-500"><i class="fas fa-bicycle text-2xl"></i></div>
+                        <div class="text-left"><h3 class="font-bold text-lg text-white">Ciclismo</h3><p class="text-xs text-gray-400">Rastreamento GPS</p></div>
+                    </button>
+                </div>
+            </div>
+
+            <!-- OUTDOOR TRACKING SCREEN -->
+            <div id="outdoorTrackingScreen" class="screen p-0 flex flex-col h-full">
+                 <div class="bg-gray-900 p-4 border-b border-gray-800 z-20">
+                    <div class="flex items-center justify-between mb-4">
+                        <button class="outdoor-back-btn text-gray-400" data-target="outdoorSelectionScreen"><i data-feather="arrow-left"></i></button>
+                        <h2 id="tracking-activity-title" class="text-xl font-black text-white uppercase italic"></h2>
+                        <div class="w-6"></div>
+                    </div>
+                    <div class="grid grid-cols-3 gap-2 text-center">
+                        <div><p class="text-[10px] text-gray-500 uppercase font-bold">Distância</p><p id="tracking-distance" class="text-xl font-mono font-bold text-white">0.00 km</p></div>
+                        <div><p class="text-[10px] text-gray-500 uppercase font-bold">Tempo</p><p id="tracking-time" class="text-xl font-mono font-bold text-yellow-500">00:00:00</p></div>
+                        <div><p class="text-[10px] text-gray-500 uppercase font-bold">Pace</p><p id="tracking-pace" class="text-xl font-mono font-bold text-gray-300">--:--</p></div>
+                    </div>
+                </div>
+                <div id="map" class="flex-grow bg-gray-800 relative z-10"></div>
+                <div class="bg-gray-900 p-6 pb-8 z-20">
+                    <button id="start-tracking-btn" class="w-full bg-green-600 hover:bg-green-700 text-white font-black py-4 rounded-xl uppercase tracking-widest shadow-lg">INICIAR</button>
+                    <div class="grid grid-cols-2 gap-4 hidden" id="pause-tracking-btn">
+                        <button class="bg-yellow-600 hover:bg-yellow-700 text-white font-black py-4 rounded-xl uppercase tracking-widest shadow-lg">PAUSAR</button>
+                        <button id="stop-tracking-btn" class="bg-red-600 hover:bg-red-700 text-white font-black py-4 rounded-xl uppercase tracking-widest shadow-lg">FINALIZAR</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- AI ANALYSIS SCREEN (Populated dynamically) -->
+            <div id="aiAnalysisScreen" class="screen"></div>
+
+            <!-- PHYSIO ASSESSMENT SCREEN -->
+            <div id="physioAssessmentScreen" class="screen p-0">
+                <div class="bg-gray-900 min-h-full pb-20">
+                    <!-- Nav -->
+                    <div class="bg-gray-800 px-4 py-3 flex justify-between items-center shadow-md border-b border-gray-700 sticky top-0 z-30">
+                        <div class="flex items-center space-x-2">
+                             <button onclick="showScreen('studentProfileScreen')" class="text-gray-400 mr-2"><i data-feather="arrow-left"></i></button>
+                            <i class="fas fa-heartbeat text-red-500 text-xl"></i>
+                            <h1 class="text-lg font-bold text-white tracking-wide">PhysioApp</h1>
+                        </div>
+                        <div class="flex bg-gray-700 rounded-lg p-1">
+                            <button id="tab-professor" class="px-3 py-1 text-xs font-bold rounded-md text-gray-300 tab-active">Professor</button>
+                            <button id="tab-aluno" class="px-3 py-1 text-xs font-bold rounded-md text-gray-300">Aluno</button>
+                        </div>
+                    </div>
+
+                    <!-- Content -->
+                    <div class="p-4">
+                        <!-- VIEW PROFESSOR -->
+                        <div id="view-professor">
+                            <div id="professor-dashboard">
+                                <div class="flex justify-between items-center mb-6">
+                                    <h2 class="text-xl font-bold text-white">Meus Alunos</h2>
+                                    <button id="btn-add-aluno" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-lg flex items-center gap-2">
+                                        <i class="fas fa-plus"></i> Novo
+                                    </button>
+                                </div>
+                                
+                                <div id="loader" class="text-center py-10 hidden">
+                                    <i class="fas fa-circle-notch fa-spin text-4xl text-blue-500"></i>
+                                    <p class="mt-2 text-gray-400">Carregando dados...</p>
+                                </div>
+
+                                <div id="no-alunos-message" class="text-center py-12 bg-gray-800 rounded-xl border border-gray-700 hidden">
+                                    <i class="fas fa-users text-4xl text-gray-600 mb-3"></i>
+                                    <p class="text-gray-400">Nenhum aluno cadastrado.</p>
+                                </div>
+
+                                <div id="lista-alunos" class="grid grid-cols-1 gap-4"></div>
+                            </div>
+
+                            <!-- FORM AVALIACAO -->
+                            <div id="form-avaliacao" class="hidden">
+                                <div class="flex items-center mb-6">
+                                    <button id="btn-back-to-dashboard" class="mr-4 bg-gray-700 text-white p-2 rounded-full"><i class="fas fa-arrow-left"></i></button>
+                                    <h2 class="text-xl font-bold text-white">Nova Avaliação: <span id="form-aluno-nome" class="text-blue-400"></span></h2>
+                                </div>
+                                <form id="avaliacao-form" class="space-y-6">
+                                    <div class="bg-gray-800 p-4 rounded-xl border border-gray-700">
+                                        <label class="block text-gray-400 text-xs font-bold uppercase mb-2">Data da Avaliação</label>
+                                        <input type="date" id="data" class="w-full bg-gray-900 border border-gray-600 rounded-lg p-3 text-white focus:border-blue-500 outline-none" required>
+                                    </div>
+
+                                    <div class="bg-gray-800 p-4 rounded-xl border border-gray-700">
+                                        <h3 class="text-blue-400 font-bold mb-4 flex items-center gap-2"><i class="fas fa-ruler-vertical"></i> Dados Básicos</h3>
+                                        <div class="grid grid-cols-2 gap-4">
+                                            <div><label class="block text-gray-500 text-xs mb-1">Peso (kg)</label><input type="number" step="0.1" id="peso" class="w-full bg-gray-900 border border-gray-600 rounded-lg p-2 text-white" required></div>
+                                            <div><label class="block text-gray-500 text-xs mb-1">Altura (cm)</label><input type="number" step="1" id="altura" class="w-full bg-gray-900 border border-gray-600 rounded-lg p-2 text-white" required></div>
+                                        </div>
+                                    </div>
+
+                                    <div class="bg-gray-800 p-4 rounded-xl border border-gray-700">
+                                        <h3 class="text-blue-400 font-bold mb-4 flex items-center gap-2"><i class="fas fa-compress-arrows-alt"></i> Dobras Cutâneas (mm)</h3>
+                                        <div class="grid grid-cols-2 gap-4">
+                                            <div class="skinfold-field-wrapper" data-gender="Masculino Feminino"><label class="block text-gray-500 text-xs mb-1">Coxa</label><input type="number" step="0.1" id="dc_coxa" class="w-full bg-gray-900 border border-gray-600 rounded-lg p-2 text-white"></div>
+                                            <div class="skinfold-field-wrapper" data-gender="Masculino"><label class="block text-gray-500 text-xs mb-1">Peitoral</label><input type="number" step="0.1" id="dc_peitoral" class="w-full bg-gray-900 border border-gray-600 rounded-lg p-2 text-white"></div>
+                                            <div class="skinfold-field-wrapper" data-gender="Masculino"><label class="block text-gray-500 text-xs mb-1">Abdominal</label><input type="number" step="0.1" id="dc_abdominal" class="w-full bg-gray-900 border border-gray-600 rounded-lg p-2 text-white"></div>
+                                            <div class="skinfold-field-wrapper" data-gender="Feminino"><label class="block text-gray-500 text-xs mb-1">Tricipital</label><input type="number" step="0.1" id="dc_tricipital" class="w-full bg-gray-900 border border-gray-600 rounded-lg p-2 text-white"></div>
+                                            <div class="skinfold-field-wrapper" data-gender="Feminino"><label class="block text-gray-500 text-xs mb-1">Suprailíaca</label><input type="number" step="0.1" id="dc_suprailiaca" class="w-full bg-gray-900 border border-gray-600 rounded-lg p-2 text-white"></div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Hidden simplified fields for full implementation if needed later -->
+                                    <div class="hidden"><input id="p_torax"><input id="p_abdomen"><input id="p_cintura"><input id="p_quadril"><input id="p_braco_d"><input id="p_braco_e"><input id="p_antebraco_d"><input id="p_antebraco_e"><input id="p_coxa_proximal_d"><input id="p_coxa_proximal_e"><input id="p_coxa_d"><input id="p_coxa_e"><input id="p_coxa_distal_d"><input id="p_coxa_distal_e"><input id="p_panturrilha_d"><input id="p_panturrilha_e"><input id="bio_agua_corporal"><input id="bio_proteina"><input id="bio_minerais"><input id="bio_massa_gordura"><input id="bio_massa_magra"><input id="bio_tmb"><input id="bio_gordura_visceral"><input id="bio_grau_obesidade"></div>
+
+                                    <button type="submit" class="w-full bg-green-600 hover:bg-green-700 text-white font-black py-4 rounded-xl uppercase tracking-widest shadow-lg">Salvar Avaliação</button>
+                                </form>
+                            </div>
+                            
+                            <!-- DATA VIEW -->
+                            <div id="view-aluno-data" class="hidden"></div>
+                        </div>
+
+                        <!-- VIEW ALUNO -->
+                        <div id="view-aluno" class="hidden">
+                             <div id="aluno-login-screen" class="text-center py-12">
+                                <h2 class="text-xl font-bold text-white mb-4">Acesso do Aluno</h2>
+                                <select id="aluno-selector" class="w-full bg-gray-800 text-white p-4 rounded-xl border border-gray-700 text-lg mb-4">
+                                    <option value="">Carregando...</option>
+                                </select>
+                            </div>
+                            <div id="aluno-dashboard" class="hidden"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
         </main>
     </div>
@@ -157,30 +374,39 @@
             </div>
         </div>
     </div>
+    
+    <!-- Info Modal (Footer) -->
+    <div id="infoModal" class="fixed inset-0 z-[80] flex items-center justify-center bg-black/90 hidden backdrop-blur-sm p-6">
+        <div class="bg-gray-800 w-full max-w-md rounded-2xl p-6 shadow-2xl border border-gray-700 relative">
+            <button onclick="document.getElementById('infoModal').classList.add('hidden')" class="absolute top-4 right-4 text-gray-400 hover:text-white"><i data-feather="x"></i></button>
+            <h3 id="info-modal-title" class="text-xl font-bold text-white mb-4"></h3>
+            <div id="info-modal-body" class="text-gray-300 text-sm leading-relaxed space-y-2"></div>
+        </div>
+    </div>
 
     <!-- ADD ALUNO MODAL (For Physio) -->
-    <div id="modal-add-aluno" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-70 hidden">
-        <div id="modal-content" class="bg-white rounded-lg shadow-xl w-full max-w-md p-6 transform scale-95 opacity-0 transition-all duration-300">
-            <h3 class="text-xl font-bold text-gray-900 mb-4">Adicionar Novo Aluno</h3>
+    <div id="modal-add-aluno" class="fixed inset-0 z-[80] flex items-center justify-center bg-black bg-opacity-70 hidden">
+        <div id="modal-content" class="bg-gray-800 rounded-xl shadow-xl w-full max-w-md p-6 transform scale-95 opacity-0 transition-all duration-300 border border-gray-700">
+            <h3 class="text-xl font-bold text-white mb-4">Adicionar Novo Aluno</h3>
             <form id="form-novo-aluno" class="space-y-4">
                 <div>
-                    <label class="block text-gray-700 text-sm font-bold mb-2">Nome Completo</label>
-                    <input type="text" id="nome-aluno" class="w-full border rounded-lg py-2 px-3 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                    <label class="block text-gray-400 text-xs font-bold uppercase mb-2">Nome Completo</label>
+                    <input type="text" id="nome-aluno" class="w-full bg-gray-900 border border-gray-600 rounded-lg p-3 text-white focus:border-blue-500 outline-none" required>
                 </div>
                 <div>
-                    <label class="block text-gray-700 text-sm font-bold mb-2">Data de Nascimento</label>
-                    <input type="date" id="nascimento-aluno" class="w-full border rounded-lg py-2 px-3 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                    <label class="block text-gray-400 text-xs font-bold uppercase mb-2">Data de Nascimento</label>
+                    <input type="date" id="nascimento-aluno" class="w-full bg-gray-900 border border-gray-600 rounded-lg p-3 text-white focus:border-blue-500 outline-none" required>
                 </div>
                 <div>
-                    <label class="block text-gray-700 text-sm font-bold mb-2">Sexo</label>
-                    <select id="sexo-aluno" class="w-full border rounded-lg py-2 px-3 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                    <label class="block text-gray-400 text-xs font-bold uppercase mb-2">Sexo</label>
+                    <select id="sexo-aluno" class="w-full bg-gray-900 border border-gray-600 rounded-lg p-3 text-white focus:border-blue-500 outline-none" required>
                         <option value="Masculino">Masculino</option>
                         <option value="Feminino">Feminino</option>
                     </select>
                 </div>
                 <div class="flex justify-end space-x-3 mt-6">
-                    <button type="button" id="btn-cancel-modal" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded-lg">Cancelar</button>
-                    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">Salvar</button>
+                    <button type="button" id="btn-cancel-modal" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-3 px-6 rounded-lg">Cancelar</button>
+                    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg">Salvar</button>
                 </div>
             </form>
         </div>
@@ -189,23 +415,5 @@
     <script src="assessment.js"></script>
     <script type="module" src="index.js"></script>
 
-    <!-- FAILSAFE SCRIPT -->
-    <script>
-        window.addEventListener('load', function() {
-            // Failsafe: Ensure Splash is removed after max 3.5s if logic fails
-            setTimeout(function() {
-                var splash = document.getElementById('splashScreen');
-                var app = document.getElementById('appContainer');
-                if (splash && !splash.classList.contains('hidden') && !window.isAppLoaded) {
-                    console.warn("Failsafe triggered: Removing splash manually.");
-                    splash.classList.add('fade-out');
-                    setTimeout(() => { 
-                        splash.classList.add('hidden'); 
-                        if(app) app.classList.remove('init-hidden');
-                    }, 500);
-                }
-            }, 3500);
-        });
-    </script>
 </body>
 </html>

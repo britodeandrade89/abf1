@@ -7,7 +7,7 @@ declare var marked: any;
 declare var L: any; // Leaflet global
 
 // --- CONFIGURATION ---
-const SPLASH_DURATION = 2000; // 2 seconds
+// No splash duration needed
 
 // Timer Variables (Indoor)
 let workoutTimerInterval: number | null = null;
@@ -491,13 +491,12 @@ async function loadAIAnalysisScreen() {
 
 // --- NAVIGATION ---
 function showScreen(screenId: string) {
-    // 1. Hide all screens
+    // 1. Hide all screens by removing active class
     const screens = document.querySelectorAll('.screen');
     screens.forEach(s => {
         s.classList.remove('active');
-        // Do NOT manually set style.display = 'none'.
-        // We rely on CSS rule: .screen:not(.active) { display: none !important; }
-        // Just clear any inline overrides if they exist.
+        // Ensure we remove any lingering hidden classes from manual manipulation
+        s.classList.remove('hidden'); 
         (s as HTMLElement).style.display = '';
     });
 
@@ -505,8 +504,7 @@ function showScreen(screenId: string) {
     const target = document.getElementById(screenId);
     if (target) {
         target.classList.add('active');
-        // Ensure inline style doesn't hide it (just in case)
-        target.style.display = '';
+        target.classList.remove('hidden'); // Double check
         console.log(`Navigating to: ${screenId}`);
     } else {
         console.error(`Screen not found: ${screenId}`);
@@ -1339,8 +1337,6 @@ function loadStudentProfile(email: string) {
 // --- BOOTSTRAP (INITIALIZATION) ---
 document.addEventListener('DOMContentLoaded', () => {
     
-    // 1. DOM References
-    const splashScreen = document.getElementById('splashScreen');
     const appContainer = document.getElementById('appContainer');
     const user = getCurrentUser();
 
@@ -1361,32 +1357,18 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // 3. Prepare Initial Screen (Hidden behind splash)
+    // 3. Prepare Initial Screen (Immediately visible)
+    if (appContainer) {
+        appContainer.classList.remove('init-hidden');
+    }
+    
     showScreen(startScreen);
     
     if (startScreen === 'studentProfileScreen' && emailToLoad) {
         loadStudentProfile(emailToLoad);
     }
 
-    // 4. Splash Screen Logic (2 Seconds Fixed)
-    if (splashScreen && appContainer) {
-        setTimeout(() => {
-            // Fade out splash
-            splashScreen.classList.add('fade-out');
-            
-            // Make App Visible
-            appContainer.classList.remove('init-hidden'); // Remove opacity 0
-            
-            // Remove Splash from DOM
-            setTimeout(() => {
-                splashScreen.classList.add('hidden');
-                (window as any).isAppLoaded = true; // Signal failsafe
-            }, 500);
-
-        }, SPLASH_DURATION);
-    }
-
-    // 5. Login Form Setup
+    // 4. Login Form Setup
     const loginForm = document.getElementById('login-form');
     const loginEmailInput = document.getElementById('login-email') as HTMLInputElement;
     const loginBtn = document.getElementById('login-btn');
@@ -1430,6 +1412,9 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Setup listeners for other UI elements (Modals, Nav, etc)
     setupEventListeners();
+    
+    // Signal loaded (for any listeners waiting)
+    (window as any).isAppLoaded = true;
 });
 
 function setupEventListeners() {

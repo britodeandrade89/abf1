@@ -13,14 +13,8 @@ html, body {
 /* Transição do App Container */
 #appContainer {
     opacity: 1;
-    transition: opacity 0.5s ease-in-out;
     height: 100%;
     width: 100%;
-}
-
-/* Classe para esconder inicialmente (usada pelo JS) */
-#appContainer.init-hidden {
-    opacity: 0;
 }
 
 /* Telas */
@@ -35,12 +29,6 @@ html, body {
 /* Regra CRÍTICA: Se não tiver a classe active, some */
 .screen:not(.active) {
     display: none !important;
-}
-
-/* Splash Screen Fade Out */
-.fade-out {
-    opacity: 0 !important;
-    pointer-events: none;
 }
 
 @keyframes fadeIn {
