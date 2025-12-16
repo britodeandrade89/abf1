@@ -18,13 +18,32 @@ html, body {
 .screen {
     width: 100%;
     height: 100%;
-    display: block;
+    display: none;
     overflow-y: auto;
     animation: fadeIn 0.3s ease-out;
 }
 
-.screen:not(.active) {
-    display: none !important;
+/* Login screen specific alignment */
+#loginScreen.active {
+    display: flex;
+    flex-direction: column;
+}
+
+.screen.active {
+    display: block;
+}
+
+/* Ensure login is flex, but others are block by default when active */
+#studentProfileScreen.active, 
+#trainingScreen.active, 
+#periodizationScreen.active,
+#runningScreen.active,
+#raceCalendarScreen.active,
+#outdoorSelectionScreen.active,
+#outdoorTrackingScreen.active,
+#aiAnalysisScreen.active,
+#physioAssessmentScreen.active {
+    display: block !important;
 }
 
 @keyframes fadeIn {

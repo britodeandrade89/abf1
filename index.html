@@ -5,458 +5,79 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>ABFIT</title>
-
-    <!-- PWA Meta Tags -->
     <meta name="theme-color" content="#111827">
     <link rel="manifest" href="manifest.json">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="ABFIT">
-    <link rel="apple-touch-icon" href="https://via.placeholder.com/192x192/991b1b/FFFFFF?text=AB">
-
-    <!-- Tailwind CSS -->
+    
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Google Fonts: Inter -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@700&display=swap" rel="stylesheet">
-    <!-- Feather Icons -->
     <script src="https://unpkg.com/feather-icons"></script>
-    <!-- Chart.js for graphs -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
-    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <!-- Leaflet.js for GPS Tracking -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <!-- Marked.js for Markdown parsing -->
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 
-    <!-- CRITICAL: Process Polyfill for GenAI SDK -->
+    <!-- Environment Setup -->
     <script>
-        window.process = {
-            env: {
-                NODE_ENV: 'production'
-            }
-        };
+        window.process = { env: { NODE_ENV: 'production' } };
     </script>
-
     <link rel="stylesheet" href="index.css">
-<script type="importmap">
-{
-  "imports": {
-    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.26.0",
-    "@capacitor/cli": "https://aistudiocdn.com/@capacitor/cli@^7.4.4"
-  }
-}
-</script>
+    
+    <script type="importmap">
+    {
+      "imports": {
+        "@google/genai": "https://aistudiocdn.com/@google/genai@^1.26.0",
+        "@capacitor/cli": "https://aistudiocdn.com/@capacitor/cli@^7.4.4"
+      }
+    }
+    </script>
 </head>
 
 <body class="overscroll-none">
 
-    <!-- REMOVED SPLASH SCREEN DIV TO FIX RED SCREEN ISSUE -->
+    <!-- APP CONTAINER -->
+    <div id="appContainer" class="h-full w-full max-w-lg mx-auto relative">
+        
+        <!-- LOGIN SCREEN (Active by default via CSS) -->
+        <div id="loginScreen" class="screen active justify-center items-center p-8">
+            <div class="text-center mb-12 transform scale-125">
+                <h1 class="abfit-logo-style text-6xl mb-0 leading-none drop-shadow-2xl">
+                    <span class="part-ab">AB</span><span class="part-fit">FIT</span>
+                </h1>
+            </div>
 
-    <!-- ======================= PWA INSTALL BANNER ======================= -->
-    <div id="pwa-install-banner" class="hidden fixed bottom-0 left-0 right-0 z-[60] bg-gray-900 border-t-2 border-red-600 p-4 shadow-2xl transition-transform duration-300 transform translate-y-0">
-        <div class="flex items-center justify-between max-w-lg mx-auto">
-             <div class="flex items-center gap-3">
-                <div class="bg-gradient-to-br from-red-600 to-red-800 text-white font-black p-2 rounded-lg shadow-lg border border-red-500">AB</div>
-                <div>
-                    <h4 class="font-bold text-white text-sm">Instalar App ABFIT</h4>
-                    <p class="text-xs text-gray-400">Acesso rápido na tela inicial</p>
+            <!-- Login logic handled by inline function handleLogin() -->
+            <form id="login-form" class="w-full max-w-xs flex flex-col gap-6" onsubmit="handleLogin(event)">
+                <div class="relative group">
+                    <input type="email" id="login-email" required placeholder="Digite seu e-mail"
+                        class="w-full p-4 bg-transparent border-b-2 border-gray-600 text-white text-center text-lg placeholder-gray-500 focus:border-red-600 focus:outline-none transition-colors rounded-none">
                 </div>
-            </div>
-            <div class="flex items-center gap-2">
-                <button id="pwa-install-btn" class="bg-white text-black font-bold text-xs py-2 px-3 rounded-lg hover:bg-gray-200 transition shadow-md">
-                    Instalar
+                
+                <button id="login-btn" type="submit"
+                    class="mt-4 w-full bg-red-600 hover:bg-red-700 active:scale-95 text-white font-black uppercase tracking-widest py-4 rounded-xl shadow-lg shadow-red-900/50 transition-all cursor-pointer">
+                    ENTRAR
                 </button>
-                <button id="pwa-close-btn" class="text-gray-400 hover:text-white p-1">
-                    <i data-feather="x" class="w-5 h-5"></i>
-                </button>
-            </div>
+                
+                <div id="login-error" class="text-red-400 text-center text-sm font-bold min-h-[20px]"></div>
+            </form>
         </div>
+
+        <!-- APP SCREENS (Content injected by index.js) -->
+        <div id="studentProfileScreen" class="screen p-6"></div>
+        <div id="trainingScreen" class="screen"></div>
+        <div id="periodizationScreen" class="screen"></div>
+        <div id="runningScreen" class="screen"></div>
+        <div id="raceCalendarScreen" class="screen"></div>
+        <div id="outdoorSelectionScreen" class="screen"></div>
+        <div id="outdoorTrackingScreen" class="screen"></div>
+        <div id="aiAnalysisScreen" class="screen"></div>
+        <div id="physioAssessmentScreen" class="screen"></div>
+
     </div>
 
-    <!-- ======================= APP CONTAINER ======================= -->
-    <!-- Removed 'init-hidden' class. Content is visible immediately. -->
-    <div id="appContainer" class="h-screen flex flex-col max-w-lg mx-auto relative z-10">
-        <main class="flex-grow screens-wrapper">
-             
-            <!-- ======================= TELA DE LOGIN (ACTIVE BY DEFAULT) ======================= -->
-            <div id="loginScreen" class="screen active">
-                <div class="h-full flex flex-col justify-center items-center p-8 w-full">
-                    
-                    <!-- Logo Grande -->
-                    <div class="text-center mb-16 transform scale-110">
-                        <div class="inline-flex flex-col items-center">
-                            <h1 class="abfit-logo-style text-7xl mb-0 leading-none drop-shadow-2xl">
-                                <span class="part-ab">AB</span><span class="part-fit">FIT</span>
-                            </h1>
-                        </div>
-                    </div>
-
-                    <!-- Formulário Flutuante Minimalista -->
-                    <form id="login-form" class="w-full max-w-xs flex flex-col gap-6" onsubmit="event.preventDefault(); return false;">
-                        
-                        <div class="relative group">
-                            <input type="email" id="login-email" required placeholder="Digite seu e-mail"
-                                class="w-full p-3 bg-transparent border-b-2 border-gray-500 text-white text-center text-xl placeholder-gray-500 focus:border-red-600 focus:outline-none transition-colors rounded-none font-medium">
-                        </div>
-                        
-                        <button id="login-btn" type="submit"
-                            class="mt-4 w-full bg-red-600 hover:bg-red-700 active:scale-95 text-white font-black uppercase tracking-widest py-4 rounded-xl shadow-lg shadow-red-900/50 transition-all border border-red-500">
-                            ENTRAR
-                        </button>
-                        
-                        <div id="login-error" class="text-red-400 text-center text-sm font-bold h-4 mt-2"></div>
-                    </form>
-
-                </div>
-            </div>
-
-            <!-- ======================= TELA PERFIL DO ALUNO ======================= -->
-            <div id="studentProfileScreen" class="screen p-6">
-                <!-- Header Organizado -->
-                <header class="flex flex-col pt-6 pb-2">
-                    
-                    <!-- Linha Superior: Logo ESQUERDA + Clima à DIREITA -->
-                    <div class="flex items-center justify-between mb-4">
-                        <div class="flex-none animate-logo-entry flex flex-col items-start">
-                            <h1 class="abfit-logo-style text-5xl leading-none">
-                                <span class="part-ab">AB</span><span class="part-fit">FIT</span>
-                            </h1>
-                        </div>
-
-                        <div class="flex-1 flex flex-col items-end">
-                             <div id="weather-widget" class="text-right flex flex-col items-end min-h-[50px] justify-center">
-                                <span class="text-xs text-gray-500">Carregando...</span>
-                            </div>
-                             <button id="logout-btn" class="mt-2 p-1 rounded-full hover:bg-gray-700 text-gray-400 hover:text-white border border-transparent hover:border-gray-600">
-                                <i data-feather="log-out" class="w-4 h-4"></i>
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Faixa de Informações do Aluno -->
-                    <div id="student-profile-info" class="hidden bg-gray-800/80 backdrop-blur-md border border-gray-700 rounded-xl p-4 flex items-center gap-4 shadow-lg"></div>
-
-                </header>
-
-                <div id="student-profile-buttons" class="grid grid-cols-3 gap-4 mb-6 mt-4"></div>
-
-                <div class="bg-gray-800 p-4 rounded-xl border border-gray-700 shadow-lg">
-                    <div id="calendar-header" class="flex justify-between items-center mb-4">
-                        <button id="prev-month-btn" class="p-2 rounded-full hover:bg-gray-700"><i
-                                data-feather="chevron-left" class="text-white"></i></button>
-                        <h2 id="calendar-month-year" class="font-bold text-lg text-white">Carregando...</h2>
-                        <button id="next-month-btn" class="p-2 rounded-full hover:bg-gray-700"><i
-                                data-feather="chevron-right" class="text-white"></i></button>
-                    </div>
-                    <div class="grid grid-cols-7 gap-1 text-center text-xs text-white mb-2">
-                        <div>D</div>
-                        <div>S</div>
-                        <div>T</div>
-                        <div>Q</div>
-                        <div>Q</div>
-                        <div>S</div>
-                        <div>S</div>
-                    </div>
-                    <div id="calendar-grid" class="grid grid-cols-7 gap-1 text-center text-sm"></div>
-                </div>
-
-                <div id="training-history-container" class="mt-6"></div>
-                
-                <!-- FOOTER DETALHADO E FUNCIONAL -->
-                <footer class="mt-10 pb-24 pt-8 border-t border-gray-800 bg-transparent rounded-t-3xl -mx-6 px-6">
-                    <div class="grid grid-cols-2 gap-y-8 gap-x-4 mb-8">
-                        <!-- COLUNA ABFIT -->
-                        <div>
-                            <h4 class="text-white font-bold text-xs mb-4 uppercase tracking-wider text-red-500">ABFIT</h4>
-                            <ul class="space-y-3">
-                                <li><button onclick="openInfoModal('sobre')" class="text-gray-400 text-xs hover:text-white transition-colors text-left">Sobre nós</button></li>
-                                <li><button onclick="openInfoModal('carreiras')" class="text-gray-400 text-xs hover:text-white transition-colors text-left">Carreiras</button></li>
-                                <li><button onclick="openInfoModal('imprensa')" class="text-gray-400 text-xs hover:text-white transition-colors text-left">Imprensa</button></li>
-                            </ul>
-                        </div>
-                        
-                        <!-- COLUNA AJUDA -->
-                        <div>
-                            <h4 class="text-white font-bold text-xs mb-4 uppercase tracking-wider text-red-500">Ajuda</h4>
-                            <ul class="space-y-3">
-                                <li><button onclick="openInfoModal('fale')" class="text-gray-400 text-xs hover:text-white transition-colors text-left">Fale Conosco</button></li>
-                                <li><button onclick="openInfoModal('suporte')" class="text-gray-400 text-xs hover:text-white transition-colors text-left">Suporte</button></li>
-                            </ul>
-                        </div>
-
-                        <!-- COLUNA TERMOS (Ocupa largura total na grade se necessário, ou ajustado) -->
-                        <div class="col-span-2">
-                            <h4 class="text-white font-bold text-xs mb-4 uppercase tracking-wider text-red-500">Termos</h4>
-                            <ul class="space-y-3">
-                                <li><button onclick="openInfoModal('privacidade')" class="text-gray-400 text-xs hover:text-white transition-colors text-left">Política de Privacidade</button></li>
-                                <li><button onclick="openInfoModal('termos')" class="text-gray-400 text-xs hover:text-white transition-colors text-left">Termos e Condições</button></li>
-                            </ul>
-                        </div>
-                    </div>
-                    
-                    <div class="text-center border-t border-gray-800 pt-8">
-                         <div class="inline-flex flex-col items-center opacity-50 mb-4">
-                            <h1 class="abfit-logo-style text-2xl mb-0 leading-none">
-                                <span class="part-ab">AB</span><span class="part-fit">FIT</span>
-                            </h1>
-                        </div>
-                        <p class="text-[10px] text-gray-600 uppercase tracking-widest font-bold">© 2025 André Brito. Todos os direitos reservados.</p>
-                        <p class="text-[10px] text-gray-700 mt-1">Design & Performance.</p>
-                    </div>
-                </footer>
-            </div>
-
-            <!-- ======================= OUTRAS TELAS (PLACEHOLDERS REAIS) ======================= -->
-            <div id="trainingScreen" class="screen p-4">
-                 <div class="sticky top-0 z-20 bg-[#000000] pb-4 pt-2 -mx-4 px-4 border-b border-gray-800/50 backdrop-blur-sm">
-                    <div class="timer-header-box mb-4">
-                        <h2 id="training-title" class="text-center font-bold text-white mb-1">TREINO</h2>
-                        <div id="workout-timer" class="digital-timer">00:00:00</div>
-                    </div>
-                    <div class="flex justify-between items-center px-1">
-                        <button onclick="showScreen('studentProfileScreen')" class="flex items-center gap-2 text-gray-400 hover:text-white transition">
-                            <i data-feather="arrow-left" class="w-5 h-5"></i>
-                            <span class="text-sm font-bold uppercase tracking-wider">Voltar</span>
-                        </button>
-                        <button id="save-training-btn" class="bg-red-600 hover:bg-red-700 text-white text-xs font-bold py-2 px-4 rounded-full flex items-center gap-2 shadow-lg shadow-red-900/20 border border-red-500 transition-all active:scale-95">
-                            <i class="fas fa-check"></i> FINALIZAR
-                        </button>
-                    </div>
-                    <!-- NAV BUTTONS INJECTED HERE -->
-                    <div id="workout-nav-bar" class="grid grid-cols-2 gap-4 mt-3 px-1 border-t border-gray-800 pt-2 empty:hidden"></div>
-                 </div>
-                 <div id="training-content-wrapper" class="mt-2 pb-20 space-y-4"></div>
-            </div>
-
-            <div id="periodizationScreen" class="screen p-6">
-                <div class="flex items-center mb-6">
-                    <button onclick="showScreen('studentProfileScreen')" class="mr-4 bg-gray-800 p-2 rounded-full hover:bg-gray-700 border border-gray-700"><i data-feather="arrow-left" class="text-white w-5 h-5"></i></button>
-                    <h2 class="text-2xl font-bold text-white">Periodização</h2>
-                </div>
-                <div id="periodization-content-wrapper" class="space-y-4 pb-20"></div>
-            </div>
-            
-            <div id="runningScreen" class="screen p-6">
-                <div class="flex items-center mb-6">
-                    <button onclick="showScreen('studentProfileScreen')" class="mr-4 bg-gray-800 p-2 rounded-full hover:bg-gray-700 border border-gray-700"><i data-feather="arrow-left" class="text-white w-5 h-5"></i></button>
-                    <h2 class="text-2xl font-bold text-white">Treinos de Corrida</h2>
-                </div>
-                <div id="running-workouts-list" class="space-y-4 pb-20"></div>
-            </div>
-
-            <div id="raceCalendarScreen" class="screen p-6">
-                <div class="flex items-center mb-6">
-                    <button onclick="showScreen('studentProfileScreen')" class="mr-4 bg-gray-800 p-2 rounded-full hover:bg-gray-700 border border-gray-700"><i data-feather="arrow-left" class="text-white w-5 h-5"></i></button>
-                    <h2 class="text-2xl font-bold text-white">Calendário de Provas</h2>
-                </div>
-                <div id="race-calendar-list" class="space-y-4 pb-20"></div>
-            </div>
-
-            <!-- TELA DE SELEÇÃO OUTDOOR -->
-             <div id="outdoorSelectionScreen" class="screen p-6">
-                <div class="flex items-center mb-8">
-                    <button onclick="showScreen('studentProfileScreen')" class="mr-4 bg-gray-800 p-2 rounded-full hover:bg-gray-700 border border-gray-700"><i data-feather="arrow-left" class="text-white w-5 h-5"></i></button>
-                    <h2 class="text-2xl font-bold text-white">Rastreamento GPS</h2>
-                </div>
-                <div class="grid grid-cols-1 gap-4">
-                    <button data-activity="Caminhada" class="outdoor-activity-btn metal-card-exercise !flex-row !justify-start !p-4 hover:bg-gray-700 transition">
-                         <div class="w-12 h-12 rounded-full bg-green-500/20 flex items-center justify-center border border-green-500/50"><i class="fas fa-walking text-green-500 text-xl"></i></div>
-                         <div class="text-left"><h3 class="!text-white text-lg">Caminhada</h3><p class="text-gray-400 text-xs">Registro de passo e distância</p></div>
-                    </button>
-                    <button data-activity="Corrida" class="outdoor-activity-btn metal-card-exercise !flex-row !justify-start !p-4 hover:bg-gray-700 transition">
-                         <div class="w-12 h-12 rounded-full bg-orange-500/20 flex items-center justify-center border border-orange-500/50"><i class="fas fa-running text-orange-500 text-xl"></i></div>
-                         <div class="text-left"><h3 class="!text-white text-lg">Corrida</h3><p class="text-gray-400 text-xs">Pace, distância e mapa</p></div>
-                    </button>
-                    <button data-activity="Ciclismo" class="outdoor-activity-btn metal-card-exercise !flex-row !justify-start !p-4 hover:bg-gray-700 transition">
-                         <div class="w-12 h-12 rounded-full bg-blue-500/20 flex items-center justify-center border border-blue-500/50"><i class="fas fa-bicycle text-blue-500 text-xl"></i></div>
-                         <div class="text-left"><h3 class="!text-white text-lg">Ciclismo</h3><p class="text-gray-400 text-xs">Alta velocidade e rota</p></div>
-                    </button>
-                </div>
-            </div>
-
-            <!-- TELA DE RASTREAMENTO OUTDOOR -->
-            <div id="outdoorTrackingScreen" class="screen relative h-full flex flex-col">
-                <div class="absolute top-4 left-4 z-[9999]">
-                    <button class="outdoor-back-btn bg-black/50 backdrop-blur-md p-3 rounded-full text-white border border-white/20 shadow-lg" data-target="outdoorSelectionScreen">
-                        <i data-feather="arrow-left"></i>
-                    </button>
-                </div>
-                
-                <div class="flex-grow relative z-0">
-                    <div id="map" class="w-full h-full bg-gray-800"></div>
-                     <!-- Overlay de Stats -->
-                    <div class="absolute top-0 left-0 right-0 p-4 pt-20 bg-gradient-to-b from-black/80 to-transparent z-[500] pointer-events-none">
-                        <h2 id="tracking-activity-title" class="text-center text-white font-black text-2xl uppercase tracking-widest drop-shadow-md mb-2">ATIVIDADE</h2>
-                        <div class="flex justify-center gap-6 text-white drop-shadow-md">
-                            <div class="text-center">
-                                <p class="text-xs text-gray-300 font-bold uppercase">Distância</p>
-                                <p id="tracking-distance" class="text-3xl font-mono font-bold text-white">0.00 km</p>
-                            </div>
-                             <div class="text-center">
-                                <p class="text-xs text-gray-300 font-bold uppercase">Tempo</p>
-                                <p id="tracking-time" class="text-3xl font-mono font-bold text-yellow-500">00:00:00</p>
-                            </div>
-                        </div>
-                         <div class="text-center mt-2">
-                             <p class="text-xs text-gray-300 font-bold uppercase inline-block bg-black/40 px-2 py-0.5 rounded">Pace Médio: <span id="tracking-pace" class="text-white">--:-- /km</span></p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Controles -->
-                <div class="bg-black/90 p-6 pb-8 border-t border-gray-800 z-[9999]">
-                    <div class="grid grid-cols-2 gap-4" id="tracking-controls">
-                         <button id="start-tracking-btn" class="col-span-2 bg-green-600 hover:bg-green-700 text-white font-black py-4 rounded-xl text-lg uppercase tracking-wider shadow-lg shadow-green-900/30 flex items-center justify-center gap-2">
-                            <i class="fas fa-play"></i> Iniciar
-                        </button>
-                        <button id="pause-tracking-btn" class="hidden bg-yellow-600 hover:bg-yellow-700 text-white font-black py-4 rounded-xl text-lg uppercase tracking-wider shadow-lg shadow-yellow-900/30 flex items-center justify-center gap-2">
-                            <i class="fas fa-pause"></i> Pausar
-                        </button>
-                        <button id="stop-tracking-btn" class="hidden bg-red-600 hover:bg-red-700 text-white font-black py-4 rounded-xl text-lg uppercase tracking-wider shadow-lg shadow-red-900/30 flex items-center justify-center gap-2">
-                            <i class="fas fa-stop"></i> Finalizar
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- TELA DE ANÁLISE IA -->
-            <div id="aiAnalysisScreen" class="screen p-6">
-                 <div class="flex items-center mb-6">
-                    <button onclick="showScreen('studentProfileScreen')" class="mr-4 bg-gray-800 p-2 rounded-full hover:bg-gray-700 border border-gray-700"><i data-feather="arrow-left" class="text-white w-5 h-5"></i></button>
-                    <h2 class="text-2xl font-bold text-white">Análise de Progresso IA</h2>
-                </div>
-                <div class="bg-gray-800 p-6 rounded-xl border border-gray-700 shadow-lg text-center">
-                    <div class="mb-6">
-                        <div class="w-20 h-20 bg-teal-900/30 rounded-full flex items-center justify-center mx-auto mb-4 border border-teal-500/30">
-                            <i class="fas fa-robot text-teal-400 text-3xl"></i>
-                        </div>
-                        <h3 class="text-white font-bold text-lg">Consultor Virtual ABFIT</h3>
-                        <p class="text-gray-400 text-sm mt-2">Nossa IA analisa seu histórico de periodização e sugere o próximo passo ideal.</p>
-                    </div>
-                    
-                    <button id="generate-analysis-btn" class="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2 transition shadow-lg shadow-teal-900/20">
-                        <i data-feather="zap"></i> <span>Gerar Análise Agora</span>
-                    </button>
-
-                    <div id="ai-analysis-spinner" class="hidden mt-6">
-                        <i class="fas fa-spinner fa-spin text-teal-500 text-2xl"></i>
-                        <p class="text-gray-400 text-xs mt-2 animate-pulse">Analisando dados...</p>
-                    </div>
-
-                    <div id="ai-analysis-result" class="hidden mt-6 text-left bg-gray-900/50 p-4 rounded-lg border border-gray-700 text-gray-300 text-sm leading-relaxed whitespace-pre-line">
-                    </div>
-                </div>
-            </div>
-
-            <!-- TELA DE AVALIAÇÃO FÍSICA -->
-            <div id="physioAssessmentScreen" class="screen p-4 flex flex-col h-full bg-[#000000]">
-                <div class="flex items-center mb-4">
-                     <button onclick="showScreen('studentProfileScreen')" class="mr-3 bg-gray-800 p-2 rounded-full hover:bg-gray-700 border border-gray-700"><i data-feather="arrow-left" class="text-white w-5 h-5"></i></button>
-                     <h1 class="text-xl font-bold text-white flex-1 text-center pr-10">Avaliação Física</h1>
-                </div>
-
-                <div class="flex bg-gray-800 rounded-lg p-1 mb-4">
-                    <button id="tab-professor" class="flex-1 py-2 text-sm font-bold text-gray-400 rounded-md transition-colors tab-active">Área do Professor</button>
-                    <button id="tab-aluno" class="flex-1 py-2 text-sm font-bold text-gray-400 rounded-md transition-colors">Área do Aluno</button>
-                </div>
-
-                <div id="view-professor" class="flex-1 overflow-y-auto pb-20">
-                    <div id="professor-dashboard">
-                         <div class="flex justify-between items-center mb-4">
-                            <h2 class="text-lg font-bold text-white">Meus Alunos</h2>
-                            <button id="btn-add-aluno" class="bg-blue-600 hover:bg-blue-700 text-white p-2 rounded-lg shadow-md"><i class="fas fa-plus"></i></button>
-                        </div>
-                        <div id="lista-alunos" class="space-y-3"></div>
-                        <div id="loader" class="text-center py-8"><i class="fas fa-circle-notch fa-spin text-blue-500 text-2xl"></i></div>
-                        <div id="no-alunos-message" class="hidden text-center py-8 text-gray-500 bg-gray-800/50 rounded-lg border border-dashed border-gray-700">
-                            <p>Nenhum aluno cadastrado.</p>
-                        </div>
-                    </div>
-
-                    <div id="form-avaliacao" class="hidden bg-white rounded-xl shadow-lg p-4 text-gray-900">
-                         <div class="flex items-center mb-4 border-b pb-2">
-                             <button id="btn-back-to-dashboard" class="mr-3 text-gray-500"><i class="fas fa-arrow-left"></i></button>
-                             <h2 class="text-lg font-bold">Nova Avaliação: <span id="form-aluno-nome" class="text-blue-600"></span></h2>
-                         </div>
-                         <form id="avaliacao-form" class="space-y-4">
-                             <div class="grid grid-cols-2 gap-3">
-                                 <div><label class="block text-xs font-bold text-gray-600">Data</label><input type="date" id="data" required class="w-full p-2 border rounded bg-gray-50"></div>
-                                 <div><label class="block text-xs font-bold text-gray-600">Peso (kg)</label><input type="number" id="peso" step="0.1" required class="w-full p-2 border rounded bg-gray-50"></div>
-                                 <div><label class="block text-xs font-bold text-gray-600">Altura (cm)</label><input type="number" id="altura" required class="w-full p-2 border rounded bg-gray-50"></div>
-                             </div>
-                             
-                             <h3 class="text-sm font-bold text-blue-600 border-b pt-2">Dobras Cutâneas (mm)</h3>
-                             <div class="grid grid-cols-2 gap-3">
-                                <div class="skinfold-field-wrapper" data-gender="Masculino"><label class="block text-xs font-bold text-gray-600">Peitoral</label><input type="number" id="dc_peitoral" step="0.1" class="w-full p-2 border rounded bg-gray-50"></div>
-                                <div class="skinfold-field-wrapper" data-gender="Masculino Feminino"><label class="block text-xs font-bold text-gray-600">Abdominal</label><input type="number" id="dc_abdominal" step="0.1" class="w-full p-2 border rounded bg-gray-50"></div>
-                                <div class="skinfold-field-wrapper" data-gender="Masculino Feminino"><label class="block text-xs font-bold text-gray-600">Coxa</label><input type="number" id="dc_coxa" step="0.1" class="w-full p-2 border rounded bg-gray-50"></div>
-                                <div class="skinfold-field-wrapper" data-gender="Feminino"><label class="block text-xs font-bold text-gray-600">Tricipital</label><input type="number" id="dc_tricipital" step="0.1" class="w-full p-2 border rounded bg-gray-50"></div>
-                                <div class="skinfold-field-wrapper" data-gender="Feminino"><label class="block text-xs font-bold text-gray-600">Suprailíaca</label><input type="number" id="dc_suprailiaca" step="0.1" class="w-full p-2 border rounded bg-gray-50"></div>
-                             </div>
-
-                             <h3 class="text-sm font-bold text-blue-600 border-b pt-2">Perímetros (cm)</h3>
-                             <div class="grid grid-cols-2 gap-3 text-xs">
-                                <div><label>Tórax</label><input type="number" id="p_torax" step="0.1" class="w-full p-1.5 border rounded"></div>
-                                <div><label>Abdômen</label><input type="number" id="p_abdomen" step="0.1" class="w-full p-1.5 border rounded"></div>
-                                <div><label>Cintura</label><input type="number" id="p_cintura" step="0.1" class="w-full p-1.5 border rounded"></div>
-                                <div><label>Quadril</label><input type="number" id="p_quadril" step="0.1" class="w-full p-1.5 border rounded"></div>
-                                <div><label>Braço D</label><input type="number" id="p_braco_d" step="0.1" class="w-full p-1.5 border rounded"></div>
-                                <div><label>Braço E</label><input type="number" id="p_braco_e" step="0.1" class="w-full p-1.5 border rounded"></div>
-                                <div><label>Antebraço D</label><input type="number" id="p_antebraco_d" step="0.1" class="w-full p-1.5 border rounded"></div>
-                                <div><label>Antebraço E</label><input type="number" id="p_antebraco_e" step="0.1" class="w-full p-1.5 border rounded"></div>
-                                <div><label>Coxa Proximal D</label><input type="number" id="p_coxa_proximal_d" step="0.1" class="w-full p-1.5 border rounded"></div>
-                                <div><label>Coxa Proximal E</label><input type="number" id="p_coxa_proximal_e" step="0.1" class="w-full p-1.5 border rounded"></div>
-                                <div><label>Coxa Medial D</label><input type="number" id="p_coxa_d" step="0.1" class="w-full p-1.5 border rounded"></div>
-                                <div><label>Coxa Medial E</label><input type="number" id="p_coxa_e" step="0.1" class="w-full p-1.5 border rounded"></div>
-                                <div><label>Coxa Distal D</label><input type="number" id="p_coxa_distal_d" step="0.1" class="w-full p-1.5 border rounded"></div>
-                                <div><label>Coxa Distal E</label><input type="number" id="p_coxa_distal_e" step="0.1" class="w-full p-1.5 border rounded"></div>
-                                <div><label>Panturrilha D</label><input type="number" id="p_panturrilha_d" step="0.1" class="w-full p-1.5 border rounded"></div>
-                                <div><label>Panturrilha E</label><input type="number" id="p_panturrilha_e" step="0.1" class="w-full p-1.5 border rounded"></div>
-                             </div>
-
-                             <h3 class="text-sm font-bold text-blue-600 border-b pt-2">Bioimpedância</h3>
-                             <div class="grid grid-cols-2 gap-3 text-xs">
-                                <div><label>Água (%)</label><input type="number" id="bio_agua_corporal" step="0.1" class="w-full p-1.5 border rounded"></div>
-                                <div><label>Proteína (%)</label><input type="number" id="bio_proteina" step="0.1" class="w-full p-1.5 border rounded"></div>
-                                <div><label>Minerais (%)</label><input type="number" id="bio_minerais" step="0.1" class="w-full p-1.5 border rounded"></div>
-                                <div><label>Massa Gordura (kg)</label><input type="number" id="bio_massa_gordura" step="0.1" class="w-full p-1.5 border rounded"></div>
-                                <div><label>Massa Magra (kg)</label><input type="number" id="bio_massa_magra" step="0.1" class="w-full p-1.5 border rounded"></div>
-                                <div><label>TMB (kcal)</label><input type="number" id="bio_tmb" class="w-full p-1.5 border rounded"></div>
-                                <div><label>Gordura Visceral</label><input type="number" id="bio_gordura_visceral" class="w-full p-1.5 border rounded"></div>
-                                <div><label>Grau Obesidade (%)</label><input type="number" id="bio_grau_obesidade" step="0.1" class="w-full p-1.5 border rounded"></div>
-                             </div>
-                             
-                             <button type="submit" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-lg shadow-md mt-4">Salvar Avaliação</button>
-                         </form>
-                    </div>
-
-                    <div id="view-aluno-data" class="hidden pb-20 text-black"></div>
-                </div>
-
-                <div id="view-aluno" class="hidden flex-1 overflow-y-auto pb-20">
-                     <div id="aluno-login-screen" class="bg-gray-800 p-6 rounded-xl border border-gray-700 text-center mt-10">
-                        <i class="fas fa-user-lock text-4xl text-gray-500 mb-4"></i>
-                        <h3 class="text-white font-bold text-lg mb-2">Acesso do Aluno</h3>
-                        <p class="text-gray-400 text-sm mb-4">Selecione seu nome para visualizar seus resultados.</p>
-                        <select id="aluno-selector" class="w-full p-3 bg-gray-700 text-white border border-gray-600 rounded-lg outline-none focus:border-blue-500">
-                            <option value="">Carregando...</option>
-                        </select>
-                     </div>
-                     <div id="aluno-dashboard" class="hidden mt-4 text-black"></div>
-                </div>
-            </div>
-
-        </main>
-    </div>
-
-    <!-- ======================= MODALS ======================= -->
-    
+    <!-- MODALS -->
     <!-- Exercise Detail Modal -->
     <div id="exerciseDetailModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 hidden backdrop-blur-sm transition-opacity">
         <div id="exercise-modal-content" class="bg-gray-800 w-11/12 max-w-md rounded-2xl overflow-hidden shadow-2xl transform scale-95 opacity-0 transition-all duration-300 border border-gray-600">
@@ -595,57 +216,64 @@
 
     <!-- Scripts do PhysioApp -->
     <script src="assessment.js"></script>
-    <!-- Compiled TSX -->
-    <!-- FIX: Changed to type="module" so imports work and the app doesn't crash on load -->
+    
+    <!-- MAIN MODULE (Loaded after inline logic) -->
     <script type="module" src="index.js"></script>
 
+    <!-- INLINE BOOTSTRAP SCRIPT (Fixes Login Issues) -->
     <script>
-        // Fallback for app loading (removes splash artifacts if any exist, though none should)
+        // Inline Database for immediate validation
+        const VALID_USERS = [
+            'britodeandrade@gmail.com', 
+            'marcellybispo92@gmail.com'
+        ];
+
+        // Ensure icons load
         window.addEventListener('load', function() {
-            setTimeout(function() {
-                var app = document.getElementById('appContainer');
-                if(app) {
-                    app.classList.remove('init-hidden'); // Ensure visibility
-                }
-            }, 500); 
+            if(typeof feather !== 'undefined') feather.replace();
         });
 
-        // Register Service Worker
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./service-worker.js')
-                    .then(registration => {
-                        console.log('SW Registered:', registration);
-                    })
-                    .catch(err => {
-                        console.log('SW Registration Failed:', err);
-                    });
-            });
-        }
-        
-        // PWA Install Prompt
-        let deferredPrompt;
-        window.addEventListener('beforeinstallprompt', (e) => {
-            e.preventDefault();
-            deferredPrompt = e;
-            const banner = document.getElementById('pwa-install-banner');
-            // Show banner after a delay if not standalone
-            if (!window.matchMedia('(display-mode: standalone)').matches) {
-                setTimeout(() => banner.classList.remove('hidden'), 5000);
+        // Robust Login Function
+        function handleLogin(e) {
+            e.preventDefault(); 
+            
+            const emailInput = document.getElementById('login-email');
+            const btn = document.getElementById('login-btn');
+            const errorMsg = document.getElementById('login-error');
+            
+            const email = emailInput.value.trim().toLowerCase();
+            
+            if(!email) {
+                errorMsg.textContent = "Digite um e-mail.";
+                return;
             }
-        });
-        
-        document.getElementById('pwa-install-btn')?.addEventListener('click', async () => {
-            if (deferredPrompt) {
-                deferredPrompt.prompt();
-                const { outcome } = await deferredPrompt.userChoice;
-                if (outcome === 'accepted') {
-                    document.getElementById('pwa-install-banner').classList.add('hidden');
+
+            // Visual Feedback
+            const originalText = btn.innerText;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Entrando...';
+            btn.disabled = true;
+            errorMsg.textContent = "";
+
+            setTimeout(() => {
+                if (VALID_USERS.includes(email)) {
+                    // Success: Save session to the key used by index.tsx
+                    localStorage.setItem('abfit_current_user', email);
+                    
+                    // Try to trigger the main app loader if loaded
+                    if (window.loadStudentProfile) {
+                        window.loadStudentProfile(email);
+                        document.getElementById('loginScreen').classList.remove('active');
+                    } else {
+                        // Fallback: Reload page so index.js picks up the session on start
+                        window.location.reload();
+                    }
+                } else {
+                    errorMsg.textContent = "E-mail não encontrado.";
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
                 }
-                deferredPrompt = null;
-            }
-        });
+            }, 600);
+        }
     </script>
 </body>
-
 </html>

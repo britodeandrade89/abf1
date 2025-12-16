@@ -1245,44 +1245,6 @@ document.addEventListener('DOMContentLoaded', () => {
         showScreen('loginScreen');
     }
 
-    const loginForm = document.getElementById('login-form');
-    const loginEmailInput = document.getElementById('login-email') as HTMLInputElement;
-    const loginBtn = document.getElementById('login-btn');
-    const loginError = document.getElementById('login-error');
-
-    if (loginForm) {
-        loginForm.addEventListener('submit', (e) => {
-            e.preventDefault(); 
-            const email = loginEmailInput.value.trim().toLowerCase();
-            
-            if (!email) {
-                if (loginError) loginError.textContent = "Digite seu e-mail.";
-                return;
-            }
-            const db = getDatabase();
-            if (!db.users.find((u: any) => u.email.toLowerCase() === email)) {
-                 if (loginError) loginError.textContent = "Email não encontrado.";
-                 return;
-            }
-            
-            if (loginBtn) {
-                const originalText = loginBtn.innerText;
-                loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
-                
-                // Save session
-                setCurrentUser(email);
-
-                // Small delay for UX feel, then switch
-                setTimeout(() => {
-                    loadStudentProfile(email);
-                    showScreen('studentProfileScreen');
-                    // Reset button state
-                    loginBtn.innerText = originalText;
-                }, 500);
-            }
-        });
-    }
-
     document.body.addEventListener('click', (e) => {
         const target = e.target as HTMLElement;
         const btn = target.closest('button');
@@ -1422,3 +1384,4 @@ document.addEventListener('DOMContentLoaded', () => {
 (window as any).showScreen = showScreen;
 (window as any).loadRunningScreen = loadRunningScreen;
 (window as any).loadRaceCalendarScreen = loadRaceCalendarScreen;
+(window as any).loadStudentProfile = loadStudentProfile; // EXPOSE TO WINDOW FOR INLINE SCRIPT
