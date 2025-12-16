@@ -57,16 +57,11 @@
 <body class="overscroll-none">
 
     <!-- ======================= SPLASH SCREEN ======================= -->
-    <div id="splashScreen" class="w-full h-screen flex flex-col items-center justify-center bg-gradient-to-b from-black to-red-900 z-[9999] fixed inset-0 transition-opacity duration-500">
-        <div class="p-6 flex flex-col items-center">
-            <div class="inline-flex flex-col items-center">
-                <h1 class="abfit-logo-style text-7xl mb-0 leading-none">
-                    <span class="part-ab">AB</span><span class="part-fit">FIT</span>
-                </h1>
-                <p class="font-['Inter'] font-black italic text-gray-400 text-[9px] uppercase text-center mt-0 leading-none tracking-normal">
-                    Assessoria em Treinamentos Físicos
-                </p>
-            </div>
+    <div id="splashScreen" class="w-full h-screen flex flex-col items-center justify-center bg-black z-[9999] fixed inset-0 transition-opacity duration-500">
+        <div class="flex flex-col items-center animate-pulse">
+            <h1 class="abfit-logo-style text-8xl mb-0 leading-none">
+                <span class="part-ab">AB</span><span class="part-fit">FIT</span>
+            </h1>
         </div>
     </div>
 
@@ -92,37 +87,40 @@
     </div>
 
     <!-- ======================= APP CONTAINER ======================= -->
-    <!-- Removed 'hidden' class to prevent blank screens if JS delays. Opacity handles visibility. -->
     <div id="appContainer" class="init-hidden h-screen flex flex-col max-w-lg mx-auto relative z-10 transition-opacity duration-500">
         <main class="flex-grow screens-wrapper">
-             <!-- ======================= TELA DE LOGIN ======================= -->
+             
+            <!-- ======================= TELA DE LOGIN (MINIMALISTA) ======================= -->
             <div id="loginScreen" class="screen">
-                <div class="h-full flex flex-col justify-center items-center p-6 w-full">
-                    <!-- Login Card -->
-                    <div class="w-full max-w-sm bg-black/40 backdrop-blur-md p-8 rounded-2xl border border-white/10 shadow-2xl">
-                        
-                        <!-- Logo in Card -->
-                        <div class="text-center mb-8">
-                            <div class="inline-flex flex-col items-center">
-                                <h1 class="abfit-logo-style text-5xl mb-0 leading-none">
-                                    <span class="part-ab">AB</span><span class="part-fit">FIT</span>
-                                </h1>
-                            </div>
+                <div class="h-full flex flex-col justify-center items-center p-8 w-full">
+                    
+                    <!-- Logo Grande -->
+                    <div class="text-center mb-16 transform scale-110">
+                        <div class="inline-flex flex-col items-center">
+                            <h1 class="abfit-logo-style text-7xl mb-0 leading-none drop-shadow-2xl">
+                                <span class="part-ab">AB</span><span class="part-fit">FIT</span>
+                            </h1>
                         </div>
-
-                        <!-- Form -->
-                        <form id="login-form" onsubmit="event.preventDefault(); return false;">
-                            <div class="mb-6">
-                                <input type="email" id="login-email" required placeholder="Digite seu e-mail"
-                                    class="w-full p-4 bg-gray-900/80 text-white border border-gray-700 rounded-xl focus:ring-2 focus:ring-red-600 focus:border-red-600 outline-none placeholder-gray-500 font-medium transition-all text-center">
-                            </div>
-                            <button id="login-btn" type="submit"
-                                class="w-full bg-red-600 hover:bg-red-700 active:scale-95 text-white font-black uppercase tracking-wider py-4 rounded-xl flex items-center justify-center shadow-lg shadow-red-900/40 transition-all">
-                                Entrar
-                            </button>
-                            <div id="login-error" class="text-red-400 text-center text-xs font-bold mt-4 h-4"></div>
-                        </form>
                     </div>
+
+                    <!-- Formulário Flutuante -->
+                    <form id="login-form" class="w-full max-w-xs flex flex-col gap-6" onsubmit="event.preventDefault(); return false;">
+                        
+                        <!-- Input Minimalista (Underline) -->
+                        <div class="relative">
+                            <input type="email" id="login-email" required placeholder="Digite seu e-mail"
+                                class="w-full p-3 bg-transparent border-b-2 border-gray-500 text-white text-center text-xl placeholder-gray-500 focus:border-red-600 focus:outline-none transition-colors rounded-none font-medium">
+                        </div>
+                        
+                        <!-- Botão Grande -->
+                        <button id="login-btn" type="submit"
+                            class="mt-4 w-full bg-red-600 hover:bg-red-700 active:scale-95 text-white font-black uppercase tracking-widest py-4 rounded-xl shadow-lg shadow-red-900/50 transition-all border border-red-500">
+                            ENTRAR
+                        </button>
+                        
+                        <div id="login-error" class="text-red-400 text-center text-sm font-bold h-4 mt-2"></div>
+                    </form>
+
                 </div>
             </div>
 

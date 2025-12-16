@@ -1250,20 +1250,22 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     // Set the initial active screen in the DOM (it is underneath the splash)
+    // NOTE: This call is critical. If not called, all screens are 'hidden' via CSS.
     showScreen(nextScreen);
 
     // 3. Splash Screen Logic (Strict 2s duration)
     if (splashScreen && appContainer) {
-        // App container is already 'flex' via HTML, just has 'init-hidden' (opacity 0)
         
         setTimeout(() => {
             // Start fade out animation
             splashScreen.classList.add('fade-out'); 
             
-            // Wait for CSS transition (500ms) then remove from DOM flow
+            // At the SAME TIME, ensure the app container is fully visible
+            appContainer.classList.remove('init-hidden');
+            
+            // Wait for CSS transition (500ms) then remove splash from DOM
             setTimeout(() => {
                 splashScreen.classList.add('hidden');
-                appContainer.classList.remove('init-hidden');
                 (window as any).isAppLoaded = true; // Signal failsafe that we loaded correctly
             }, 500); 
         }, 2000);
