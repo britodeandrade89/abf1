@@ -1228,40 +1228,44 @@ document.addEventListener('DOMContentLoaded', () => {
     
     const splashScreen = document.getElementById('splashScreen');
     const appContainer = document.getElementById('appContainer');
+    const user = getCurrentUser();
 
     // 1. Determine Target Screen (Login vs Profile)
-    const user = getCurrentUser();
-    let targetScreen = 'loginScreen';
+    let nextScreen = 'loginScreen';
+    let emailToLoad = null;
 
     if (user) {
         const db = getDatabase();
         if (db.users.find((u: any) => u.email.toLowerCase() === user.toLowerCase())) {
-            targetScreen = 'studentProfileScreen';
-            loadStudentProfile(user);
+            nextScreen = 'studentProfileScreen';
+            emailToLoad = user;
         } else {
             localStorage.removeItem(STORAGE_KEYS.CURRENT_USER);
         }
     }
 
-    // 2. Prepare the underlying screen (invisible behind splash)
-    showScreen(targetScreen);
+    // 2. Pre-load data if logged in, but keep screen hidden behind splash
+    if (nextScreen === 'studentProfileScreen' && emailToLoad) {
+        loadStudentProfile(emailToLoad);
+    }
+    
+    // Set the initial active screen in the DOM (it is underneath the splash)
+    showScreen(nextScreen);
 
-    // 3. Handle Splash Screen Timing (2.0 seconds)
+    // 3. Splash Screen Logic (Strict 2s duration)
     if (splashScreen && appContainer) {
-        // Ensure App Container is visible in DOM but behind splash or ready to fade in
+        // Ensure App Container is present in DOM but maybe hidden by splash z-index
         appContainer.classList.remove('hidden'); 
         
-        // Wait exactly 2000ms
         setTimeout(() => {
-            // Start Fade Out
-            splashScreen.classList.add('fade-out'); // Relies on CSS transition
+            // Start fade out animation
+            splashScreen.classList.add('fade-out'); 
             
-            // Wait for CSS transition (e.g., 500ms) then remove from DOM flow
+            // Wait for CSS transition (500ms) then remove from DOM flow
             setTimeout(() => {
                 splashScreen.classList.add('hidden');
-                // Ensure App Container is fully visible/interactive
                 appContainer.classList.remove('init-hidden');
-                (window as any).isAppLoaded = true;
+                (window as any).isAppLoaded = true; // Signal failsafe that we loaded correctly
             }, 500); 
         }, 2000);
     }
