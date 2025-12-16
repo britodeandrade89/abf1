@@ -33,7 +33,7 @@
     </script>
 
     <style>
-        /* CSS CRÍTICO - GARANTIA DE FUNCIONAMENTO */
+        /* BASE STYLES */
         body, html {
             height: 100%;
             margin: 0;
@@ -45,7 +45,7 @@
             overflow: hidden; 
         }
 
-        /* Estilo do Logo */
+        /* LOGO */
         .abfit-logo-style {
             font-family: 'Inter', sans-serif;
             font-weight: 900;
@@ -55,9 +55,10 @@
         .part-ab { color: #ef4444; margin-right: -0.05em; }
         .part-fit { color: #ffffff; }
 
-        /* LÓGICA DE TELAS - FORÇADA (NUCLEAR OPTION) */
+        /* SCREEN VISIBILITY LOGIC */
+        /* Default: Hidden */
         .screen {
-            display: none !important; /* Esconde tudo por padrão */
+            display: none;
             width: 100%;
             height: 100%;
             overflow-y: auto;
@@ -65,12 +66,13 @@
             padding-bottom: 2rem;
         }
 
+        /* Active: Flex (default for centering) */
         .screen.active {
-            display: flex !important; /* Mostra quem tem a classe active */
+            display: flex;
             flex-direction: column;
         }
         
-        /* Ajuste para telas de conteúdo (não centralizadas) */
+        /* Active: Block (for content screens) */
         #studentProfileScreen.active, 
         #trainingScreen.active,
         #periodizationScreen.active,
@@ -80,13 +82,11 @@
         #outdoorTrackingScreen.active,
         #aiAnalysisScreen.active,
         #physioAssessmentScreen.active {
-            display: block !important;
+            display: block;
         }
-
-        /* Helpers extras */
-        .hidden { display: none !important; }
         
-        /* Override do index.css externo se necessário */
+        /* Helper to ensure hidden stays hidden if conflicts arise */
+        .hidden { display: none !important; }
     </style>
     <link rel="stylesheet" href="index.css">
 </head>
@@ -95,7 +95,8 @@
     <div id="appContainer" class="h-full w-full max-w-lg mx-auto relative">
 
         <!-- LOGIN SCREEN -->
-        <div id="loginScreen" class="screen active justify-center items-center p-6">
+        <!-- Added inline style="display: flex" to force visibility on load, prevents blank screen -->
+        <div id="loginScreen" class="screen active justify-center items-center p-6" style="display: flex;">
             <div class="w-full max-w-sm text-center">
                 
                 <h1 class="abfit-logo-style text-6xl mb-12 drop-shadow-2xl">
@@ -118,10 +119,8 @@
             </div>
         </div>
 
-        <!-- APP SCREENS (Mantendo todos para o index.js popular) -->
-        <div id="studentProfileScreen" class="screen p-6">
-            <!-- Fallback content injected by inline script, overwritten by index.js -->
-        </div>
+        <!-- APP SCREENS -->
+        <div id="studentProfileScreen" class="screen p-6"></div>
         <div id="trainingScreen" class="screen"></div>
         <div id="periodizationScreen" class="screen"></div>
         <div id="runningScreen" class="screen"></div>
@@ -133,7 +132,7 @@
 
     </div>
 
-    <!-- MODALS (Include structure for index.js logic) -->
+    <!-- MODALS -->
     <!-- Exercise Detail Modal -->
     <div id="exerciseDetailModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 hidden backdrop-blur-sm transition-opacity">
         <div id="exercise-modal-content" class="bg-gray-800 w-11/12 max-w-md rounded-2xl overflow-hidden shadow-2xl transform scale-95 opacity-0 transition-all duration-300 border border-gray-600">
@@ -202,7 +201,7 @@
     <!-- Scripts do PhysioApp -->
     <script src="assessment.js"></script>
     
-    <!-- MAIN MODULE (Keep this so the app features actually work!) -->
+    <!-- MAIN MODULE -->
     <script type="module" src="index.js"></script>
 
     <!-- ROBUST INLINE LOGIC -->
@@ -237,7 +236,7 @@
                 const aluno = ALUNOS.find(u => u.email === emailDigitado);
 
                 if (aluno) {
-                    // SUCESSO: Salva sessão (usando a chave do app principal)
+                    // SUCESSO: Salva sessão
                     localStorage.setItem('abfit_current_user', emailDigitado);
                     
                     // Renderiza perfil imediatamente (Shell)
@@ -246,10 +245,6 @@
                     // Tenta acionar o carregamento completo via index.js se disponível
                     if(window.loadStudentProfile) {
                         window.loadStudentProfile(emailDigitado);
-                    } else {
-                        // Se index.js falhar ou demorar, reload para garantir
-                        // window.location.reload(); 
-                        // Mas como já renderizamos o perfil básico abaixo, deixamos o usuário navegar
                     }
                 } else {
                     msg.textContent = "E-mail não encontrado.";
@@ -259,7 +254,7 @@
             }, 600);
         }
 
-        // 3. CARREGAR PERFIL BÁSICO (Fallback se JS não carregar)
+        // 3. CARREGAR PERFIL BÁSICO (Fallback)
         function carregarTelaPerfil(aluno) {
             const profileScreen = document.getElementById('studentProfileScreen');
             
@@ -281,8 +276,10 @@
                 `;
             }
 
-            // TROCA DE TELA VIA CSS CLASS (!important)
+            // TROCA DE TELA
+            document.getElementById('loginScreen').style.display = 'none'; // Hide inline style
             document.getElementById('loginScreen').classList.remove('active');
+            
             document.getElementById('studentProfileScreen').classList.add('active');
             
             if(typeof feather !== 'undefined') feather.replace();
